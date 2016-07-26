@@ -5,36 +5,31 @@ within this file
 
 def get_neuron_params(NAME, name='', number=1, SI_units=False):
 
-    if NAME=='LIF':
+    BASE = NAME.split('_')[0]
+    VAR, VALS = NAME.split('_')[1::2], NAME.split('_')[2::2]
+    print(BASE, VAR, VALS)
+    if BASE=='LIF':
         params = {'name':name, 'N':number,\
                   'Gl':10., 'Cm':150.,'Trefrac':5.,\
-                  'El':-60., 'Vthre':-50., 'Vreset':-60., 'delta_v':0.,\
+                  'El':-65., 'Vthre':-50., 'Vreset':-65., 'delta_v':0.,\
                   'a':0., 'b': 0., 'tauw':1e9}
-    elif NAME=='EIF':
+    elif BASE=='EIF':
         params = {'name':name, 'N':number,\
                   'Gl':10., 'Cm':150.,'Trefrac':5.,\
                   'El':-60., 'Vthre':-50., 'Vreset':-60., 'delta_v':2.,\
                   'a':0., 'b':0., 'tauw':1e9}
-    elif NAME=='AdExp':
-        params = {'name':name, 'N':number,\
-                  'Gl':10., 'Cm':150.,'Trefrac':5.,\
-                  'El':-60., 'Vthre':-50., 'Vreset':-60., 'delta_v':2.,\
-                  'a':4., 'b':20., 'tauw':500.}
-    elif NAME=='FS-cell':
-        params = {'name':name, 'N':number,\
-                  'Gl':10., 'Cm':200.,'Trefrac':5.,\
-                  'El':-65., 'Vthre':-50., 'Vreset':-65., 'delta_v':0.5,\
-                  'a':0., 'b': 0., 'tauw':1e9}
-    elif NAME=='RS-cell':
+    elif BASE=='AdExp':
         params = {'name':name, 'N':number,\
                   'Gl':10., 'Cm':200.,'Trefrac':5.,\
                   'El':-65., 'Vthre':-50., 'Vreset':-65., 'delta_v':2.,\
                   'a':4., 'b':20., 'tauw':500.}
     else:
-        print('====================================================')
-        print('------------ CELL NOT RECOGNIZED !! ---------------')
-        print('====================================================')
+        raise NameError('/!\ Cell Name not recognized /!\ \n either not implemented or mis-typed !!')
 
+    ## POSSIBILITY TO CHANGE VALUES BY A 'FANCY' STRING INPUT !!
+    for var, val in zip(VAR, VALS):
+        print(var, ' changed to --> ', float(val))
+        params[var] = float(val)
 
     if SI_units:
         print('/!\ PASSING cell parameters in SI units /!\ ')
@@ -50,7 +45,6 @@ def get_neuron_params(NAME, name='', number=1, SI_units=False):
     else:
         print('/!\ cell parameters --NOT-- in SI units /!\ ')
 
-        
     return params.copy()
 
 if __name__=='__main__':
