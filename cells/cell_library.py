@@ -11,12 +11,12 @@ def get_neuron_params(NAME, name='', number=1, SI_units=False):
     if BASE=='LIF':
         params = {'name':name, 'N':number,\
                   'Gl':10., 'Cm':150.,'Trefrac':5.,\
-                  'El':-65., 'Vthre':-50., 'Vreset':-65., 'delta_v':0.,\
+                  'El':-60., 'Vthre':-50., 'Vreset':-60., 'delta_v':0.,\
                   'a':0., 'b': 0., 'tauw':1e9}
     elif BASE=='EIF':
         params = {'name':name, 'N':number,\
                   'Gl':10., 'Cm':150.,'Trefrac':5.,\
-                  'El':-60., 'Vthre':-50., 'Vreset':-60., 'delta_v':2.,\
+                  'El':-65., 'Vthre':-50., 'Vreset':-60., 'delta_v':2.,\
                   'a':0., 'b':0., 'tauw':1e9}
     elif BASE=='AdExp':
         params = {'name':name, 'N':number,\

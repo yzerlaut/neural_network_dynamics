@@ -49,6 +49,7 @@ def get_membrane_equation(neuron_params, synaptic_array,\
                                  reset='V='+str(neuron_params['Vreset'])+'*mV; w_adapt+='+str(neuron_params['b'])+'*pA')
                                  
 
+    print(eqs)
     if return_equations:
         return neurons, eqs
     else:
