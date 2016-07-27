@@ -4,6 +4,12 @@ This script connects the different synapses to a target neuron
 import brian2
 import numpy as np
 import itertools, string
+import sys
+sys.path.append('../')
+from cells.cell_library import get_neuron_params
+from cells.cell_construct import get_membrane_equation
+
+
 
 def build_up_recurrent_connections(Pops, M, SEED=1):
     """
@@ -26,11 +32,11 @@ def build_populations(NTWK, M, with_raster=False):
     sets up the neuronal populations
     """
     POPS = []
-    for ntwk, i in zip(NTWK, range(len(NTWK))):
+    for ntwk, ii in zip(NTWK, range(len(NTWK))):
         POPS.append(\
                     get_membrane_equation(\
                     get_neuron_params(ntwk['type'], number=ntwk['N']),
-                                          M[:,i]))
+                                          M[:,ii]))
     if with_raster:
         RASTER = []
         for pop in POPS:
@@ -50,20 +56,15 @@ def initialize_to_rest(POPS, NTWK):
     for ii, l in zip(range(len(POPS)), string.ascii_uppercase[:len(POPS)]):
         POPS[ii].V = get_neuron_params(NTWK[ii]['type'])['El']*brian2.mV
         for t in string.ascii_uppercase[:len(POPS)]:
-            exec("POPS[ii].G"+t+l+" = 0.*nS")
+            exec("POPS[ii].G"+t+l+" = 0.*brian2.nS")
 
         
 if __name__=='__main__':
 
     print(__doc__)
     
-    # starting from an example
-
-    import sys
-    sys.path.append('../')
-    from cells.cell_library import get_neuron_params
-    from cells.cell_construct import get_membrane_equation
     from syn_and_connec_library import get_connectivity_and_synapses_matrix
+    # starting from an example
     
     NTWK = [\
             {'name':'exc', 'N':4000, 'type':'LIF'},
