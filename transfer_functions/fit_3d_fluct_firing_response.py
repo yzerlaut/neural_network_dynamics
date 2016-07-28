@@ -8,7 +8,6 @@ from scipy.optimize import curve_fit, leastsq
 import scipy.special as sp_spec
 import statsmodels.api as sm
 
-    
 ## NORMALIZING COEFFICIENTS
 # needs to be global here, because used both in the function
 # and its derivatives
@@ -271,7 +270,8 @@ if __name__=='__main__':
     ,formatter_class=argparse.RawTextHelpFormatter)
     
     parser.add_argument("NEURON",\
-                        help="Choose a cell (e.g. 'cell1') or a model of neuron (e.g. 'LIF')", default='LIF')
+        help="Choose a cell (e.g. 'cell1') or a model of neuron (e.g. 'LIF')", default='LIF')
+    parser.add_argument("--NO_PLOT", help="do not plot", action="store_true")
 
     args = parser.parse_args()
     
@@ -283,15 +283,16 @@ if __name__=='__main__':
     P = fitting_Vthre_then_Fout(data['Fout'], 1e-3*data['muV'],\
                                 1e-3*data['sV'], data['TvN'],\
                                 data['muGn'], data['Gl'], data['Cm'],
-                                data['El'], print_things=True)
+                                data['El'], print_things=args.NO_PLOT)
 
-    ##### PLOTTING #####
-    # see plotting_tools.py
-    # need non SI units (electrophy units) !!!
-    FIG = make_3d_and_2d_figs(P,\
-            data['Fout'], data['s_Fout'], data['muV'],\
-            data['sV'], data['TvN'], data['muGn'],\
-            data['Gl'], data['Cm'], data['El'], args.NEURON)
-
-
-    plt.show()
+    if args.NO_PLOT:
+        np.save('data/'+args.NEURON+'_coeff.npy', P)
+    else:
+        ##### PLOTTING #####
+        # see plotting_tools.py
+        # need non SI units (electrophy units) !!!
+        FIG = make_3d_and_2d_figs(P,\
+                data['Fout'], data['s_Fout'], data['muV'],\
+                data['sV'], data['TvN'], data['muGn'],\
+                data['Gl'], data['Cm'], data['El'], args.NEURON)
+        plt.show()
