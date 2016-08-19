@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def heaviside(x):
     return 0.5*(1+np.sign(x))
 
