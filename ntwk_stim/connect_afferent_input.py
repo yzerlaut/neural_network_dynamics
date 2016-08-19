@@ -61,7 +61,7 @@ if __name__=='__main__':
         build_up_recurrent_connections,\
         initialize_to_rest
     from ntwk_build.syn_and_connec_library import get_connectivity_and_synapses_matrix
-    from waveform_input import double_gaussian
+    from waveform_library import double_gaussian
     
     DT, tstop =0.1, 100.
     brian2.defaultclock.dt = DT*brian2.ms

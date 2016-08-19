@@ -20,8 +20,8 @@ def get_connectivity_and_synapses_matrix(NAME, number=2, SI_units=False):
         for m in M[1,:]: m['pconn']=0.02;m['Q']=67.;m['Tsyn']=10.;m['Erev']=-80.
         
     elif NAME=='CONFIG1':
-        for m in M[:,0]: {'pconn':0.05, 'Q':1., 'Tsyn':5., 'Erev':0.}
-        for m in M[:,1]: {'pconn':0.05, 'Q':5., 'Tsyn':5., 'Erev':-80.}
+        for m in M[0,:]: m['pconn']=0.05;m['Q']=1.;m['Tsyn']=5.;m['Erev']=0.
+        for m in M[1,:]: m['pconn']=0.05;m['Q']=5.;m['Tsyn']=5.;m['Erev']=-80.
         
     else:
         print('====================================================')

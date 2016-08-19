@@ -10,7 +10,6 @@ from cells.cell_library import get_neuron_params
 from cells.cell_construct import get_membrane_equation
 
 
-
 def build_up_recurrent_connections(Pops, M, SEED=1):
     """
     Construct the synapses from the connectivity matrix
@@ -27,7 +26,7 @@ def build_up_recurrent_connections(Pops, M, SEED=1):
         CONN[ii,jj].w = M[ii,jj]['Q']*brian2.nS
     return CONN
 
-def build_populations(NTWK, M, with_raster=False):
+def build_populations(NTWK, M, with_raster=False, with_pop_act=False):
     """
     sets up the neuronal populations
     """
@@ -37,11 +36,21 @@ def build_populations(NTWK, M, with_raster=False):
                     get_membrane_equation(\
                     get_neuron_params(ntwk['type'], number=ntwk['N']),
                                           M[:,ii]))
+    if with_pop_act:
+        POP_ACT = []
+        for pop in POPS:
+            POP_ACT.append(brian2.PopulationRateMonitor(pop))
     if with_raster:
         RASTER = []
         for pop in POPS:
             RASTER.append(brian2.SpikeMonitor(pop))
+
+    if with_pop_act and with_raster:
+        return POPS, RASTER, POP_ACT
+    elif with_raster:
         return POPS, RASTER
+    elif with_pop_act:
+        return POPS, POP_ACT
     else:
         return POPS
 

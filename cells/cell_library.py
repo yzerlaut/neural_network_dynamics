@@ -15,7 +15,7 @@ def get_neuron_params(NAME, name='', number=1, SI_units=False):
                   'a':0., 'b': 0., 'tauw':1e9}
     elif BASE=='EIF':
         params = {'name':name, 'N':number,\
-                  'Gl':10., 'Cm':150.,'Trefrac':5.,\
+                  'Gl':10., 'Cm':200.,'Trefrac':5.,\
                   'El':-65., 'Vthre':-50., 'Vreset':-60., 'delta_v':1.,\
                   'a':0., 'b':0., 'tauw':1e9}
     elif BASE=='AdExp':
