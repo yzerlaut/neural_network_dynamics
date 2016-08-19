@@ -3,6 +3,7 @@ import numpy as np
 cdir = os.path.dirname(os.path.realpath(__file__))
 os.chdir('../../transfer_functions/')
 os.system('ls')
+
 discret = 10
 for vthre in np.linspace(-50, -54, discret):
     os.system('python run_3d_fluct_space_charact.py EIF_Vthre_'+\
