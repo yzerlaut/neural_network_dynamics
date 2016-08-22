@@ -93,13 +93,21 @@ if __name__=='__main__':
 
     net.run(tstop*brian2.ms)
 
-    # plotting 
-    fig1 = brian2.figure(figsize=(5,3.5))
-    brian2.plot(RASTER[0].t/brian2.ms, RASTER[0].i, '.g',\
-         RASTER[1].t/brian2.ms, RASTER[1].i+NTWK[0]['N'], '.r')
-    brian2.xlabel('Time (ms)');brian2.ylabel('Neuron index')
+    plot_code="""
+    fig = plt.figure(figsize=(5,3.5))
+    plt.plot(data['exc_spk_times'], data['exc_spk_ids'], '.g',\
+          data['inh_spk_times'],\
+          data['inh_spk_ids']+data['NTWK'][0]['N'], '.r')
+    plt.xlabel('Time (ms)');plt.ylabel('Neuron index')
+    """
     
-    fig1.savefig('fig.png')
+    np.savez('data.npz',\
+             NTWK=NTWK, M=M, AFF=AFFERENCE_ARRAY,\
+             exc_spk_times=RASTER[0].t/brian2.ms,\
+             exc_spk_ids=RASTER[0].i,\
+             inh_spk_times=RASTER[1].t/brian2.ms,\
+             inh_spk_ids=RASTER[1].i, plot=plot_code)
+
 
     
 
