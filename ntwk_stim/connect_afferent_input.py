@@ -93,7 +93,7 @@ if __name__=='__main__':
 
     net.run(tstop*brian2.ms)
 
-    plot_code="fig=plt.figure(figsize=(5,3.5));plt.plot(data['exc_spk_times'],data['exc_spk_ids'],'.g',data['inh_spk_times'],data['inh_spk_ids']+data['NTWK'][0]['N'],'.r');plt.xlabel('Time(ms)');plt.ylabel('Neuron index')"
+    plot_code="\"fig=plt.figure(figsize=(5,3.5));plt.plot(data['exc_spk_times'],data['exc_spk_ids'],'.g',data['inh_spk_times'],data['inh_spk_ids']+data['NTWK'][0]['N'],'.r');plt.xlabel('Time(ms)');plt.ylabel('Neuron index')\""
     
     np.savez('data.npz',\
              NTWK=NTWK, M=M, AFF=AFFERENCE_ARRAY,\
