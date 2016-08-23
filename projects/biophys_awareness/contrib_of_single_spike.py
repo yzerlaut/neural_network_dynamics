@@ -27,7 +27,7 @@ def run_sim(args):
                        {'Q':1., 'N':400, 'pconn':0.1}]
     rate_array = ramp_rise_then_constant(t_array, 0., 10., 0, args.f_ext)
     
-    EXC_ACTS, INH_ACTS = [], []
+    EXC_ACTS, INH_ACTS, SPK_TIMES, SPK_IDS = [], [], [], []
 
     for seed in range(1, args.nsim+1):
 
@@ -42,7 +42,7 @@ def run_sim(args):
                                                              rate_array,\
                                                              pop_for_conductance='A',
                                                              SEED=seed)
-        SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed)
+        SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
 
         # Then single spike addition
         # spikes tergetting randomly one neuron in the network
@@ -64,17 +64,33 @@ def run_sim(args):
                                        width=args.smoothing*brian2.ms)/brian2.Hz)
         INH_ACTS.append(POP_ACT[1].smooth_rate(window='flat',\
                                        width=args.smoothing*brian2.ms)/brian2.Hz)
+        SPK_TIMES.append(spike_times)
+        SPK_IDS.append(spike_ids)
         
     np.savez(args.filename, args=args, EXC_ACTS=np.array(EXC_ACTS),
              INH_ACTS=np.array(INH_ACTS), NTWK=NTWK, t_array=t_array,
              rate_array=rate_array, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
-             spike_times=spike_times, spike_ids=spike_ids,
+             SPK_IDS=SPK_IDS, SPK_TIMES=SPK_TIMES,
              plot=get_plotting_instructions())
 
 def get_plotting_instructions():
     
     plot_data="""
-fig, AX = plt.subplots(2, 1, figsize=(5,7));data = np.load('data.npz');AX[0].plot(data['t_array'], data['rate_array'], 'b');AX[0].plot(data['t_array'], data['EXC_ACTS'].mean(axis=0), 'g');AX[0].plot(data['t_array'], data['INH_ACTS'].mean(axis=0), 'r');int_spk_times=np.array(data['spike_times']/data['args'].all().DT, dtype=int)
+args = data['args'].all()
+fig, AX = plt.subplots(2, 1, figsize=(5,7))
+data = np.load('data.npz')
+AX[0].plot(data['t_array'], data['rate_array'], 'b')
+AX[0].plot(data['t_array'], data['EXC_ACTS'].mean(axis=0), 'g')
+AX[0].plot(data['t_array'], data['INH_ACTS'].mean(axis=0), 'r')
+t_zoom = np.linspace(-10, 30, int(40/args.DT)+1)
+trace, counter = 0.*t_zoom, 0
+for spike_times, exc_act in zip(data['SPK_TIMES'], data['EXC_ACTS']):
+    for t_spk in spike_times:
+        i_spk = int(t_spk/args.DT)
+        counter +=1
+        trace += exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[1]/args.DT)+1]
+        AX[1].plot(t_zoom, exc_act[i_spk+], 'k-', lw=.5)
+AX[1].plot(t_zoom, trace/counter, 'k-', lw=2)
 """
 
     return plot_data
@@ -91,7 +107,7 @@ if __name__=='__main__':
     # simulation parameters
     parser.add_argument("--DT",help="simulation time step (ms)",type=float, default=0.1)
     parser.add_argument("--tstop",help="simulation duration (ms)",type=float, default=200.)
-    parser.add_argument("--nsim",help="number of simulations (different seeds used)", type=int, default=5)
+    parser.add_argument("--nsim",help="number of simulations (different seeds used)", type=int, default=1)
     parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",type=float, default=0.5)
     # network architecture
     parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
