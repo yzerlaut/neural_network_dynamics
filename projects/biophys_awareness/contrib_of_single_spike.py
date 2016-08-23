@@ -51,7 +51,7 @@ def run_sim(args):
         spike_ids = np.random.randint(POPS[0].N, size=Nspikes)
         INPUT_SPIKES = brian2.SpikeGeneratorGroup(POPS[0].N, spike_ids, spike_times*brian2.ms) # targetting purely exc pop
         
-        FEEDFORWARD = brian2.Synapses(INPUT_SPIKES, POPS[0], on_pre='Gee_post += w', model='w:siemens')
+        FEEDFORWARD = brian2.Synapses(INPUT_SPIKES, POPS[0], on_pre='GAA_post += w', model='w:siemens')
         FEEDFORWARD.connect(j='i')
         FEEDFORWARD.w=M[0,0]['Q']*brian2.nS
         
@@ -73,7 +73,7 @@ def run_sim(args):
 
 def get_plotting_instructions():
     
-    plot_data="fig, AX = plt.subplots(2, 1, figsize=(5,7));data = np.load('data.npz');plt.plot(data['t_array'], data['rate_array'], 'b');plt.plot(data['t_array'], data['EXC_ACTS'].mean(axis=0), 'g');plt.plot(data['t_array'], data['INH_ACTS'].mean(axis=0), 'r')"
+    plot_data="fig, AX = plt.subplots(2, 1, figsize=(5,7));data = np.load('data.npz');AX[0].plot(data['t_array'], data['rate_array'], 'b');AX[0].plot(data['t_array'], data['EXC_ACTS'].mean(axis=0), 'g');AX[0].plot(data['t_array'], data['INH_ACTS'].mean(axis=0), 'r');int_spk_times=np.array(data['spike_times']/data['args'].dt, dtype=int)"
 
     return plot_data
 
