@@ -53,7 +53,7 @@ def run_sim(args):
         
         FEEDFORWARD = brian2.Synapses(INPUT_SPIKES, POPS[0], on_pre='Gee_post += w', model='w:siemens')
         FEEDFORWARD.connect(j='i')
-        FEEDFORWARD.w=M[0,0]['Q']*nS
+        FEEDFORWARD.w=M[0,0]['Q']*brian2.nS
         
         net = brian2.Network(brian2.collect())
         # manually add the generated quantities
@@ -68,6 +68,7 @@ def run_sim(args):
     np.savez(args.filename, args=args, EXC_ACTS=np.array(EXC_ACTS),
              INH_ACTS=np.array(INH_ACTS), NTWK=NTWK, t_array=t_array,
              rate_array=rate_array, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
+             spike_times=spike_times, spike_ids=spike_ids,
              plot=get_plotting_instructions())
 
 def get_plotting_instructions():
