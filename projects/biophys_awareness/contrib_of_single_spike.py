@@ -60,15 +60,7 @@ def run_sim(args):
         INH_ACTS.append(POP_ACT[1].smooth_rate(window='flat',\
                                        width=args.smoothing*brian2.ms)/brian2.Hz)
         
-    plot_data="""
-    import matplotlib.pylab as plt
-    from common_libraries.graphs.my_graph import set_plot
-    fig = plt.figure(figsize=(5,3.5))
-    data = np.load('data.npz')
-    plt.plot(data['t_array'], data['rate_array'], 'b')
-    plt.plot(data['t_array'], data['EXC_ACTS'].mean(axis=0), 'g')
-    plt.plot(data['t_array'], data['INH_ACTS'].mean(axis=0), 'r')
-    """
+    plot_data="fig = plt.figure(figsize=(5,3.5));data = np.load('data.npz');plt.plot(data['t_array'], data['rate_array'], 'b');plt.plot(data['t_array'], data['EXC_ACTS'].mean(axis=0), 'g');plt.plot(data['t_array'], data['INH_ACTS'].mean(axis=0), 'r')"
     
     np.savez('data.npz', args=args, EXC_ACTS=np.array(EXC_ACTS),
              INH_ACTS=np.array(INH_ACTS), NTWK=NTWK, t_array=t_array,
