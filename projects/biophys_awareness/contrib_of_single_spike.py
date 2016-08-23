@@ -45,7 +45,7 @@ def run_sim(args):
         SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed)
 
         # Then single spike addition
-        input_spike = SpikeGeneratorGroup(POPS[0].N, [0], [args.spiketime])
+        # input_spike = brian2.SpikeGeneratorGroup(POPS[0].N, [0], [args.spiketime])
         # fdfrwd_to_inh = Synapses(input_inh, inh_neurons, pre='Gei_post += w',\
         #                          model='w:siemens', connect='i==j')
         # fdfrwd_to_inh.w=P[0,1]['Q']*nS
@@ -91,13 +91,15 @@ if __name__=='__main__':
     parser.add_argument("--DT",help="simulation time step (ms)",\
                         type=float, default=0.1)
     parser.add_argument("--tstop",help="simulation duration (ms)",\
-                        type=float, default=0.1)
+                        type=float, default=100.)
     parser.add_argument("--stim_start",\
                         help="time of the start for the additional spike (ms)",\
                         type=float, default=50.)
     parser.add_argument("--stim_delay",\
                         help="we multiply the single spike on the trial at this (ms)",\
                         type=float, default=50.)
+    parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
+    parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
                         action="store_true")
     parser.add_argument("-p", "--plot", help="plot the figures",
@@ -105,10 +107,3 @@ if __name__=='__main__':
     args = parser.parse_args()
 
     run_sim(args)
-
-
-        
-        
-        
-        
-
