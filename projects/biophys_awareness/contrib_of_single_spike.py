@@ -64,12 +64,16 @@ def run_sim(args):
         INH_ACTS.append(POP_ACT[1].smooth_rate(window='flat',\
                                        width=args.smoothing*brian2.ms)/brian2.Hz)
         
-    plot_data="fig = plt.figure(figsize=(5,3.5));data = np.load('data.npz');plt.plot(data['t_array'], data['rate_array'], 'b');plt.plot(data['t_array'], data['EXC_ACTS'].mean(axis=0), 'g');plt.plot(data['t_array'], data['INH_ACTS'].mean(axis=0), 'r')"
-    
-    np.savez('data.npz', args=args, EXC_ACTS=np.array(EXC_ACTS),
+    np.savez(args.filename, args=args, EXC_ACTS=np.array(EXC_ACTS),
              INH_ACTS=np.array(INH_ACTS), NTWK=NTWK, t_array=t_array,
              rate_array=rate_array, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
-             plot=plot_data)
+             plot=get_plotting_instructions())
+
+def get_plotting_instructions():
+    
+    plot_data="fig, AX = plt.subplots(2, 1, figsize=(5,7));data = np.load('data.npz');plt.plot(data['t_array'], data['rate_array'], 'b');plt.plot(data['t_array'], data['EXC_ACTS'].mean(axis=0), 'g');plt.plot(data['t_array'], data['INH_ACTS'].mean(axis=0), 'r')"
+
+    return plot_data
 
 if __name__=='__main__':
     import argparse
@@ -94,7 +98,13 @@ if __name__=='__main__':
     parser.add_argument("--stim_delay",help="we multiply the single spike on the trial at this (ms)",type=float, default=50.)
     parser.add_argument("--stim_jitter",help="we jitter the spike times with a gaussian distrib (ms)",type=float, default=5.)
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
-    parser.add_argument("-p", "--plot", help="plot the figures", action="store_true")
+    parser.add_argument("-u", "--update_plot", help="plot the figures", action="store_true")
+    parser.add_argument("--filename", '-f', help="filename",type=str, default='data.npz')
     args = parser.parse_args()
 
-    run_sim(args)
+    if args.update_plot:
+        data = dict(np.load(args.filename))
+        data['plot'] = get_plotting_instructions()
+        np.savez(args.filename, **data)
+    else:
+        run_sim(args)
