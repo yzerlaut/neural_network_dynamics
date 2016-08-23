@@ -45,14 +45,18 @@ def run_sim(args):
         SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed)
 
         # Then single spike addition
-        input_spike = brian2.SpikeGeneratorGroup(POPS[0].N, [0], [args.spiketime])
-        # fdfrwd_to_inh = Synapses(input_inh, inh_neurons, pre='Gei_post += w',\
-        #                          model='w:siemens', connect='i==j')
-        # fdfrwd_to_inh.w=P[0,1]['Q']*nS
+        # spikes tergetting randomly one neuron in the network
+        Nspikes = int((args.tstop-args.stim_start)/args.stim_delay)
+        spike_times = args.stim_start+np.arange(Nspikes)*args.stim_delay+np.random.randn(Nspikes)*args.stim_jitter
+        spike_ids = np.random.randint(POPS[0].N, size=Nspikes)
+        INPUT_SPIKES = brian2.SpikeGeneratorGroup(POPS[0].N, spike_ids, spike_times) # targetting purely exc pop
+        
+        FEEDFORWARD = Synapses(INPUT_SPIKES, POPS[0], pre='Gee_post += w', model='w:siemens', connect='i==j')
+        FEEDFORWARD.w=P[0,0]['Q']*nS
         
         net = brian2.Network(brian2.collect())
         # manually add the generated quantities
-        net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES) 
+        net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES, FEEDFORWARD, INPUT_SPIKES) 
         net.run(args.tstop*brian2.ms)
 
         EXC_ACTS.append(POP_ACT[0].smooth_rate(window='flat',\
@@ -78,7 +82,7 @@ if __name__=='__main__':
 
     # simulation parameters
     parser.add_argument("--DT",help="simulation time step (ms)",type=float, default=0.1)
-    parser.add_argument("--tstop",help="simulation duration (ms)",type=float, default=100.)
+    parser.add_argument("--tstop",help="simulation duration (ms)",type=float, default=200.)
     parser.add_argument("--nsim",help="number of simulations (different seeds used)", type=int, default=5)
     parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",type=float, default=0.5)
     # network architecture
