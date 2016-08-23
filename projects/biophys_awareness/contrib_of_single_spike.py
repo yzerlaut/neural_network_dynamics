@@ -51,7 +51,7 @@ def run_sim(args):
         spike_ids = np.random.randint(POPS[0].N, size=Nspikes)
         INPUT_SPIKES = brian2.SpikeGeneratorGroup(POPS[0].N, spike_ids, spike_times*brian2.ms) # targetting purely exc pop
         
-        FEEDFORWARD = Synapses(INPUT_SPIKES, POPS[0], pre='Gee_post += w', model='w:siemens', connect='i==j')
+        FEEDFORWARD = brian2.Synapses(INPUT_SPIKES, POPS[0], pre='Gee_post += w', model='w:siemens', connect='i==j')
         FEEDFORWARD.w=P[0,0]['Q']*nS
         
         net = brian2.Network(brian2.collect())
