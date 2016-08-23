@@ -53,7 +53,7 @@ def run_sim(args):
         net = brian2.Network(brian2.collect())
         # manually add the generated quantities
         net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES) 
-        net.run(tstop*brian2.ms)
+        net.run(args.tstop*brian2.ms)
 
         EXC_ACTS.append(POP_ACT[0].smooth_rate(window='flat',\
                                        width=args.smoothing*brian2.ms)/brian2.Hz)
