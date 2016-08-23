@@ -25,7 +25,7 @@ def run_sim(args):
             {'name':'inh', 'N':args.Ni, 'type':'EIF'}]
     AFFERENCE_ARRAY = [{'Q':1., 'N':400, 'pconn':0.1},
                        {'Q':1., 'N':400, 'pconn':0.1}]
-    rate_array = ramp_rise_then_constant(t_array, 0., 50., 0., 20.)
+    rate_array = ramp_rise_then_constant(t_array, 0., 30., 0., args.f_ext)
     
     EXC_ACTS, INH_ACTS = [], []
 
@@ -84,6 +84,7 @@ if __name__=='__main__':
                         type=float, default=0.1)
     parser.add_argument("--tstop",help="simulation duration (ms)",\
                         type=float, default=100.)
+    parser.add_argument("--f_ext",help="external drive (Hz)",type=float, default=10.)
     parser.add_argument("--stim_start",\
                         help="time of the start for the additional spike (ms)",\
                         type=float, default=50.)
