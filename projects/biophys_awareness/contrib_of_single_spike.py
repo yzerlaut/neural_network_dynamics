@@ -49,7 +49,7 @@ def run_sim(args):
         Nspikes = int((args.tstop-args.stim_start)/args.stim_delay)
         spike_times = args.stim_start+np.arange(Nspikes)*args.stim_delay+np.random.randn(Nspikes)*args.stim_jitter
         spike_ids = np.random.randint(POPS[0].N, size=Nspikes)
-        INPUT_SPIKES = brian2.SpikeGeneratorGroup(POPS[0].N, spike_ids, spike_times) # targetting purely exc pop
+        INPUT_SPIKES = brian2.SpikeGeneratorGroup(POPS[0].N, spike_ids, spike_times*brian2.ms) # targetting purely exc pop
         
         FEEDFORWARD = Synapses(INPUT_SPIKES, POPS[0], pre='Gee_post += w', model='w:siemens', connect='i==j')
         FEEDFORWARD.w=P[0,0]['Q']*nS
