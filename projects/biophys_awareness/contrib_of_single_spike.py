@@ -21,10 +21,10 @@ def run_sim(args):
     t_array = np.arange(int(args.tstop/args.DT))*args.DT
 
     NTWK = [{'name':'exc', 'N':args.Ne, 'type':'AdExp'},
-            {'name':'inh', 'N':args.Ni, 'type':'EIF'}]
+            {'name':'inh', 'N':args.Ni, 'type':'LIF'}]
     AFFERENCE_ARRAY = [{'Q':1., 'N':4000, 'pconn':0.05},
                        {'Q':1., 'N':1000, 'pconn':0.05}]
-    rate_array = ramp_rise_then_constant(t_array, 0., 10., 0, args.f_ext)
+    rate_array = ramp_rise_then_constant(t_array, 0., 50., 0, args.f_ext)
     
     EXC_ACTS, INH_ACTS, SPK_TIMES, SPK_IDS = [], [], [], []
 
@@ -111,7 +111,7 @@ if __name__=='__main__':
     # network architecture
     parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
     parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
-    parser.add_argument("--f_ext",help="external drive (Hz)",type=float, default=10.)
+    parser.add_argument("--f_ext",help="external drive (Hz)",type=float, default=5.)
     # stimulation (single spike) properties
     parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)", type=float, default=100.)
     parser.add_argument("--stim_delay",help="we multiply the single spike on the trial at this (ms)",type=float, default=50.)
