@@ -14,7 +14,6 @@ from ntwk_stim.waveform_library import double_gaussian, ramp_rise_then_constant
 from ntwk_stim.connect_afferent_input import construct_feedforward_input
 
 
-
 def run_sim(args):
     ### SIMULATION PARAMETERS
 
@@ -23,8 +22,8 @@ def run_sim(args):
 
     NTWK = [{'name':'exc', 'N':args.Ne, 'type':'AdExp'},
             {'name':'inh', 'N':args.Ni, 'type':'EIF'}]
-    AFFERENCE_ARRAY = [{'Q':1., 'N':400, 'pconn':0.1},
-                       {'Q':1., 'N':400, 'pconn':0.1}]
+    AFFERENCE_ARRAY = [{'Q':1., 'N':4000, 'pconn':0.05},
+                       {'Q':1., 'N':1000, 'pconn':0.05}]
     rate_array = ramp_rise_then_constant(t_array, 0., 10., 0, args.f_ext)
     
     EXC_ACTS, INH_ACTS, SPK_TIMES, SPK_IDS = [], [], [], []
@@ -74,8 +73,7 @@ def run_sim(args):
              plot=get_plotting_instructions())
 
 def get_plotting_instructions():
-    
-    plot_data="""
+    return """
 args = data['args'].all()
 fig, AX = plt.subplots(2, 1, figsize=(5,7))
 data = np.load('data.npz')
@@ -94,7 +92,7 @@ AX[1].plot(t_zoom, trace/counter, 'k-', lw=2)
 set_plot(AX[0], xlabel='time (ms)', ylabel='pop. act. (Hz)')
 set_plot(AX[1], xlabel='time lag (ms)', ylabel='pop. act. (Hz)')
 """
-    return plot_data
+
 
 if __name__=='__main__':
     import argparse
