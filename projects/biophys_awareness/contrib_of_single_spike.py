@@ -73,7 +73,9 @@ def run_sim(args):
 
 def get_plotting_instructions():
     
-    plot_data="fig, AX = plt.subplots(2, 1, figsize=(5,7));data = np.load('data.npz');AX[0].plot(data['t_array'], data['rate_array'], 'b');AX[0].plot(data['t_array'], data['EXC_ACTS'].mean(axis=0), 'g');AX[0].plot(data['t_array'], data['INH_ACTS'].mean(axis=0), 'r');int_spk_times=np.array(data['spike_times']/data['args'].dt, dtype=int)"
+    plot_data="""
+fig, AX = plt.subplots(2, 1, figsize=(5,7));data = np.load('data.npz');AX[0].plot(data['t_array'], data['rate_array'], 'b');AX[0].plot(data['t_array'], data['EXC_ACTS'].mean(axis=0), 'g');AX[0].plot(data['t_array'], data['INH_ACTS'].mean(axis=0), 'r');int_spk_times=np.array(data['spike_times']/data['args'].all().DT, dtype=int)
+"""
 
     return plot_data
 
