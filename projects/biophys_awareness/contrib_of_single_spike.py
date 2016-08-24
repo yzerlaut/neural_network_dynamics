@@ -47,12 +47,13 @@ def run_sim(args):
         # spikes tergetting randomly one neuron in the network
         Nspikes = int((args.tstop-args.stim_start)/args.stim_delay)
         spike_times = args.stim_start+np.arange(Nspikes)*args.stim_delay+np.random.randn(Nspikes)*args.stim_jitter
+        print(spike_times)
         spike_ids = np.random.randint(POPS[0].N, size=Nspikes)
         INPUT_SPIKES = brian2.SpikeGeneratorGroup(POPS[0].N, spike_ids, spike_times*brian2.ms) # targetting purely exc pop
         
         FEEDFORWARD = brian2.Synapses(INPUT_SPIKES, POPS[0], on_pre='GAA_post += w', model='w:siemens')
         FEEDFORWARD.connect(j='i')
-        FEEDFORWARD.w=M[0,0]['Q']*brian2.nS
+        FEEDFORWARD.w=args.Qe_spike*brian2.nS
         
         net = brian2.Network(brian2.collect())
         # manually add the generated quantities
@@ -83,7 +84,9 @@ AX[0].plot(data['t_array'], data['INH_ACTS'].mean(axis=0), 'r')
 t_zoom = np.linspace(-10, 30, int(40/args.DT)+1)
 trace, counter = 0.*t_zoom, 0
 for spike_times, exc_act in zip(data['SPK_TIMES'], data['EXC_ACTS']):
+    print(spike_times)
     for t_spk in spike_times:
+        print(t_spk)
         i_spk = int(t_spk/args.DT)
         counter +=1
         trace += exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1]
