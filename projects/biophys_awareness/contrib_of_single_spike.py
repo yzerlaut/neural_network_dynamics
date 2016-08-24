@@ -87,7 +87,7 @@ for spike_times, exc_act in zip(data['SPK_TIMES'], data['EXC_ACTS']):
         i_spk = int(t_spk/args.DT)
         counter +=1
         trace += exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1]
-        AX[1].plot(t_zoom, exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1], 'k-', lw=.5)
+        AX[1].plot(t_zoom, exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1], '-', color='gray', lw=.1)
 AX[1].plot(t_zoom, trace/counter, 'k-', lw=2)
 set_plot(AX[0], xlabel='time (ms)', ylabel='pop. act. (Hz)')
 set_plot(AX[1], xlabel='time lag (ms)', ylabel='pop. act. (Hz)')
