@@ -120,7 +120,7 @@ if __name__=='__main__':
     parser.add_argument("--stim_delay",help="we multiply the single spike on the trial at this (ms)",type=float, default=50.)
     parser.add_argument("--stim_jitter",help="we jitter the spike times with a gaussian distrib (ms)",type=float, default=5.)
     parser.add_argument("--Qe_spike", help="weight of additional excitatory spike", type=float, default=1.)
-    parser.add_argument("--duplicate_spike", help="we duplicate the spike over neurons", type=int, default=1)
+    parser.add_argument("--duplicate_spikes", help="we duplicate the spike over neurons", type=int, default=1)
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
     parser.add_argument("-u", "--update_plot", help="plot the figures", action="store_true")
     parser.add_argument("--filename", '-f', help="filename",type=str, default='data.npz')
