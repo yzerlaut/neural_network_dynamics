@@ -47,7 +47,8 @@ def run_sim(args):
         # spikes tergetting randomly one neuron in the network
         Nspikes = int((args.tstop-args.stim_start)/args.stim_delay)
         spike_times = args.stim_start+np.arange(Nspikes)*args.stim_delay+np.random.randn(Nspikes)*args.stim_jitter
-        spike_ids = np.random.randint(POPS[0].N, size=Nspikes)
+        spike_times = np.sort(np.meshgrid(spike_times, np.ones(args.duplicate_spikes))[0])
+        spike_ids = np.random.randint(POPS[0].N, size=Nspikes*args.duplicate_spikes)
         INPUT_SPIKES = brian2.SpikeGeneratorGroup(POPS[0].N, spike_ids, spike_times*brian2.ms) # targetting purely exc pop
         
         FEEDFORWARD = brian2.Synapses(INPUT_SPIKES, POPS[0], on_pre='GAA_post += w', model='w:siemens')
@@ -119,6 +120,7 @@ if __name__=='__main__':
     parser.add_argument("--stim_delay",help="we multiply the single spike on the trial at this (ms)",type=float, default=50.)
     parser.add_argument("--stim_jitter",help="we jitter the spike times with a gaussian distrib (ms)",type=float, default=5.)
     parser.add_argument("--Qe_spike", help="weight of additional excitatory spike", type=float, default=1.)
+    parser.add_argument("--duplicate_spike", help="we duplicate the spike over neurons", type=int, default=1)
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
     parser.add_argument("-u", "--update_plot", help="plot the figures", action="store_true")
     parser.add_argument("--filename", '-f', help="filename",type=str, default='data.npz')
