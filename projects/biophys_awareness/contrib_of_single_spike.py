@@ -48,7 +48,7 @@ def run_sim(args):
         Nspikes = int((args.tstop-args.stim_start)/args.stim_delay)
         spike_times = args.stim_start+np.arange(Nspikes)*args.stim_delay+np.random.randn(Nspikes)*args.stim_jitter
         spike_times = np.sort(np.meshgrid(spike_times, np.ones(args.duplicate_spikes))[0].flatten())
-        spike_ids = np.empty()
+        spike_ids = np.empty(0)
         for ii in range(args.duplicate_spikes):
             # spike_ids.append(np.random.randint(POPS[0].N, size=Nspikes))
             # non repetitive ids
