@@ -52,7 +52,7 @@ def run_sim(args):
         for ii in range(args.duplicate_spikes):
             # spike_ids.append(np.random.randint(POPS[0].N, size=Nspikes))
             # non repetitive ids
-            spike_ids.append(np.random.shuffle(np.arange(POPS[0].N))[:Nspikes])
+            spike_ids.append(np.random.choice(np.arange(POPS[0].N), Nspikes, replace=False))
             
         spike_ids = np.array(spike_ids).flatten()
 
