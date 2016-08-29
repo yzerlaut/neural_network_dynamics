@@ -50,7 +50,10 @@ def run_sim(args):
         spike_times = np.sort(np.meshgrid(spike_times, np.ones(args.duplicate_spikes))[0].flatten())
         spike_ids = []
         for ii in range(args.duplicate_spikes):
-            spike_ids.append(np.random.randint(POPS[0].N, size=Nspikes))
+            # spike_ids.append(np.random.randint(POPS[0].N, size=Nspikes))
+            # non repetitive ids
+            spike_ids.append(np.random.shuffle(np.arange(POPS[0].N))[:Nspikes])
+            
         spike_ids = np.array(spike_ids).flatten()
 
         INPUT_SPIKES = brian2.SpikeGeneratorGroup(POPS[0].N, spike_ids, spike_times*brian2.ms) # targetting purely exc pop
@@ -89,7 +92,7 @@ t_zoom = np.linspace(-10, 30, int(40/args.DT)+1)
 trace, counter = 0.*t_zoom, 0
 for spike_times, exc_act in zip(data['SPK_TIMES'], data['EXC_ACTS']):
     print(spike_times)
-    for t_spk in spike_times:
+    for t_spk in spike_times.unique():
         print(t_spk)
         i_spk = int(t_spk/args.DT)
         counter +=1
