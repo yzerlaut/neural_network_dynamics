@@ -48,14 +48,12 @@ def run_sim(args):
         Nspikes = int((args.tstop-args.stim_start)/args.stim_delay)
         spike_times = args.stim_start+np.arange(Nspikes)*args.stim_delay+np.random.randn(Nspikes)*args.stim_jitter
         spike_times = np.sort(np.meshgrid(spike_times, np.ones(args.duplicate_spikes))[0].flatten())
-        spike_ids = np.empty(0)
+        spike_ids = np.empty(0, dtype=int)
         for ii in range(args.duplicate_spikes):
-            # spike_ids.append(np.random.randint(POPS[0].N, size=Nspikes))
             # non repetitive ids
             spike_ids = np.concatenate([spike_ids, np.random.choice(np.arange(POPS[0].N), Nspikes, replace=False)])
-            
-        # spike_ids = np.array(spike_ids).flatten()
 
+        print(spike_times, spike_ids)
         INPUT_SPIKES = brian2.SpikeGeneratorGroup(POPS[0].N, spike_ids, spike_times*brian2.ms) # targetting purely exc pop
         
         FEEDFORWARD = brian2.Synapses(INPUT_SPIKES, POPS[0], on_pre='GAA_post += w', model='w:siemens')
@@ -68,9 +66,9 @@ def run_sim(args):
         net.run(args.tstop*brian2.ms)
 
         EXC_ACTS.append(POP_ACT[0].smooth_rate(window='flat',\
-                                       width=args.smoothing*brian2.ms)/brian2.Hz)
+                                               width=args.smoothing*brian2.ms)/brian2.Hz)
         INH_ACTS.append(POP_ACT[1].smooth_rate(window='flat',\
-                                       width=args.smoothing*brian2.ms)/brian2.Hz)
+                                               width=args.smoothing*brian2.ms)/brian2.Hz)
         SPK_TIMES.append(spike_times)
         SPK_IDS.append(spike_ids)
         
