@@ -36,13 +36,13 @@ def run_sim(args):
 
         initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
 
-        # AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS,
-        #                                                      AFFERENCE_ARRAY,\
-        #                                                      t_array,
-        #                                                      rate_array,\
-        #                                                      pop_for_conductance='A',
-        #                                                      SEED=seed)
-        # SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
+        AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS,
+                                                             AFFERENCE_ARRAY,\
+                                                             t_array,
+                                                             rate_array,\
+                                                             pop_for_conductance='A',
+                                                             SEED=seed)
+        SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
 
         # Then single spike addition
         # spikes tergetting randomly one neuron in the network
@@ -62,7 +62,7 @@ def run_sim(args):
         FEEDFORWARD.w=args.Qe_spike*brian2.nS
         
         net = brian2.Network(brian2.collect())
-        manually add the generated quantities
+        # manually add the generated quantities
         net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES, FEEDFORWARD, INPUT_SPIKES) 
         net.run(args.tstop*brian2.ms)
 
