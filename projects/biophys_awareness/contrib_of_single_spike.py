@@ -54,8 +54,8 @@ def run_sim(args):
             # non repetitive ids
             spike_ids = np.concatenate([spike_ids, np.random.choice(np.arange(POPS[0].N), Nspikes, replace=False)])
 
-        print(spike_ids, spike_times)
-        find_coincident_duplicates_in_two_arrays(spike_ids, spike_times, with_ids=True)
+        # print(spike_ids, spike_times)
+        # find_coincident_duplicates_in_two_arrays(spike_ids, spike_times, with_ids=True)
         
         INPUT_SPIKES = brian2.SpikeGeneratorGroup(POPS[0].N, spike_ids, spike_times*brian2.ms) # targetting purely exc pop
         
