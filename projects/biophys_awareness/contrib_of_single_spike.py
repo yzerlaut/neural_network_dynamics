@@ -12,7 +12,7 @@ from ntwk_build.syn_and_connec_construct import build_populations,\
 from ntwk_build.syn_and_connec_library import get_connectivity_and_synapses_matrix
 from ntwk_stim.waveform_library import double_gaussian, ramp_rise_then_constant
 from ntwk_stim.connect_afferent_input import construct_feedforward_input
-from common_libraries.array_funcs import find_coincident_duplicates_in_two_arrays
+from common_libraries.data_analysis.array_funcs import find_coincident_duplicates_in_two_arrays
 
 
 def run_sim(args):
