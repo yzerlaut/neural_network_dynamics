@@ -85,16 +85,15 @@ def get_plotting_instructions():
     return """
 args = data['args'].all()
 fig, AX = plt.subplots(2, 1, figsize=(5,7))
-data = np.load('data.npz')
+plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
+data = np.load(args.filename)
 AX[0].plot(data['t_array'], data['rate_array'], 'b')
 AX[0].plot(data['t_array'], data['EXC_ACTS'].mean(axis=0), 'g')
 AX[0].plot(data['t_array'], data['INH_ACTS'].mean(axis=0), 'r')
 t_zoom = np.linspace(-10, 30, int(40/args.DT)+1)
 trace, counter = 0.*t_zoom, 0
 for spike_times, exc_act in zip(data['SPK_TIMES'], data['EXC_ACTS']):
-    print(spike_times)
-    for t_spk in spike_times.unique():
-        print(t_spk)
+    for t_spk in np.unique(spike_times):
         i_spk = int(t_spk/args.DT)
         counter +=1
         trace += exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1]
