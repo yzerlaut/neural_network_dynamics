@@ -36,27 +36,25 @@ def run_sim(args):
 
         initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
 
-        AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS,
-                                                             AFFERENCE_ARRAY,\
-                                                             t_array,
-                                                             rate_array,\
-                                                             pop_for_conductance='A',
-                                                             SEED=seed)
-        SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
+        # AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS,
+        #                                                      AFFERENCE_ARRAY,\
+        #                                                      t_array,
+        #                                                      rate_array,\
+        #                                                      pop_for_conductance='A',
+        #                                                      SEED=seed)
+        # SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
 
         # Then single spike addition
         # spikes tergetting randomly one neuron in the network
         Nspikes = int((args.tstop-args.stim_start)/args.stim_delay)
         spike_times = args.stim_start+np.arange(Nspikes)*args.stim_delay+np.random.randn(Nspikes)*args.stim_jitter
-        spike_times = np.sort(np.meshgrid(spike_times, np.ones(args.duplicate_spikes))[0].flatten())
         spike_ids = np.empty(0, dtype=int)
-        for ii in range(args.duplicate_spikes):
+        Spk_times = np.empty(0, dtype=int)
+        for ii in range(len(spike_times)):
             # non repetitive ids
-            spike_ids = np.concatenate([spike_ids, np.random.choice(np.arange(POPS[0].N), Nspikes, replace=False)])
+            spike_ids = np.concatenate([spike_ids, np.random.choice(np.arange(POPS[0].N), args.duplicate_spikes, replace=False)])
 
-        # print(spike_ids, spike_times)
-        # find_coincident_duplicates_in_two_arrays(spike_ids, spike_times, with_ids=True)
-        
+        spike_times = np.sort(np.meshgrid(spike_times, np.ones(args.duplicate_spikes))[0].flatten())
         INPUT_SPIKES = brian2.SpikeGeneratorGroup(POPS[0].N, spike_ids, spike_times*brian2.ms) # targetting purely exc pop
         
         FEEDFORWARD = brian2.Synapses(INPUT_SPIKES, POPS[0], on_pre='GAA_post += w', model='w:siemens')
@@ -64,7 +62,7 @@ def run_sim(args):
         FEEDFORWARD.w=args.Qe_spike*brian2.nS
         
         net = brian2.Network(brian2.collect())
-        # manually add the generated quantities
+        manually add the generated quantities
         net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES, FEEDFORWARD, INPUT_SPIKES) 
         net.run(args.tstop*brian2.ms)
 
@@ -86,7 +84,6 @@ def get_plotting_instructions():
 args = data['args'].all()
 fig, AX = plt.subplots(2, 1, figsize=(5,7))
 plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
-data = np.load(args.filename)
 AX[0].plot(data['t_array'], data['rate_array'], 'b')
 AX[0].plot(data['t_array'], data['EXC_ACTS'].mean(axis=0), 'g')
 AX[0].plot(data['t_array'], data['INH_ACTS'].mean(axis=0), 'r')
