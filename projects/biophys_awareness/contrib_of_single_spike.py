@@ -84,9 +84,9 @@ def get_plotting_instructions():
 args = data['args'].all()
 fig, AX = plt.subplots(2, 1, figsize=(5,7))
 plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
-AX[0].plot(data['t_array'], data['rate_array'], 'b')
-AX[0].plot(data['t_array'], data['EXC_ACTS'].mean(axis=0), 'g')
-AX[0].plot(data['t_array'], data['INH_ACTS'].mean(axis=0), 'r')
+AX[0].plot(data['t_array'][-1000:], data['rate_array'][-1000:], 'b')
+AX[0].plot(data['t_array'][-1000:], data['EXC_ACTS'].mean(axis=0)[-1000:], 'g')
+AX[0].plot(data['t_array'][-1000:], data['INH_ACTS'].mean(axis=0)[-1000:], 'r')
 t_zoom = np.linspace(-10, 30, int(40/args.DT)+1)
 trace, counter = 0.*t_zoom, 0
 for spike_times, exc_act in zip(data['SPK_TIMES'], data['EXC_ACTS']):
@@ -94,7 +94,8 @@ for spike_times, exc_act in zip(data['SPK_TIMES'], data['EXC_ACTS']):
         i_spk = int(t_spk/args.DT)
         counter +=1
         trace += exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1]
-        # AX[1].plot(t_zoom, exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1], '-', color='gray', lw=.1)
+        if counter%int(data['SPK_TIMES'].shape[0]*len(spike_times)/20)==0:
+            AX[1].plot(t_zoom, exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1], '-', color='gray', lw=0.2)
 AX[1].plot(t_zoom, trace/counter, 'k-', lw=2)
 set_plot(AX[0], xlabel='time (ms)', ylabel='pop. act. (Hz)')
 set_plot(AX[1], xlabel='time lag (ms)', ylabel='pop. act. (Hz)')
