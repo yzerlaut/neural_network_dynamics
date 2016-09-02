@@ -32,6 +32,11 @@ def run_sim(args):
     for seed in range(1, args.nsim+1):
 
         M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK))
+        if args.Qe!=0:
+            M[0,0]['Q'], M[0,1]['Q'] = args.Qe, args.Qe
+        if args.Qi!=0:
+            M[1,0]['Q'], M[1,1]['Q'] = args.Qi, args.Qi
+            
         POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True, with_pop_act=True)
 
         initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
@@ -120,6 +125,8 @@ if __name__=='__main__':
     # network architecture
     parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
     parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
+    parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=0.)
+    parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=0.)
     parser.add_argument("--f_ext",help="external drive (Hz)",type=float, default=4.)
     # stimulation (single spike) properties
     parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)", type=float, default=100.)
