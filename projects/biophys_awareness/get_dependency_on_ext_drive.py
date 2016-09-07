@@ -28,7 +28,7 @@ def run_sim(args):
     
     EXC_ACTS, INH_ACTS, SPK_TIMES, SPK_IDS = [], [], [], []
 
-    for f_ext, seed in zip(np.linspace(fext_min, fext_max, nsim),\
+    for f_ext, seed in zip(np.linspace(args.fext_min, args.fext_max, args.nsim),\
                            range(1, args.nsim+1)):
 
         rate_array = ramp_rise_then_constant(t_array, 0., 50., 0, f_ext)
@@ -88,24 +88,15 @@ def run_sim(args):
 def get_plotting_instructions():
     return """
 args = data['args'].all()
-fig, AX = plt.subplots(2, 1, figsize=(5,7))
+fig, AX = plt.subplots(1, figsize=(5,3))
 plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
-AX[0].plot(data['t_array'][-1000:], data['rate_array'][-1000:], 'b')
-AX[0].plot(data['t_array'][-1000:], data['EXC_ACTS'].mean(axis=0)[-1000:], 'g')
-AX[0].plot(data['t_array'][-1000:], data['INH_ACTS'].mean(axis=0)[-1000:], 'r')
-t_zoom = np.linspace(-10, 30, int(40/args.DT)+1)
-trace, counter = 0.*t_zoom, 0
-for spike_times, exc_act in zip(data['SPK_TIMES'], data['EXC_ACTS']):
-    i_plot = int(data['SPK_TIMES'].shape[0]*len(np.unique(spike_times))/20)
-    for t_spk in np.unique(spike_times):
-        i_spk = int(t_spk/args.DT)
-        counter +=1
-        trace += exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1]
-        if counter%i_plot==0:
-            AX[1].plot(t_zoom, exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1], '-', color='gray', lw=0.2)
-AX[1].plot(t_zoom, trace/counter, 'k-', lw=2)
-set_plot(AX[0], xlabel='time (ms)', ylabel='pop. act. (Hz)')
-set_plot(AX[1], xlabel='time lag (ms)', ylabel='pop. act. (Hz)')
+f_ext = np.linspace(args.fext_min, args.fext_max, args.nsim)
+mean_exc_freq = []
+for exc_act in data['EXC_ACTS']:
+    print(exc_act[int(args.tstop/2/args.DT)+1:].mean())
+    mean_exc_freq.append(exc_act[int(args.tstop/2/args.DT)+1:].mean())
+AX.plot(f_ext, mean_exc_freq, 'k-')
+set_plot(AX, xlabel='drive freq. (Hz)', ylabel='mean exc. (Hz)')
 """
 
 
@@ -121,7 +112,7 @@ if __name__=='__main__':
     # simulation parameters
     parser.add_argument("--DT",help="simulation time step (ms)",type=float, default=0.1)
     parser.add_argument("--tstop",help="simulation duration (ms)",type=float, default=200.)
-    parser.add_argument("--nsim",help="number of simulations (different seeds used)", type=int, default=1)
+    parser.add_argument("--nsim",help="number of simulations (different seeds used)", type=int, default=3)
     parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",type=float, default=0.5)
     # network architecture
     parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
@@ -131,11 +122,6 @@ if __name__=='__main__':
     parser.add_argument("--fext_min",help="min external drive (Hz)",type=float, default=1.)
     parser.add_argument("--fext_max",help="min external drive (Hz)",type=float, default=6.)
     # stimulation (single spike) properties
-    parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)", type=float, default=100.)
-    parser.add_argument("--stim_delay",help="we multiply the single spike on the trial at this (ms)",type=float, default=50.)
-    parser.add_argument("--stim_jitter",help="we jitter the spike times with a gaussian distrib (ms)",type=float, default=5.)
-    parser.add_argument("--Qe_spike", help="weight of additional excitatory spike", type=float, default=1.)
-    parser.add_argument("--duplicate_spikes", help="we duplicate the spike over neurons", type=int, default=1)
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
     parser.add_argument("-u", "--update_plot", help="plot the figures", action="store_true")
     parser.add_argument("--filename", '-f', help="filename",type=str, default='data.npz')
