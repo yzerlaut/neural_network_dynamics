@@ -25,43 +25,52 @@ def run_sim(args):
     AFFERENCE_ARRAY = [{'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn},
                        {'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn}]
     
-    EXC_ACTS, INH_ACTS, SPK_TIMES, SPK_IDS = [], [], [], []
+    EXC_ACTS_ACTIVE, INH_ACTS_ACTIVE = [], []
+    EXC_ACTS_REST, INH_ACTS_REST = [], []
+    
+    for EXC_ACTS, INH_ACTS, FEXT in zip([EXC_ACTS_ACTIVE, EXC_ACTS_REST],\
+                                        [INH_ACTS_ACTIVE, INH_ACTS_REST],\
+                                        [0, args.fext]):
+        for f_ext, seed in zip(np.linspace(args.fext_min, args.fext_max, args.nsim),\
+                               range(1, args.nsim+1)):
+            rate_array = ramp_rise_then_constant(t_array, 0., 0., 0, FEXT)+\
+                         double_gaussian(t_array, args.stim_start,\
+                                         args.stim_T0, args.stim_T1, f_ext)
 
-    for f_ext, seed in zip(np.linspace(args.fext_min, args.fext_max, args.nsim),\
-                           range(1, args.nsim+1)):
+            M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK))
+            if args.Qe!=0:
+                M[0,0]['Q'], M[0,1]['Q'] = args.Qe, args.Qe
+            if args.Qi!=0:
+                M[1,0]['Q'], M[1,1]['Q'] = args.Qi, args.Qi
 
-        rate_array = ramp_rise_then_constant(t_array, 0., 0., 0, f_ext)
-        M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK))
-        if args.Qe!=0:
-            M[0,0]['Q'], M[0,1]['Q'] = args.Qe, args.Qe
-        if args.Qi!=0:
-            M[1,0]['Q'], M[1,1]['Q'] = args.Qi, args.Qi
-            
-        POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True,\
-                                                  with_pop_act=True)
+            POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True,\
+                                                      with_pop_act=True)
 
-        initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
+            initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
 
-        AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS,
-                                                             AFFERENCE_ARRAY,\
-                                                             t_array,
-                                                             rate_array,\
-                                                             pop_for_conductance='A',
-                                                             SEED=seed)
-        SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
+            AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS,
+                                                                 AFFERENCE_ARRAY,\
+                                                                 t_array,
+                                                                 rate_array,\
+                                                                 pop_for_conductance='A',
+                                                                 SEED=seed)
+            SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
 
-        net = brian2.Network(brian2.collect())
-        # manually add the generated quantities
-        net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES) 
-        net.run(args.tstop*brian2.ms)
+            net = brian2.Network(brian2.collect())
+            # manually add the generated quantities
+            net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES) 
+            net.run(args.tstop*brian2.ms)
 
-        EXC_ACTS.append(POP_ACT[0].smooth_rate(window='flat',\
-                                             width=args.smoothing*brian2.ms)/brian2.Hz)
-        INH_ACTS.append(POP_ACT[1].smooth_rate(window='flat',\
-                                             width=args.smoothing*brian2.ms)/brian2.Hz)
-    np.savez(args.filename, args=args, EXC_ACTS=np.array(EXC_ACTS),
-             INH_ACTS=np.array(INH_ACTS), NTWK=NTWK, t_array=t_array,
-             rate_array=rate_array, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
+            EXC_ACTS.append(POP_ACT[0].smooth_rate(window='flat',\
+                                                 width=args.smoothing*brian2.ms)/brian2.Hz)
+            INH_ACTS.append(POP_ACT[1].smooth_rate(window='flat',\
+                                                 width=args.smoothing*brian2.ms)/brian2.Hz)
+    np.savez(args.filename, args=args,
+             EXC_ACTS_ACTIVE=np.array(EXC_ACTS_ACTIVE),
+             INH_ACTS_ACTIVE=np.array(INH_ACTS_ACTIVE),
+             EXC_ACTS_REST=np.array(EXC_ACTS_REST),
+             INH_ACTS_REST=np.array(INH_ACTS_REST),
+             NTWK=NTWK, t_array=t_array,
              plot=get_plotting_instructions())
 
 def get_plotting_instructions():
@@ -100,10 +109,14 @@ if __name__=='__main__':
     parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
     parser.add_argument("--pconn", help="connection proba", type=float, default=0.05)
     parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=1.)
-    parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=4.)
+    parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=3.)
     parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=5.)
+    parser.add_argument("--fext",help="baseline external drive (Hz)",type=float,default=8.)
     parser.add_argument("--fext_min",help="min external drive (Hz)",type=float, default=1.)
     parser.add_argument("--fext_max",help="min external drive (Hz)",type=float, default=6.)
+    parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)", type=float, default=100.)
+    parser.add_argument("--stim_T0",help="we multiply the single spike on the trial at this (ms)",type=float, default=20.)
+    parser.add_argument("--stim_T1",help="we multiply the single spike on the trial at this (ms)",type=float, default=50.)
     # stimulation (single spike) properties
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
     parser.add_argument("-u", "--update_plot", help="plot the figures", action="store_true")
