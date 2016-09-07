@@ -17,14 +17,13 @@ from common_libraries.data_analysis.array_funcs import find_coincident_duplicate
 
 def run_sim(args):
     ### SIMULATION PARAMETERS
-
     brian2.defaultclock.dt = args.DT*brian2.ms
     t_array = np.arange(int(args.tstop/args.DT))*args.DT
 
     NTWK = [{'name':'exc', 'N':args.Ne, 'type':'AdExp'},
             {'name':'inh', 'N':args.Ni, 'type':'LIF'}]
-    AFFERENCE_ARRAY = [{'Q':args.Qe_ff, 'N':args.Ne, 'pconn':0.05},
-                       {'Q':args.Qe_ff, 'N':args.Ne, 'pconn':0.05}]
+    AFFERENCE_ARRAY = [{'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn},
+                       {'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn}]
     
     EXC_ACTS, INH_ACTS, SPK_TIMES, SPK_IDS = [], [], [], []
 
@@ -99,6 +98,7 @@ if __name__=='__main__':
     # network architecture
     parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
     parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
+    parser.add_argument("--pconn", help="connection proba", type=float, default=0.05)
     parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=1.)
     parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=4.)
     parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=5.)
