@@ -21,7 +21,7 @@ def run_sim(args):
     t_array = np.arange(int(args.tstop/args.DT))*args.DT
 
     NTWK = [{'name':'exc', 'N':args.Ne, 'type':'AdExp'},
-            {'name':'inh', 'N':args.Ni, 'type':'LIF'}]
+            {'name':'inh', 'N':args.Ni, 'type':'EIF'}]
     AFFERENCE_ARRAY = [{'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn},
                        {'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn}]
     
@@ -84,11 +84,11 @@ i1 = min([int((args.stim_start+3.*args.stim_T1)/args.DT), len(data['t_array'])-1
 for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE'], data['EXC_ACTS_REST']):
     active_resp.append(exc_act_active[i0:i1].mean()-exc_act_active[i1:].mean())
     rest_resp.append(exc_act_rest[i0:i1].mean()-exc_act_rest[i1:].mean())
-    AX[1].plot(data['t_array'], exc_act_rest, 'k-')
+    AX[1].plot(data['t_array'], exc_act_rest, 'b-')
     AX[1].plot(data['t_array'], exc_act_active, 'b-')
 for inh_act_active, inh_act_rest  in zip(data['INH_ACTS_ACTIVE'], data['INH_ACTS_REST']):
-    AX[1].plot(data['t_array'], inh_act_rest, 'k-')
-    AX[1].plot(data['t_array'], inh_act_active, 'b-')
+    AX[1].plot(data['t_array'], inh_act_rest, 'r-')
+    AX[1].plot(data['t_array'], inh_act_active, 'r-')
 AX[0].plot(f_ext, active_resp, 'b-')
 AX[0].plot(f_ext, rest_resp, 'k-')
 AX[0].plot(rest_resp, rest_resp, 'k--')
