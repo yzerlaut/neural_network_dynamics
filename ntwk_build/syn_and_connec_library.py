@@ -12,7 +12,7 @@ def get_connectivity_and_synapses_matrix(NAME, number=2, SI_units=False):
     M = np.empty((number, number), dtype=object)
     # default initialisation
     for i, j in itertools.product(range(number), range(number)):
-        M[i, j] = {'pconn':0.02, 'Q':67., 'Tsyn':10., 'Erev':-80.,\
+        M[i, j] = {'pconn': 0., 'Q': 1., 'Tsyn': 5., 'Erev': 0.,\
                    'name':string.ascii_uppercase[i]+string.ascii_uppercase[j]}
 
     if NAME=='Vogels-Abbott':
@@ -37,7 +37,6 @@ def get_connectivity_and_synapses_matrix(NAME, number=2, SI_units=False):
     else:
         print('synaptic network parameters --NOT-- in SI units')
 
-    print(M)
     return M
 
 if __name__=='__main__':
