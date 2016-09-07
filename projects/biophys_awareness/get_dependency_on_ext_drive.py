@@ -56,9 +56,9 @@ def run_sim(args):
         net.run(args.tstop*brian2.ms)
 
         EXC_ACTS.append(POP_ACT[0].smooth_rate(window='flat',\
-                                               width=args.smoothing*brian2.ms)/brian2.Hz)
+                                             width=args.smoothing*brian2.ms)/brian2.Hz)
         INH_ACTS.append(POP_ACT[1].smooth_rate(window='flat',\
-                                               width=args.smoothing*brian2.ms)/brian2.Hz)
+                                             width=args.smoothing*brian2.ms)/brian2.Hz)
     np.savez(args.filename, args=args, EXC_ACTS=np.array(EXC_ACTS),
              INH_ACTS=np.array(INH_ACTS), NTWK=NTWK, t_array=t_array,
              rate_array=rate_array, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
