@@ -33,8 +33,7 @@ def run_sim(args):
                                         [0, args.fext]):
         for f_ext, seed in zip(np.linspace(args.fext_min, args.fext_max, args.nsim),\
                                range(1, args.nsim+1)):
-            rate_array = ramp_rise_then_constant(t_array, 0., 0., 0, FEXT)+\
-                         double_gaussian(t_array, args.stim_start,\
+            rate_array = FEXT + double_gaussian(t_array, args.stim_start,\
                                          args.stim_T0, args.stim_T1, f_ext)
 
             M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK))
