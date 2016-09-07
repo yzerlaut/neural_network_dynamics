@@ -50,26 +50,9 @@ def run_sim(args):
                                                              SEED=seed)
         SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
 
-        # Then single spike addition
-        # spikes tergetting randomly one neuron in the network
-        Nspikes = int((args.tstop-args.stim_start)/args.stim_delay)
-        spike_times = args.stim_start+np.arange(Nspikes)*args.stim_delay+np.random.randn(Nspikes)*args.stim_jitter
-        spike_ids = np.empty(0, dtype=int)
-        Spk_times = np.empty(0, dtype=int)
-        for ii in range(len(spike_times)):
-            # non repetitive ids
-            spike_ids = np.concatenate([spike_ids, np.random.choice(np.arange(POPS[0].N), args.duplicate_spikes, replace=False)])
-
-        spike_times = np.sort(np.meshgrid(spike_times, np.ones(args.duplicate_spikes))[0].flatten())
-        INPUT_SPIKES = brian2.SpikeGeneratorGroup(POPS[0].N, spike_ids, spike_times*brian2.ms) # targetting purely exc pop
-        
-        FEEDFORWARD = brian2.Synapses(INPUT_SPIKES, POPS[0], on_pre='GAA_post += w', model='w:siemens')
-        FEEDFORWARD.connect('i==j')
-        FEEDFORWARD.w=args.Qe_spike*brian2.nS
-        
         net = brian2.Network(brian2.collect())
         # manually add the generated quantities
-        net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES, FEEDFORWARD, INPUT_SPIKES) 
+        net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES) 
         net.run(args.tstop*brian2.ms)
 
         EXC_ACTS.append(POP_ACT[0].smooth_rate(window='flat',\
@@ -82,7 +65,6 @@ def run_sim(args):
     np.savez(args.filename, args=args, EXC_ACTS=np.array(EXC_ACTS),
              INH_ACTS=np.array(INH_ACTS), NTWK=NTWK, t_array=t_array,
              rate_array=rate_array, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
-             SPK_IDS=SPK_IDS, SPK_TIMES=SPK_TIMES,
              plot=get_plotting_instructions())
 
 def get_plotting_instructions():
