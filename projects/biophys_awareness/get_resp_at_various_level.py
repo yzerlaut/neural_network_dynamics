@@ -116,7 +116,7 @@ if __name__=='__main__':
     parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=5.)
     parser.add_argument("--fext",help="baseline external drive (Hz)",type=float,default=8.)
     parser.add_argument("--fext_min",help="min external drive (Hz)",type=float, default=0.)
-    parser.add_argument("--fext_max",help="min external drive (Hz)",type=float, default=30.)
+    parser.add_argument("--fext_max",help="min external drive (Hz)",type=float, default=7.)
     parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)", type=float, default=100.)
     parser.add_argument("--stim_T0",help="we multiply the single spike on the trial at this (ms)",type=float, default=10.)
     parser.add_argument("--stim_T1",help="we multiply the single spike on the trial at this (ms)",type=float, default=20.)
