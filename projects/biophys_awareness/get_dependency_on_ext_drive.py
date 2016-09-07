@@ -23,8 +23,8 @@ def run_sim(args):
 
     NTWK = [{'name':'exc', 'N':args.Ne, 'type':'AdExp'},
             {'name':'inh', 'N':args.Ni, 'type':'LIF'}]
-    AFFERENCE_ARRAY = [{'Q':args.Qe, 'N':args.Ne, 'pconn':0.05},
-                       {'Q':args.Qe, 'N':args.Ni, 'pconn':0.05}]
+    AFFERENCE_ARRAY = [{'Q':1., 'N':args.Ne, 'pconn':0.05},
+                       {'Q':1., 'N':args.Ni, 'pconn':0.05}]
     
     EXC_ACTS, INH_ACTS, SPK_TIMES, SPK_IDS = [], [], [], []
 
@@ -35,10 +35,12 @@ def run_sim(args):
         M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK))
         if args.Qe!=0:
             M[0,0]['Q'], M[0,1]['Q'] = args.Qe, args.Qe
+            AFFERENCE_ARRAY[0]['Q'], AFFERENCE_ARRAY[1]['Q'] = args.Qe, args.Qe
         if args.Qi!=0:
             M[1,0]['Q'], M[1,1]['Q'] = args.Qi, args.Qi
             
-        POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True, with_pop_act=True)
+        POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True,\
+                                                  with_pop_act=True)
 
         initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
 
@@ -67,15 +69,16 @@ def run_sim(args):
 def get_plotting_instructions():
     return """
 args = data['args'].all()
-fig, AX = plt.subplots(1, figsize=(5,3))
+fig, AX = plt.subplots(2, figsize=(5,3))
 plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
 f_ext = np.linspace(args.fext_min, args.fext_max, args.nsim)
 mean_exc_freq = []
 for exc_act in data['EXC_ACTS']:
     print(exc_act[int(args.tstop/2/args.DT)+1:].mean())
     mean_exc_freq.append(exc_act[int(args.tstop/2/args.DT)+1:].mean())
-AX.plot(f_ext, mean_exc_freq, 'k-')
-set_plot(AX, xlabel='drive freq. (Hz)', ylabel='mean exc. (Hz)')
+    AX[1].plot(exc_act)
+AX[0].plot(f_ext, mean_exc_freq, 'k-')
+set_plot(AX[0], xlabel='drive freq. (Hz)', ylabel='mean exc. (Hz)')
 """
 
 
