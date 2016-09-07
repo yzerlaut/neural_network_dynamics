@@ -24,7 +24,7 @@ def run_sim(args):
     NTWK = [{'name':'exc', 'N':args.Ne, 'type':'AdExp'},
             {'name':'inh', 'N':args.Ni, 'type':'LIF'}]
     AFFERENCE_ARRAY = [{'Q':1., 'N':args.Ne, 'pconn':0.05},
-                       {'Q':1., 'N':args.Ni, 'pconn':0.05}]
+                       {'Q':1., 'N':args.Ne, 'pconn':0.05}]
     
     EXC_ACTS, INH_ACTS, SPK_TIMES, SPK_IDS = [], [], [], []
 
