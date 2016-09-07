@@ -86,6 +86,9 @@ for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE'], data['EXC_ACTS
     rest_resp.append(exc_act_rest[i0:i1].mean()-exc_act_rest[i1:].mean())
     AX[1].plot(data['t_array'], exc_act_rest, 'k-')
     AX[1].plot(data['t_array'], exc_act_active, 'b-')
+for inh_act_active, inh_act_rest  in zip(data['INH_ACTS_ACTIVE'], data['INH_ACTS_REST']):
+    AX[1].plot(data['t_array'], inh_act_rest, 'k-')
+    AX[1].plot(data['t_array'], inh_act_active, 'b-')
 AX[0].plot(f_ext, active_resp, 'b-')
 AX[0].plot(f_ext, rest_resp, 'k-')
 AX[0].plot(rest_resp, rest_resp, 'k--')
