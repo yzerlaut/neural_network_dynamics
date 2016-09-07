@@ -75,16 +75,19 @@ def run_sim(args):
 def get_plotting_instructions():
     return """
 args = data['args'].all()
-fig, AX = plt.subplots(2, figsize=(5,3))
+fig, AX = plt.subplots(2, figsize=(10,3))
 plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
 f_ext = np.linspace(args.fext_min, args.fext_max, args.nsim)
-mean_exc_freq = []
-for exc_act in data['EXC_ACTS']:
-    print(exc_act[int(args.tstop/2/args.DT)+1:].mean())
-    mean_exc_freq.append(exc_act[int(args.tstop/2/args.DT)+1:].mean())
-    AX[1].plot(exc_act)
-AX[0].plot(f_ext, mean_exc_freq, 'k-')
-AX[0].plot(mean_exc_freq, mean_exc_freq, 'k--')
+active_resp, rest_resp = [], []
+i0 = int((args.stim_start-2.*args.stim_T0)/args.DT)
+i1 = min([int((args.stim_start+3.*args.stim_T1)/args.DT), len(data['t_array'])-10])
+for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE'], data['EXC_ACTS_REST']):
+    active_resp.append(exc_act_active[i0:i1].mean()-exc_act_active[i1:].mean())
+    rest_resp.append(exc_act_rest[i0:i1].mean()-exc_act_rest[i1:].mean())
+    AX[1].plot(data['t_array'], exc_act_rest, 'k-')
+    AX[1].plot(data['t_array'], exc_act_active, 'b-')
+AX[0].plot(f_ext, active_resp, 'b-')
+AX[0].plot(f_ext, rest_resp, 'k-')
 set_plot(AX[0], xlabel='drive freq. (Hz)', ylabel='mean exc. (Hz)')
 """
 
@@ -111,11 +114,11 @@ if __name__=='__main__':
     parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=3.)
     parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=5.)
     parser.add_argument("--fext",help="baseline external drive (Hz)",type=float,default=8.)
-    parser.add_argument("--fext_min",help="min external drive (Hz)",type=float, default=1.)
-    parser.add_argument("--fext_max",help="min external drive (Hz)",type=float, default=6.)
+    parser.add_argument("--fext_min",help="min external drive (Hz)",type=float, default=0.)
+    parser.add_argument("--fext_max",help="min external drive (Hz)",type=float, default=30.)
     parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)", type=float, default=100.)
-    parser.add_argument("--stim_T0",help="we multiply the single spike on the trial at this (ms)",type=float, default=20.)
-    parser.add_argument("--stim_T1",help="we multiply the single spike on the trial at this (ms)",type=float, default=50.)
+    parser.add_argument("--stim_T0",help="we multiply the single spike on the trial at this (ms)",type=float, default=10.)
+    parser.add_argument("--stim_T1",help="we multiply the single spike on the trial at this (ms)",type=float, default=20.)
     # stimulation (single spike) properties
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
     parser.add_argument("-u", "--update_plot", help="plot the figures", action="store_true")
