@@ -23,8 +23,8 @@ def run_sim(args):
 
     NTWK = [{'name':'exc', 'N':args.Ne, 'type':'AdExp'},
             {'name':'inh', 'N':args.Ni, 'type':'LIF'}]
-    AFFERENCE_ARRAY = [{'Q':1., 'N':args.Ne, 'pconn':0.05},
-                       {'Q':1., 'N':args.Ne, 'pconn':0.05}]
+    AFFERENCE_ARRAY = [{'Q':args.Qe_ff, 'N':args.Ne, 'pconn':0.05},
+                       {'Q':args.Qe_ff, 'N':args.Ne, 'pconn':0.05}]
     
     EXC_ACTS, INH_ACTS, SPK_TIMES, SPK_IDS = [], [], [], []
 
@@ -35,7 +35,6 @@ def run_sim(args):
         M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK))
         if args.Qe!=0:
             M[0,0]['Q'], M[0,1]['Q'] = args.Qe, args.Qe
-            AFFERENCE_ARRAY[0]['Q'], AFFERENCE_ARRAY[1]['Q'] = args.Qe, args.Qe
         if args.Qi!=0:
             M[1,0]['Q'], M[1,1]['Q'] = args.Qi, args.Qi
             
@@ -78,6 +77,7 @@ for exc_act in data['EXC_ACTS']:
     mean_exc_freq.append(exc_act[int(args.tstop/2/args.DT)+1:].mean())
     AX[1].plot(exc_act)
 AX[0].plot(f_ext, mean_exc_freq, 'k-')
+AX[0].plot(mean_exc_freq, mean_exc_freq, 'k--')
 set_plot(AX[0], xlabel='drive freq. (Hz)', ylabel='mean exc. (Hz)')
 """
 
@@ -99,8 +99,9 @@ if __name__=='__main__':
     # network architecture
     parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
     parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
-    parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=0.)
-    parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=0.)
+    parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=1.)
+    parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=4.)
+    parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=5.)
     parser.add_argument("--fext_min",help="min external drive (Hz)",type=float, default=1.)
     parser.add_argument("--fext_max",help="min external drive (Hz)",type=float, default=6.)
     # stimulation (single spike) properties
