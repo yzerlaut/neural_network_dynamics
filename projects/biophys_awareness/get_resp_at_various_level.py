@@ -75,7 +75,7 @@ def run_sim(args):
 def get_plotting_instructions():
     return """
 args = data['args'].all()
-fig, AX = plt.subplots(2, figsize=(10,3))
+fig, AX = plt.subplots(2, figsize=(7,7))
 plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
 f_ext = np.linspace(args.fext_min, args.fext_max, args.nsim)
 active_resp, rest_resp = [], []
@@ -88,6 +88,7 @@ for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE'], data['EXC_ACTS
     AX[1].plot(data['t_array'], exc_act_active, 'b-')
 AX[0].plot(f_ext, active_resp, 'b-')
 AX[0].plot(f_ext, rest_resp, 'k-')
+AX[0].plot(rest_resp, rest_resp, 'k--')
 set_plot(AX[0], xlabel='drive freq. (Hz)', ylabel='mean exc. (Hz)')
 """
 
