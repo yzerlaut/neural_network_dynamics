@@ -82,17 +82,17 @@ if __name__=='__main__':
                         type=float, default=400.)
     parser.add_argument("-c", "--color", help="color of the plot",
                         default='k')
-    parser.add_argument("-s", "--save", help="save the figures",
-                        action="store_true")
+    parser.add_argument("--save", help="save the figures with a given string")
     args = parser.parse_args()
-    
-    neurons, eqs = get_membrane_equation(get_neuron_params(args.NRN), [],\
-                                       return_equations=True)
+
+    params = get_neuron_params(args.NRN)
+    neurons, eqs = get_membrane_equation(params, [],\
+                                         return_equations=True)
 
     fig, ax = plt.subplots(figsize=(5,3))
     
     # V value initialization
-    neurons.V = -65.*mV
+    neurons.V = params['El']*mV
     trace = StateMonitor(neurons, 'V', record=0)
     spikes = SpikeMonitor(neurons)
     run(100 * ms)
@@ -109,14 +109,18 @@ if __name__=='__main__':
 
     ax.set_title(args.NRN)
 
-    ax.annotate('-65mV', (-50,-70))
-    ax.plot([-20], [-65], 'k>')
+    ax.annotate(str(int(params['El']))+'mV', (-50,params['El']-5))
+    ax.plot([-20], [params['El']], 'k>')
     ax.plot([0,50], [-50, -50], 'k-', lw=4)
     ax.plot([0,0], [-50, -40], 'k-', lw=4)
     ax.annotate('10mV', (-50,-38))
     ax.annotate('50ms', (0,-55))
     set_plot(ax, [], xticks=[], yticks=[])
-    fig.savefig('fig.png', dpi=100)
+    if args.save is None:
+        fig.savefig('fig.png', dpi=100)
+    else:
+        fig.savefig(args.save)
+        
     
 
     
