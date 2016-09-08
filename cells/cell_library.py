@@ -6,7 +6,7 @@ within this file
 def get_neuron_params(NAME, name='', number=1, SI_units=False, verbose=True):
 
     BASE = NAME.split('_')[0]
-    VAR, VALS = NAME.split('_')[1::2], NAME.split('_')[2::2]
+    VAR, VALS = NAME.split('_')[1::2], NAME.split('_')[2::2] # to change parameters
 
     if BASE=='LIF':
         params = {'name':name, 'N':number,\

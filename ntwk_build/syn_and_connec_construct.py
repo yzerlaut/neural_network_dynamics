@@ -17,8 +17,7 @@ def build_up_recurrent_connections(Pops, M, SEED=1):
     CONN = np.empty((len(Pops), len(Pops)), dtype=object)
 
     brian2.seed(SEED)
-    # file = open('connectivity_code.py', 'w')
-    # file.write('seed('+str(SEED)+') \n')
+
     for ii, jj in itertools.product(range(len(Pops)), range(len(Pops))):
         CONN[ii,jj] = brian2.Synapses(Pops[ii], Pops[jj], model='w:siemens',\
                                on_pre='G'+M[ii,jj]['name']+'_post+=w')

@@ -30,7 +30,8 @@ def run_sim(args):
     for f_ext, seed in zip(np.linspace(args.fext_min, args.fext_max, args.nsim),\
                            range(1, args.nsim+1)):
 
-        rate_array = ramp_rise_then_constant(t_array, 0., 0., 0, f_ext)
+        print('[initializing simulation ...]')
+        rate_array = f_ext+0.*t_array
         M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK))
         if args.Qe!=0:
             M[0,0]['Q'], M[0,1]['Q'] = args.Qe, args.Qe
@@ -53,7 +54,9 @@ def run_sim(args):
         net = brian2.Network(brian2.collect())
         # manually add the generated quantities
         net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES) 
+        print('[running simulation ...]')
         net.run(args.tstop*brian2.ms)
+        print('[simulation done -> saving output]')
 
         EXC_ACTS.append(POP_ACT[0].smooth_rate(window='flat',\
                                              width=args.smoothing*brian2.ms)/brian2.Hz)
@@ -101,7 +104,6 @@ if __name__=='__main__':
     parser.add_argument("--pconn", help="connection proba", type=float, default=0.05)
     parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=0.)
     parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=0.)
-    parser.add_argument("--f_ext",help="external drive (Hz)",type=float, default=4.)
     parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=2.)
     parser.add_argument("--fext_min",help="min external drive (Hz)",type=float, default=0.5)
     parser.add_argument("--fext_max",help="min external drive (Hz)",type=float, default=10.)

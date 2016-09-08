@@ -18,6 +18,7 @@ from common_libraries.data_analysis.array_funcs import find_coincident_duplicate
 def run_sim(args):
     ### SIMULATION PARAMETERS
 
+    print('[initializing simulation ...]')
     brian2.defaultclock.dt = args.DT*brian2.ms
     t_array = np.arange(int(args.tstop/args.DT))*args.DT
 
@@ -52,7 +53,9 @@ def run_sim(args):
     net = brian2.Network(brian2.collect())
     # manually add the generated quantities
     net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES, EXC_SPIKES, INH_SPIKES) 
+    print('[running simulation ...]')
     net.run(args.tstop*brian2.ms)
+    print('[simulation done -> saving output]')
 
     EXC_ACTS = POP_ACT[0].smooth_rate(window='flat',\
                                            width=args.smoothing*brian2.ms)/brian2.Hz
