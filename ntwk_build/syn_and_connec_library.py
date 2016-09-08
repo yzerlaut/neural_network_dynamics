@@ -5,7 +5,7 @@ within this file
 import numpy as np
 import itertools, string
 
-def get_connectivity_and_synapses_matrix(NAME, number=2, SI_units=False):
+def get_connectivity_and_synapses_matrix(NAME, number=2, SI_units=False, verbose=True):
 
 
     # creating empty arry of objects (future dictionnaries)
@@ -21,12 +21,13 @@ def get_connectivity_and_synapses_matrix(NAME, number=2, SI_units=False):
         
     elif NAME=='CONFIG1':
         for m in M[0,:]: m['pconn']=0.05;m['Q']=1.;m['Tsyn']=5.;m['Erev']=0.
-        for m in M[1,:]: m['pconn']=0.05;m['Q']=5.;m['Tsyn']=5.;m['Erev']=-80.
+        for m in M[1,:]: m['pconn']=0.05;m['Q']=4.;m['Tsyn']=5.;m['Erev']=-80.
         
     else:
-        print('====================================================')
-        print('------------ NETWORK NOT RECOGNIZED !! ---------------')
-        print('====================================================')
+        if verbose:
+            print('====================================================')
+            print('------------ NETWORK NOT RECOGNIZED !! ---------------')
+            print('====================================================')
 
     if SI_units:
         print('synaptic network parameters in SI units')
@@ -35,7 +36,8 @@ def get_connectivity_and_synapses_matrix(NAME, number=2, SI_units=False):
             m['Erev'] *= 1e-3
             m['Tsyn'] *= 1e-3
     else:
-        print('synaptic network parameters --NOT-- in SI units')
+        if verbose:
+            print('synaptic network parameters --NOT-- in SI units')
 
     return M
 

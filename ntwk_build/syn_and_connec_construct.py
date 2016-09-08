@@ -26,7 +26,7 @@ def build_up_recurrent_connections(Pops, M, SEED=1):
         CONN[ii,jj].w = M[ii,jj]['Q']*brian2.nS
     return CONN
 
-def build_populations(NTWK, M, with_raster=False, with_pop_act=False):
+def build_populations(NTWK, M, with_raster=False, with_pop_act=False, verbose=True):
     """
     sets up the neuronal populations
     """
@@ -35,7 +35,7 @@ def build_populations(NTWK, M, with_raster=False, with_pop_act=False):
         POPS.append(\
                     get_membrane_equation(\
                     get_neuron_params(ntwk['type'], number=ntwk['N']),
-                                          M[:,ii]))
+                                          M[:,ii], verbose=verbose))
     if with_pop_act:
         POP_ACT = []
         for pop in POPS:
@@ -63,7 +63,7 @@ def initialize_to_rest(POPS, NTWK):
     /!\ one population has the same conditions on all its targets !! /!\
     """
     for ii, l in zip(range(len(POPS)), string.ascii_uppercase[:len(POPS)]):
-        POPS[ii].V = get_neuron_params(NTWK[ii]['type'])['El']*brian2.mV
+        POPS[ii].V = get_neuron_params(NTWK[ii]['type'], verbose=verbose)['El']*brian2.mV
         for t in string.ascii_uppercase[:len(POPS)]:
             exec("POPS[ii].G"+t+l+" = 0.*brian2.nS")
 
