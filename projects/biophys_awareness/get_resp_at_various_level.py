@@ -30,7 +30,7 @@ def run_sim(args):
     
     for EXC_ACTS, INH_ACTS, FEXT in zip([EXC_ACTS_ACTIVE, EXC_ACTS_REST],\
                                         [INH_ACTS_ACTIVE, INH_ACTS_REST],\
-                                        [0, args.fext]):
+                                        [0, 3.25]):
         # for f_ext, seed in zip(np.linspace(args.fext_min, args.fext_max, args.nsim),\
         #                        range(1, args.nsim+1)):
         for f_seed in range(1, args.nsim+1):
