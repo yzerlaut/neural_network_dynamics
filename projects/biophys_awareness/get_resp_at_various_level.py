@@ -36,16 +36,16 @@ def run_sim(args):
             
             # rate_array = FEXT + double_gaussian(t_array, args.stim_start,\
             #                              args.stim_T0, args.stim_T1, f_ext)
-            rate_array = args.fext+0.*t_array
-
-            M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK))
+            print('[initializing simulation ...], f_ext=', f_ext)
+            rate_array = f_ext+0.*t_array
+            M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK), verbose=args.verbose)
             if args.Qe!=0:
                 M[0,0]['Q'], M[0,1]['Q'] = args.Qe, args.Qe
             if args.Qi!=0:
                 M[1,0]['Q'], M[1,1]['Q'] = args.Qi, args.Qi
 
             POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True,\
-                                                      with_pop_act=True)
+                                                      with_pop_act=True, verbose=args.verbose)
 
             initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
 
@@ -60,8 +60,10 @@ def run_sim(args):
             net = brian2.Network(brian2.collect())
             # manually add the generated quantities
             net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES) 
+            print('[running simulation ...]')
             net.run(args.tstop*brian2.ms)
-
+            print('[simulation done -> saving output]')
+            
             EXC_ACTS.append(POP_ACT[0].smooth_rate(window='flat',\
                                                  width=args.smoothing*brian2.ms)/brian2.Hz)
             INH_ACTS.append(POP_ACT[1].smooth_rate(window='flat',\
