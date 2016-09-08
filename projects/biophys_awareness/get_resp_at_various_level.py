@@ -30,7 +30,7 @@ def run_sim(args):
     
     for EXC_ACTS, INH_ACTS, f_ext in zip([EXC_ACTS_ACTIVE, EXC_ACTS_REST],\
                                         [INH_ACTS_ACTIVE, INH_ACTS_REST],\
-                                        [0, 3.25]):
+                                        [0, 0.25]):
         # for f_ext, seed in zip(np.linspace(args.fext_min, args.fext_max, args.nsim),\
         #                        range(1, args.nsim+1)):
         for seed in range(1, args.nsim+1):
@@ -38,7 +38,7 @@ def run_sim(args):
             # rate_array = FEXT + double_gaussian(t_array, args.stim_start,\
             #                              args.stim_T0, args.stim_T1, f_ext)
             print('[initializing simulation ...], f_ext=', f_ext)
-            rate_array = 0.*t_array
+            rate_array = 0.*t_array+f_ext
             M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK), verbose=args.verbose)
             if args.Qe!=0:
                 M[0,0]['Q'], M[0,1]['Q'] = args.Qe, args.Qe
