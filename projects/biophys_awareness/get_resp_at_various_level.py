@@ -38,7 +38,7 @@ def run_sim(args):
             # rate_array = FEXT + double_gaussian(t_array, args.stim_start,\
             #                              args.stim_T0, args.stim_T1, f_ext)
             print('[initializing simulation ...], f_ext=', f_ext)
-            rate_array = f_ext+0.*t_array
+            rate_array = 0.*t_array
             M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK), verbose=args.verbose)
             if args.Qe!=0:
                 M[0,0]['Q'], M[0,1]['Q'] = args.Qe, args.Qe
@@ -84,18 +84,18 @@ fig, AX = plt.subplots(2, figsize=(7,7))
 plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
 f_ext = np.linspace(args.fext_min, args.fext_max, args.nsim)
 active_resp, rest_resp = [], []
-i0 = int((args.stim_start-2.*args.stim_T0)/args.DT)
-i1 = min([int((args.stim_start+3.*args.stim_T1)/args.DT), len(data['t_array'])-10])
+# i0 = int((args.stim_start-2.*args.stim_T0)/args.DT)
+# i1 = min([int((args.stim_start+3.*args.stim_T1)/args.DT), len(data['t_array'])-10])
 for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE'], data['EXC_ACTS_REST']):
-    active_resp.append(exc_act_active[i0:i1].mean()-exc_act_active[i1:].mean())
-    rest_resp.append(exc_act_rest[i0:i1].mean()-exc_act_rest[i1:].mean())
+    # active_resp.append(exc_act_active[i0:i1].mean()-exc_act_active[i1:].mean())
+    # rest_resp.append(exc_act_rest[i0:i1].mean()-exc_act_rest[i1:].mean())
     AX[1].plot(data['t_array'], exc_act_rest, 'b-')
     AX[1].plot(data['t_array'], exc_act_active, 'b-')
-for inh_act_active, inh_act_rest  in zip(data['INH_ACTS_ACTIVE'], data['INH_ACTS_REST']):
-    AX[1].plot(data['t_array'], inh_act_rest, 'r-')
-    AX[1].plot(data['t_array'], inh_act_active, 'r-')
-AX[0].plot(f_ext, active_resp, 'b-')
-AX[0].plot(f_ext, rest_resp, 'k-')
+# for inh_act_active, inh_act_rest  in zip(data['INH_ACTS_ACTIVE'], data['INH_ACTS_REST']):
+#     AX[1].plot(data['t_array'], inh_act_rest, 'r-')
+#     AX[1].plot(data['t_array'], inh_act_active, 'r-')
+# AX[0].plot(f_ext, active_resp, 'b-')
+# AX[0].plot(f_ext, rest_resp, 'k-')
 AX[0].plot(rest_resp, rest_resp, 'k--')
 set_plot(AX[0], xlabel='drive freq. (Hz)', ylabel='mean exc. (Hz)')
 """
