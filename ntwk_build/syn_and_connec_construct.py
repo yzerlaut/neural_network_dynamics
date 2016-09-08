@@ -34,8 +34,8 @@ def build_populations(NTWK, M, with_raster=False, with_pop_act=False, verbose=Tr
     for ntwk, ii in zip(NTWK, range(len(NTWK))):
         POPS.append(\
                     get_membrane_equation(\
-                    get_neuron_params(ntwk['type'], number=ntwk['N']),
-                                          M[:,ii], verbose=verbose))
+                    get_neuron_params(ntwk['type'], number=ntwk['N'], verbose=verbose),
+                                          M[:,ii]))
     if with_pop_act:
         POP_ACT = []
         for pop in POPS:
