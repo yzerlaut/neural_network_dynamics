@@ -21,7 +21,7 @@ def get_neuron_params(NAME, name='', number=1, SI_units=False, verbose=True):
     elif BASE=='AdExp':
         params = {'name':name, 'N':number,\
                   'Gl':10., 'Cm':200.,'Trefrac':5.,\
-                  'El':-70., 'Vthre':-50., 'Vreset':-70., 'delta_v':2.,\
+                  'El':-70., 'Vthre':-50., 'Vreset':-70., 'delta_v':1.,\
                   'a':2., 'b':20., 'tauw':500.}
     else:
         raise NameError('/!\ Cell Name not recognized /!\ \n either not implemented or mis-typed !!')
