@@ -70,17 +70,18 @@ def run_sim(args):
 def get_plotting_instructions():
     return """
 args = data['args'].all()
-fig, AX = plt.subplots(2, figsize=(5,3))
-plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
+fig, AX = plt.subplots(1, 2, figsize=(7,3))
+plt.subplots_adjust(left=0.1, bottom=0.4, wspace=0.2, hspace=0.2)
 f_ext = np.linspace(args.fext_min, args.fext_max, args.nsim)
 mean_exc_freq = []
-for exc_act in data['EXC_ACTS']:
-    print(exc_act[int(args.tstop/2/args.DT)+1:].mean())
+for exc_act,  inh_act, ff in zip(data['EXC_ACTS'], data['INH_ACTS'], f_ext):
+    print('At Fdrive=', round(ff), 'Fe=', round(exc_act[int(args.tstop/2/args.DT)+1:].mean()), 'Fi=', round(inh_act[int(args.tstop/2/args.DT)+1:].mean()))
     mean_exc_freq.append(exc_act[int(args.tstop/2/args.DT)+1:].mean())
     AX[1].plot(exc_act)
 AX[0].plot(f_ext, mean_exc_freq, 'k-')
 AX[0].plot(mean_exc_freq, mean_exc_freq, 'k--')
 set_plot(AX[0], xlabel='drive freq. (Hz)', ylabel='mean exc. (Hz)')
+set_plot(AX[1], xlabel='time (ms)', ylabel='exc. act. (Hz)')
 """
 
 
