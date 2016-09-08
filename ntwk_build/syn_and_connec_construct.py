@@ -63,7 +63,7 @@ def initialize_to_rest(POPS, NTWK):
     /!\ one population has the same conditions on all its targets !! /!\
     """
     for ii, l in zip(range(len(POPS)), string.ascii_uppercase[:len(POPS)]):
-        POPS[ii].V = get_neuron_params(NTWK[ii]['type'], verbose=verbose)['El']*brian2.mV
+        POPS[ii].V = get_neuron_params(NTWK[ii]['type'], verbose=False)['El']*brian2.mV
         for t in string.ascii_uppercase[:len(POPS)]:
             exec("POPS[ii].G"+t+l+" = 0.*brian2.nS")
 
