@@ -30,16 +30,16 @@ def run_sim(args):
     for f_ext, seed in zip(np.linspace(args.fext_min, args.fext_max, args.nsim),\
                            range(1, args.nsim+1)):
 
-        print('[initializing simulation ...]')
+        print('[initializing simulation ...], f_ext=', f_ext)
         rate_array = f_ext+0.*t_array
-        M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK))
+        M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK), verbose=args.verbose)
         if args.Qe!=0:
             M[0,0]['Q'], M[0,1]['Q'] = args.Qe, args.Qe
         if args.Qi!=0:
             M[1,0]['Q'], M[1,1]['Q'] = args.Qi, args.Qi
             
         POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True,\
-                                                  with_pop_act=True)
+                                                  with_pop_act=True, verbose=args.verbose)
 
         initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
 
@@ -104,7 +104,7 @@ if __name__=='__main__':
     parser.add_argument("--pconn", help="connection proba", type=float, default=0.05)
     parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=0.)
     parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=0.)
-    parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=2.)
+    parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=3.)
     parser.add_argument("--fext_min",help="min external drive (Hz)",type=float, default=0.5)
     parser.add_argument("--fext_max",help="min external drive (Hz)",type=float, default=10.)
     # stimulation (single spike) properties
