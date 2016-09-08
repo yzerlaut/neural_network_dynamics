@@ -33,7 +33,7 @@ def run_sim(args):
                                         [0, 3.25]):
         # for f_ext, seed in zip(np.linspace(args.fext_min, args.fext_max, args.nsim),\
         #                        range(1, args.nsim+1)):
-        for f_seed in range(1, args.nsim+1):
+        for seed in range(1, args.nsim+1):
             
             # rate_array = FEXT + double_gaussian(t_array, args.stim_start,\
             #                              args.stim_T0, args.stim_T1, f_ext)
