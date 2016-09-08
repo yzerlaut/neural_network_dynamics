@@ -60,6 +60,7 @@ def run_sim(args):
                                            width=args.smoothing*brian2.ms)/brian2.Hz
 
     np.savez(args.filename, args=args,
+             t_array=t_array,
              exc_act = np.array(EXC_ACTS),
              inh_act = np.array(INH_ACTS),
              exc_spk = np.array(EXC_SPIKES.t),
@@ -70,12 +71,16 @@ def run_sim(args):
 
 def get_plotting_instructions():
     return """
-fig, ax = plt.subplots(1, figsize=(4,3))
+fig1, ax = plt.subplots(1, figsize=(4,3))
 args = data['args'].all()
 plt.plot(1e3*data['exc_spk'], data['exc_ids'], 'g.')
 plt.plot(1e3*data['inh_spk'], data['exc_ids'].max()+data['inh_ids'], 'r.')
 set_plot(ax, xlabel='time (ms)', ylabel='neuron number', ylim=[3200,4200], xlim=[100,200])
-fig.savefig('/Users/yzerlaut/Desktop/fig.svg')
+fig2, ax = plt.subplots(1, figsize=(4,3))
+args = data['args'].all()
+plt.plot(1e3*data['t_array'], data['exc_act'], 'g-')
+plt.plot(1e3*data['t_array'], data['inh_act'], 'r-')
+set_plot(ax, xlabel='time (ms)', ylabel='pop. act. (Hz)')
 """
 
 
