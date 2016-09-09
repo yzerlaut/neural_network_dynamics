@@ -138,6 +138,7 @@ if __name__=='__main__':
      """
     ,formatter_class=argparse.RawTextHelpFormatter)
 
+    
     # simulation parameters
     parser.add_argument("--DT",help="simulation time step (ms)",type=float, default=0.1)
     parser.add_argument("--tstop",help="simulation duration (ms)",type=float, default=200.)
