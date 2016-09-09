@@ -25,10 +25,10 @@ def run_sim(args):
     AFFERENCE_ARRAY = [{'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn},
                        {'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn}]
     
-    EXC_ACTS, INH_ACTS, SPK_TIMES, SPK_IDS = [], [], [], []
+    EXC_ACTS_ACTIVE, INH_ACTS_ACTIVE = [], []
+    EXC_ACTS_REST, INH_ACTS_REST = [], []
 
-    for f_ext, seed in zip(np.linspace(args.fext_min, args.fext_max, args.nsim),\
-                           range(1, args.nsim+1)):
+    for f_ext, seed in zip([0, args.fext], [2, 3]):
 
         print('[initializing simulation ...], f_ext=', f_ext)
         rate_array = f_ext+0.*t_array
@@ -108,6 +108,7 @@ if __name__=='__main__':
     parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=2.)
     parser.add_argument("--fext_min",help="min external drive (Hz)",type=float, default=0.)
     parser.add_argument("--fext_max",help="min external drive (Hz)",type=float, default=3.25)
+    parser.add_argument("--fext",help="baseline external drive (Hz)",type=float, default=3.25)
     # stimulation (single spike) properties
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
     parser.add_argument("-u", "--update_plot", help="plot the figures", action="store_true")
