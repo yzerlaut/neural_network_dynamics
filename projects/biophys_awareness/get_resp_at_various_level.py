@@ -89,10 +89,10 @@ i1 = min([int((args.stim_start+3.*args.stim_T1)/args.DT), len(data['t_array'])-1
 for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE'], data['EXC_ACTS_REST']):
     active_resp.append(exc_act_active[i0:i1].mean()-exc_act_active[i1:].mean())
     rest_resp.append(exc_act_rest[i0:i1].mean()-exc_act_rest[i1:].mean())
-    AX[1].plot(data['t_array'], exc_act_rest, 'b-')
+    AX[1].plot(data['t_array'], exc_act_rest, 'k-')
     AX[1].plot(data['t_array'], exc_act_active, 'b-')
-AX[0].plot(active_resp, 'b-')
-AX[0].plot(rest_resp, 'k-')
+AX[0].plot(f_ext, active_resp, 'b-')
+AX[0].plot(f_ext, rest_resp, 'k-')
 AX[0].plot(rest_resp, rest_resp, 'k--')
 set_plot(AX[0], xlabel='drive freq. (Hz)', ylabel='mean exc. (Hz)')
 set_plot(AX[1], xlabel='drive freq. (Hz)', ylabel='mean exc. (Hz)')
@@ -112,7 +112,7 @@ if __name__=='__main__':
     parser.add_argument("--DT",help="simulation time step (ms)",type=float, default=0.1)
     parser.add_argument("--tstop",help="simulation duration (ms)",type=float, default=200.)
     parser.add_argument("--nsim",help="number of simulations (different seeds used)", type=int, default=3)
-    parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",type=float, default=0.5)
+    parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",type=float, default=5.)
     # network architecture
     parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
     parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
