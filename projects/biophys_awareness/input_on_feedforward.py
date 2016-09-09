@@ -31,7 +31,7 @@ def run_sim(args):
     AFFERENCE_ARRAY = [{'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn},
                        {'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn}]
     
-    M = get_connectivity_and_synapses_matrix('', number=len(NTWK)*3)
+    M = get_connectivity_and_synapses_matrix('', number=len(NTWK))
 
     # Manually construct the 6 by 6 matrix:
     for key, val in zip(['Q', 'pconn', 'Erev', 'Tsyn'], [args.Qe, args.pconn, 0., 5.]):
