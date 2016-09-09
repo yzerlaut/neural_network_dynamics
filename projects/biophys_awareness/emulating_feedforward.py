@@ -64,8 +64,9 @@ def run_sim(args):
             POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True, with_pop_act=True, verbose=args.verbose)
             initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
             ## OUTPUT AS INPUT !!!
+            rate_array = np.array([ee if ee<args.fext+2*args.f_stim else args.fext for ee in EXC_ACTS1[-1]])
             AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS, AFFERENCE_ARRAY,\
-                                                                 t_array, EXC_ACTS1[-1], pop_for_conductance='A', SEED=seed)
+                                                                 t_array, rate_array, pop_for_conductance='A', SEED=seed)
             SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
             net = brian2.Network(brian2.collect())
             # manually add the generated quantities
@@ -81,8 +82,9 @@ def run_sim(args):
             POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True, with_pop_act=True, verbose=args.verbose)
             initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
             ## OUTPUT AS INPUT !!!
+            rate_array = np.array([ee if ee<args.fext+2*args.f_stim else args.fext for ee in EXC_ACTS2[-1]])
             AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS, AFFERENCE_ARRAY,\
-                                                                 t_array, EXC_ACTS2[-1], pop_for_conductance='A', SEED=seed)
+                                                                 t_array, rate_array, pop_for_conductance='A', SEED=seed)
             SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
             net = brian2.Network(brian2.collect())
             # manually add the generated quantities
@@ -114,8 +116,9 @@ for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE3'], data['EXC_ACT
     AX[1].plot(data['t_array'], exc_act_rest, 'k-')
     AX[1].plot(data['t_array'], exc_act_active, 'b-')
 for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE1'], data['EXC_ACTS_REST1']):
-    # active_resp.append(exc_act_active[i0:i1].mean()-exc_act_active[i1:].mean())
-    # rest_resp.append(exc_act_rest[i0:i1].mean()-exc_act_rest[i1:].mean())
+    AX[1].plot(data['t_array'], exc_act_rest, 'k-')
+    AX[1].plot(data['t_array'], exc_act_active, 'b-')
+for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE2'], data['EXC_ACTS_REST2']):
     AX[1].plot(data['t_array'], exc_act_rest, 'k-')
     AX[1].plot(data['t_array'], exc_act_active, 'b-')
 # AX[0].plot(f_ext, active_resp, 'b-')
