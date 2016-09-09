@@ -36,7 +36,9 @@ def run_sim(args):
 
             print('[initializing simulation ...], f_ext0=', f_ext, 'f_stim=', f_stim)
             
-            rate_array = f_ext+0.*t_array
+            rate_array = f_ext+double_gaussian(t_array, args.stim_start,\
+                                               args.stim_T0, args.stim_T1, f_stim)
+            
             M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK), verbose=args.verbose)
             if args.Qe!=0:
                 M[0,0]['Q'], M[0,1]['Q'] = args.Qe, args.Qe
@@ -89,9 +91,6 @@ for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE'], data['EXC_ACTS
     rest_resp.append(exc_act_rest[i0:i1].mean()-exc_act_rest[i1:].mean())
     AX[1].plot(data['t_array'], exc_act_rest, 'b-')
     AX[1].plot(data['t_array'], exc_act_active, 'b-')
-for inh_act_active, inh_act_rest  in zip(data['INH_ACTS_ACTIVE'], data['INH_ACTS_REST']):
-    AX[1].plot(data['t_array'], inh_act_rest, 'r-')
-    AX[1].plot(data['t_array'], inh_act_active, 'r-')
 AX[0].plot(active_resp, 'b-')
 AX[0].plot(rest_resp, 'k-')
 AX[0].plot(rest_resp, rest_resp, 'k--')
