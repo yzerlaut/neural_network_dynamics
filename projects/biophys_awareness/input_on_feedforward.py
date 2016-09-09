@@ -29,8 +29,7 @@ def run_sim(args):
             {'name':'exc', 'N':args.Ne, 'type':'AdExp'},
             {'name':'inh', 'N':args.Ni, 'type':'LIF'}]
     AFFERENCE_ARRAY = [{'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn},
-                       {'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn},
-                       {'pconn':0.}, {'pconn':0.}, {'pconn':0.}, {'pconn':0.}]
+                       {'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn}]
     
     M = get_connectivity_and_synapses_matrix('', number=len(NTWK)*3)
 
@@ -66,7 +65,7 @@ def run_sim(args):
             
             POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True,\
                                                       with_pop_act=True, verbose=args.verbose)
-
+            print(M)
             initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
 
             AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS[:2],

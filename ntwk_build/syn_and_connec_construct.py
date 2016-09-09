@@ -66,7 +66,6 @@ def initialize_to_rest(POPS, NTWK):
         for t in string.ascii_uppercase[:len(POPS)]:
             exec("POPS[ii].G"+t+l+" = 0.*brian2.nS")
 
-        
 if __name__=='__main__':
 
     print(__doc__)
