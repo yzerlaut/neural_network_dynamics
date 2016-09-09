@@ -25,9 +25,12 @@ def run_sim(args):
     AFFERENCE_ARRAY = [{'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn},
                        {'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn}]
     
-    EXC_ACTS, INH_ACTS = [], []
+    EXC_ACTS_ACTIVE, INH_ACTS_ACTIVE = [], []
+    EXC_ACTS_REST, INH_ACTS_REST = [], []
 
-    for f_ext in zip([0, args.fext]):
+    for EXC_ACTS, INH_ACTS, f_ext in zip([EXC_ACTS_ACTIVE, EXC_ACTS_REST],\
+                                         [INH_ACTS_ACTIVE, INH_ACTS_REST],\
+                                         [0, args.fext]):
         seed = 3
         print('[initializing simulation ...], f_ext0=', f_ext, 'f_stim=')
         rate_array = f_ext+0.*t_array
@@ -61,26 +64,35 @@ def run_sim(args):
                                              width=args.smoothing*brian2.ms)/brian2.Hz)
         INH_ACTS.append(POP_ACT[1].smooth_rate(window='flat',\
                                              width=args.smoothing*brian2.ms)/brian2.Hz)
-    np.savez(args.filename, args=args, EXC_ACTS=np.array(EXC_ACTS),
-             INH_ACTS=np.array(INH_ACTS), NTWK=NTWK, t_array=t_array,
-             rate_array=rate_array, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
+    np.savez(args.filename, args=args,
+             EXC_ACTS_ACTIVE=np.array(EXC_ACTS_ACTIVE),
+             INH_ACTS_ACTIVE=np.array(INH_ACTS_ACTIVE),
+             EXC_ACTS_REST=np.array(EXC_ACTS_REST),
+             INH_ACTS_REST=np.array(INH_ACTS_REST),
+             NTWK=NTWK, t_array=t_array,
              plot=get_plotting_instructions())
 
 def get_plotting_instructions():
     return """
 args = data['args'].all()
-fig, AX = plt.subplots(1, 2, figsize=(7,3))
-plt.subplots_adjust(left=0.1, bottom=0.4, wspace=0.2, hspace=0.2)
+fig, AX = plt.subplots(2, figsize=(7,7))
+plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
 f_ext = np.linspace(args.fext_min, args.fext_max, args.nsim)
-mean_exc_freq = []
-for exc_act,  inh_act, ff in zip(data['EXC_ACTS'], data['INH_ACTS'], f_ext):
-    print('At Fdrive=', round(ff), 'Fe=', round(exc_act[int(args.tstop/2/args.DT)+1:].mean()), 'Fi=', round(inh_act[int(args.tstop/2/args.DT)+1:].mean()))
-    mean_exc_freq.append(exc_act[int(args.tstop/2/args.DT)+1:].mean())
-    AX[1].plot(exc_act)
-AX[0].plot(f_ext, mean_exc_freq, 'k-')
-AX[0].plot(mean_exc_freq, mean_exc_freq, 'k--')
+active_resp, rest_resp = [], []
+i0 = int((args.stim_start-2.*args.stim_T0)/args.DT)
+i1 = min([int((args.stim_start+3.*args.stim_T1)/args.DT), len(data['t_array'])-10])
+for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE'], data['EXC_ACTS_REST']):
+    # active_resp.append(exc_act_active[i0:i1].mean()-exc_act_active[i1:].mean())
+    # rest_resp.append(exc_act_rest[i0:i1].mean()-exc_act_rest[i1:].mean())
+    AX[1].plot(data['t_array'], exc_act_rest, 'b-')
+    AX[1].plot(data['t_array'], exc_act_active, 'b-')
+# for inh_act_active, inh_act_rest  in zip(data['INH_ACTS_ACTIVE'], data['INH_ACTS_REST']):
+    AX[1].plot(data['t_array'], inh_act_rest, 'r-')
+    AX[1].plot(data['t_array'], inh_act_active, 'r-')
+AX[0].plot(f_ext, active_resp, 'b-')
+AX[0].plot(f_ext, rest_resp, 'k-')
+AX[0].plot(rest_resp, rest_resp, 'k--')
 set_plot(AX[0], xlabel='drive freq. (Hz)', ylabel='mean exc. (Hz)')
-set_plot(AX[1], xlabel='time (ms)', ylabel='exc. act. (Hz)')
 """
 
 
@@ -109,6 +121,10 @@ if __name__=='__main__':
     parser.add_argument("--fext_max",help="min external drive (Hz)",type=float, default=3.25)
     parser.add_argument("--fext",help="baseline external drive (Hz)",type=float, default=8.5)
     # stimulation (single spike) properties
+    parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)", type=float, default=100.)
+    parser.add_argument("--stim_T0",help="we multiply the single spike on the trial at this (ms)",type=float, default=10.)
+    parser.add_argument("--stim_T1",help="we multiply the single spike on the trial at this (ms)",type=float, default=20.)
+    
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
     parser.add_argument("-u", "--update_plot", help="plot the figures", action="store_true")
     parser.add_argument("--filename", '-f', help="filename",type=str, default='data.npz')
