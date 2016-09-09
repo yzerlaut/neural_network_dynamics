@@ -23,9 +23,14 @@ def run_sim(args):
     t_array = np.arange(int(args.tstop/args.DT))*args.DT
 
     NTWK = [{'name':'exc', 'N':args.Ne, 'type':'AdExp'},
+            {'name':'inh', 'N':args.Ni, 'type':'LIF'},
+            {'name':'exc', 'N':args.Ne, 'type':'AdExp'},
+            {'name':'inh', 'N':args.Ni, 'type':'LIF'},
+            {'name':'exc', 'N':args.Ne, 'type':'AdExp'},
             {'name':'inh', 'N':args.Ni, 'type':'LIF'}]
     AFFERENCE_ARRAY = [{'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn},
-                       {'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn}]
+                       {'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn},
+                       {'pconn':0.}, {'pconn':0.}, {'pconn':0.}, {'pconn':0.}]
     
     M = get_connectivity_and_synapses_matrix('', number=len(NTWK)*3)
 
@@ -64,7 +69,7 @@ def run_sim(args):
 
             initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
 
-            AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS,
+            AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS[:2],
                                                                  AFFERENCE_ARRAY,\
                                                                  t_array,
                                                                  rate_array,\
