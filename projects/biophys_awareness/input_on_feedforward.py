@@ -27,9 +27,6 @@ def run_sim(args):
     AFFERENCE_ARRAY = [{'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn},
                        {'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn}]
     
-    EXC_ACTS, INH_ACTS, SPK_TIMES, SPK_IDS = [], [], [], []
-
-    rate_array = ramp_rise_then_constant(t_array, 0., 0., 0, args.fext)
     M = get_connectivity_and_synapses_matrix('', number=len(NTWK)*3)
 
     # Manually construct the 6 by 6 matrix:
@@ -38,8 +35,8 @@ def run_sim(args):
         for m in [M[0,0], M[2,2], M[4,4], M[0,1], M[2,3], M[4,5]]:
             m[key] = val
     for key, val in zip(['Q', 'pconn', 'Erev', 'Tsyn'], [args.Qe_ff, args.pconn, 0., 5.]):
-        # recurrent exc-exc, exc-inh and feedforward connection !
-        for m in [M[0,2], M[2,4]]:
+        # feedforward excitatory connection on excitation and inhibition!
+        for m in [M[0,2], M[2,4], M[0,3], M[2,5]]:
             m[key] = val
     for key, val in zip(['Q', 'pconn', 'Erev', 'Tsyn'], [args.Qi, args.pconn, -80., 5.]):
         # recurrent inh.
@@ -50,39 +47,44 @@ def run_sim(args):
     EXC_ACTS_ACTIVE1, EXC_ACTS_ACTIVE2, EXC_ACTS_ACTIVE3  = [], [], []
     EXC_ACTS_REST1, EXC_ACTS_REST2, EXC_ACTS_REST3  = [], [], []
 
-    seed = 3
-    for EXC_ACTS1, EXC_ACTS2, EXC_ACTS3, FEXT in zip([EXC_ACTS_ACTIVE1,EXC_ACTS_REST1],
+    for EXC_ACTS1, EXC_ACTS2, EXC_ACTS3, f_ext in zip([EXC_ACTS_ACTIVE1,EXC_ACTS_REST1],
                                                      [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
                                                      [EXC_ACTS_ACTIVE3,EXC_ACTS_REST3],
-                                                     [args.fext, 0.]):
+                                                     [0., args.fext]):
 
-        rate_array = FEXT + double_gaussian(t_array, args.stim_start,\
-                                      args.stim_T0, args.stim_T1, args.fext_stim)
-        
-        POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True, with_pop_act=True)
-        
-        initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
+        for seed in range(1, args.nsim+1):
+            
+            print('[initializing simulation ...], f_ext0=', f_ext, 'f_stim=', f_stim)
+            
+            rate_array = f_ext+double_gaussian(t_array, args.stim_start,\
+                                               args.stim_T0, args.stim_T1, args.f_stim)
+            
+            POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True,\
+                                                      with_pop_act=True, verbose=args.verbose)
 
-        AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS,
-                                                             AFFERENCE_ARRAY,\
-                                                             t_array,
-                                                             rate_array,\
-                                                             pop_for_conductance='A',
-                                                             SEED=seed)
-        
-        SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
+            initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
 
-        net = brian2.Network(brian2.collect())
-        # manually add the generated quantities
-        net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES) 
-        net.run(args.tstop*brian2.ms)
+            AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS,
+                                                                 AFFERENCE_ARRAY,\
+                                                                 t_array,
+                                                                 rate_array,\
+                                                                 pop_for_conductance='A',
+                                                                 SEED=seed)
+            SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
 
-        EXC_ACTS1.append(POP_ACT[0].smooth_rate(window='flat',\
-                                                       width=args.smoothing*brian2.ms)/brian2.Hz)
-        EXC_ACTS2.append(POP_ACT[2].smooth_rate(window='flat',\
-                                               width=args.smoothing*brian2.ms)/brian2.Hz)
-        EXC_ACTS3.append(POP_ACT[4].smooth_rate(window='flat',\
-                                               width=args.smoothing*brian2.ms)/brian2.Hz)
+            net = brian2.Network(brian2.collect())
+            # manually add the generated quantities
+            net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES) 
+            print('[running simulation ...]')
+            net.run(args.tstop*brian2.ms)
+            print('[simulation done -> saving output]')
+
+            EXC_ACTS1.append(POP_ACT[0].smooth_rate(window='flat',\
+                                                           width=args.smoothing*brian2.ms)/brian2.Hz)
+            EXC_ACTS2.append(POP_ACT[2].smooth_rate(window='flat',\
+                                                   width=args.smoothing*brian2.ms)/brian2.Hz)
+            EXC_ACTS3.append(POP_ACT[4].smooth_rate(window='flat',\
+                                                   width=args.smoothing*brian2.ms)/brian2.Hz)
     np.savez(args.filename, args=args,
              EXC_ACTS_ACTIVE1=np.array(EXC_ACTS_ACTIVE1), EXC_ACTS_ACTIVE2=np.array(EXC_ACTS_ACTIVE2), EXC_ACTS_ACTIVE3=np.array(EXC_ACTS_ACTIVE3),
              EXC_ACTS_REST1=np.array(EXC_ACTS_REST1), EXC_ACTS_REST2=np.array(EXC_ACTS_REST2), EXC_ACTS_REST3=np.array(EXC_ACTS_REST3),
@@ -90,6 +92,7 @@ def run_sim(args):
              rate_array=rate_array, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
              plot=get_plotting_instructions())
 
+    
 def get_plotting_instructions():
     return """
 args = data['args'].all()
@@ -123,12 +126,12 @@ if __name__=='__main__':
     parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
     parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
     parser.add_argument("--pconn", help="connection proba", type=float, default=0.05)
-    parser.add_argument("--Qe", help="weight of excitatory spike",type=float,default=1.)
-    parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=3.)
-    parser.add_argument("--Qi", help="weight of inhibitory spike",type=float,default=5.)
-    parser.add_argument("--fext",help="baseline external drive (Hz)",type=float,default=8.)
-    parser.add_argument("--fext_stim",help="baseline external drive (Hz)",type=float,default=8.)
-    parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)", type=float, default=100.)
+    parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=1.)
+    parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=4.)
+    parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=2.5)
+    parser.add_argument("--fext",help="baseline external drive (Hz)",type=float, default=8.5)
+    parser.add_argument("--f_stim",help="baseline external drive (Hz)",type=float,default=3.)
+    parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)", type=float, default=800.)
     parser.add_argument("--stim_T0",help="we multiply the single spike on the trial at this (ms)",type=float, default=10.)
     parser.add_argument("--stim_T1",help="we multiply the single spike on the trial at this (ms)",type=float, default=20.)
     # stimulation (single spike) properties
