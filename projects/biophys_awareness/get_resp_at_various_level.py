@@ -25,12 +25,11 @@ def run_sim(args):
     AFFERENCE_ARRAY = [{'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn},
                        {'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn}]
     
-    EXC_ACTS_ACTIVE, INH_ACTS_ACTIVE = [], []
-    EXC_ACTS_REST, INH_ACTS_REST = [], []
+    EXC_ACTS, INH_ACTS = [], []
 
-    for f_ext, seed in zip([0, args.fext], [2, 3]):
-
-        print('[initializing simulation ...], f_ext=', f_ext)
+    for f_ext in zip([0, args.fext]):
+        seed = 3
+        print('[initializing simulation ...], f_ext0=', f_ext, 'f_stim=')
         rate_array = f_ext+0.*t_array
         M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK), verbose=args.verbose)
         if args.Qe!=0:
