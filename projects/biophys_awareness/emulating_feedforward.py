@@ -34,13 +34,10 @@ def run_sim(args):
     EXC_ACTS_ACTIVE1, EXC_ACTS_ACTIVE2, EXC_ACTS_ACTIVE3  = [], [], []
     EXC_ACTS_REST1, EXC_ACTS_REST2, EXC_ACTS_REST3  = [], [], []
 
-    for EXC_ACTS1, INH_ACTS1, EXC_ACTS2, INH_ACTS2, EXC_ACTS3, INH_ACTS3, f_ext in zip([EXC_ACTS_ACTIVE1, EXC_ACTS_REST1],
-                                                                                       [INH_ACTS_ACTIVE1, INH_ACTS_REST1],\
-                                                                                       [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
-                                                                                       [INH_ACTS_ACTIVE2, INH_ACTS_REST2],\
-                                                                                       [EXC_ACTS_ACTIVE3,EXC_ACTS_REST3],
-                                                                                       [INH_ACTS_ACTIVE3, INH_ACTS_REST3],\
-                                                                                       [0., args.fext]):
+    for EXC_ACTS1, EXC_ACTS2, EXC_ACTS3, f_ext in zip([EXC_ACTS_ACTIVE1, EXC_ACTS_REST1],
+                                                      [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
+                                                      [EXC_ACTS_ACTIVE3,EXC_ACTS_REST3],
+                                                      [0., args.fext]):
         rate_array = f_ext+double_gaussian(t_array, args.stim_start,\
                                            args.stim_T0, args.stim_T1, args.f_stim)
         for seed in range(1, args.nsim+1):
