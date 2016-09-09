@@ -54,7 +54,7 @@ def run_sim(args):
 
         for seed in range(1, args.nsim+1):
             
-            print('[initializing simulation ...], f_ext0=', f_ext, 'f_stim=', f_stim)
+            print('[initializing simulation ...], f_ext0=', f_ext, 'seed=', seed)
             
             rate_array = f_ext+double_gaussian(t_array, args.stim_start,\
                                                args.stim_T0, args.stim_T1, args.f_stim)
