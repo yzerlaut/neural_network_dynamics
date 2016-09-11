@@ -35,14 +35,13 @@ def run_sim(args):
     EXC_ACTS_REST1, EXC_ACTS_REST2, EXC_ACTS_REST3  = [], [], []
 
     for EXC_ACTS1, f_ext in zip([EXC_ACTS_ACTIVE1, EXC_ACTS_REST1],
-                                [0., args.fext]):
+                                [args.fext, 0.]):
         rate_array = f_ext+double_gaussian(t_array, args.stim_start,\
                                            args.stim_T0, args.stim_T1, args.f_stim)
         for seed in range(1, args.nsim+1):
 
             ## SIMULATION 1
             print('[initializing simulation 1 ...], f_ext0=', f_ext, 'seed=', seed)
-
             POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True, with_pop_act=True, verbose=args.verbose)
             initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
             AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS, AFFERENCE_ARRAY,\
@@ -59,7 +58,7 @@ def run_sim(args):
         
     for EXC_ACTS1, EXC_ACTS2, f_ext in zip([EXC_ACTS_ACTIVE1, EXC_ACTS_REST1],
                                            [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
-                                           [0., args.fext]):
+                                           [args.fext, 0.]):
         rate_array = np.array(EXC_ACTS1).mean(axis=0)
         rate_array = np.array([ee if ee<args.fext+2*args.f_stim else args.fext for ee in rate_array])
         for seed in range(1, args.nsim+1):
@@ -83,7 +82,7 @@ def run_sim(args):
 
     for EXC_ACTS2, EXC_ACTS3, f_ext in zip([EXC_ACTS_ACTIVE2, EXC_ACTS_REST2],
                                            [EXC_ACTS_ACTIVE3,EXC_ACTS_REST3],
-                                           [0., args.fext]):
+                                           [args.fext, 0.]):
         rate_array = np.array(EXC_ACTS2).mean(axis=0)
         rate_array = np.array([ee if ee<args.fext+2*args.f_stim else args.fext for ee in rate_array])
         for seed in range(1, args.nsim+1):
@@ -120,17 +119,23 @@ plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
 active_resp, rest_resp = [], []
 i0 = int((args.stim_start-2.*args.stim_T0)/args.DT)
 i1 = min([int((args.stim_start+3.*args.stim_T1)/args.DT), len(data['t_array'])-10])
-for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE3'], data['EXC_ACTS_REST3']):
-    # active_resp.append(exc_act_active[i0:i1].mean()-exc_act_active[i1:].mean())
-    # rest_resp.append(exc_act_rest[i0:i1].mean()-exc_act_rest[i1:].mean())
-    AX[1].plot(data['t_array'], exc_act_rest, 'k-')
-    AX[1].plot(data['t_array'], exc_act_active, 'b-')
-for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE1'], data['EXC_ACTS_REST1']):
-    AX[1].plot(data['t_array'], exc_act_rest, 'k-')
-    AX[1].plot(data['t_array'], exc_act_active, 'b-')
-for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE2'], data['EXC_ACTS_REST2']):
-    AX[1].plot(data['t_array'], exc_act_rest, 'k-')
-    AX[1].plot(data['t_array'], exc_act_active, 'b-')
+AX[1].plot(data['t_array'], data['EXC_ACTS_ACTIVE1'].mean(axis=0), 'r-', lw=1)
+AX[1].plot(data['t_array'], data['EXC_ACTS_ACTIVE2'].mean(axis=0), 'k-', lw=1)
+AX[1].plot(data['t_array'], data['EXC_ACTS_ACTIVE3'].mean(axis=0), 'k-', lw=1)
+AX[1].plot(data['t_array'], data['EXC_ACTS_REST1'].mean(axis=0), 'r-', lw=1)
+AX[1].plot(data['t_array'], data['EXC_ACTS_REST2'].mean(axis=0), 'k-', lw=1)
+AX[1].plot(data['t_array'], data['EXC_ACTS_REST3'].mean(axis=0), 'k-', lw=1)
+# for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE3'], data['EXC_ACTS_REST3']):
+#     active_resp.append(exc_act_active[i0:i1].mean()-exc_act_active[i1:].mean())
+#     rest_resp.append(exc_act_rest[i0:i1].mean()-exc_act_rest[i1:].mean())
+#     AX[1].plot(data['t_array'], exc_act_rest, 'k-')
+#     AX[1].plot(data['t_array'], exc_act_active, 'b-')
+# for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE1'], data['EXC_ACTS_REST1']):
+#     AX[1].plot(data['t_array'], exc_act_rest, 'k-')
+#     AX[1].plot(data['t_array'], exc_act_active, 'b-')
+# for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE2'], data['EXC_ACTS_REST2']):
+#     AX[1].plot(data['t_array'], exc_act_rest, 'k-')
+#     AX[1].plot(data['t_array'], exc_act_active, 'b-')
 # AX[0].plot(f_ext, active_resp, 'b-')
 # AX[0].plot(f_ext, rest_resp, 'k-')
 # AX[0].plot(rest_resp, rest_resp, 'k--')
@@ -151,7 +156,7 @@ if __name__=='__main__':
     
     # simulation parameters
     parser.add_argument("--DT",help="simulation time step (ms)",type=float, default=0.1)
-    parser.add_argument("--tstop",help="simulation duration (ms)",type=float, default=200.)
+    parser.add_argument("--tstop",help="simulation duration (ms)",type=float, default=1000.)
     parser.add_argument("--nsim",help="number of simulations (different seeds used)", type=int, default=3)
     parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",type=float, default=4.9)
     # network architecture
