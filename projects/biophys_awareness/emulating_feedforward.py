@@ -57,7 +57,7 @@ def run_sim(args):
             EXC_ACTS1.append(POP_ACT[0].smooth_rate(window='flat',\
                                                     width=args.smoothing*brian2.ms)/brian2.Hz)
             if seed==1:
-                    np.savez('data/spikes1.npz', args=args,
+                    np.savez('data/spikes3'+str(round(f_ext))+'.npz', args=args,
                              exc_spk = np.array(EXC_SPIKES.t),
                              inh_spk = np.array(INH_SPIKES.t),
                              exc_ids = np.array(EXC_SPIKES.i),
@@ -88,7 +88,7 @@ def run_sim(args):
             EXC_ACTS2.append(POP_ACT[0].smooth_rate(window='flat',\
                                                    width=args.smoothing*brian2.ms)/brian2.Hz)
             if seed==1:
-                    np.savez('data/spikes2.npz', args=args,
+                    np.savez('data/spikes2'+str(round(f_ext))+'.npz', args=args,
                              exc_spk = np.array(EXC_SPIKES.t),
                              inh_spk = np.array(INH_SPIKES.t),
                              exc_ids = np.array(EXC_SPIKES.i),
@@ -120,7 +120,7 @@ def run_sim(args):
             EXC_ACTS3.append(POP_ACT[0].smooth_rate(window='flat',\
                                                    width=args.smoothing*brian2.ms)/brian2.Hz)
             if seed==1:
-                    np.savez('data/spikes3.npz', args=args,
+                    np.savez('data/spikes3'+str(round(f_ext))+'.npz', args=args,
                              exc_spk = np.array(EXC_SPIKES.t),
                              inh_spk = np.array(INH_SPIKES.t),
                              exc_ids = np.array(EXC_SPIKES.i),
