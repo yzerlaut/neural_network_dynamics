@@ -34,10 +34,8 @@ def run_sim(args):
     EXC_ACTS_ACTIVE1, EXC_ACTS_ACTIVE2, EXC_ACTS_ACTIVE3  = [], [], []
     EXC_ACTS_REST1, EXC_ACTS_REST2, EXC_ACTS_REST3  = [], [], []
 
-    for EXC_ACTS1, EXC_ACTS2, EXC_ACTS3, f_ext in zip([EXC_ACTS_ACTIVE1, EXC_ACTS_REST1],
-                                                      [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
-                                                      [EXC_ACTS_ACTIVE3,EXC_ACTS_REST3],
-                                                      [0., args.fext]):
+    for EXC_ACTS1, f_ext in zip([EXC_ACTS_ACTIVE1, EXC_ACTS_REST1],
+                                [0., args.fext]):
         rate_array = f_ext+double_gaussian(t_array, args.stim_start,\
                                            args.stim_T0, args.stim_T1, args.f_stim)
         for seed in range(1, args.nsim+1):
@@ -57,14 +55,20 @@ def run_sim(args):
             net.run(args.tstop*brian2.ms)
             print('[simulation 1 done -> saving output]')
             EXC_ACTS1.append(POP_ACT[0].smooth_rate(window='flat',\
-                                                           width=args.smoothing*brian2.ms)/brian2.Hz)
+                                                    width=args.smoothing*brian2.ms)/brian2.Hz)
+        
+    for EXC_ACTS1, EXC_ACTS2, f_ext in zip([EXC_ACTS_ACTIVE1, EXC_ACTS_REST1],
+                                           [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
+                                           [0., args.fext]):
+        rate_array = np.array(EXC_ACTS1).mean(axis=0)
+        rate_array = np.array([ee if ee<args.fext+2*args.f_stim else args.fext for ee in rate_array])
+        for seed in range(1, args.nsim+1):
             ## SIMULATION 2
             print('[initializing simulation 2 ...], f_ext0=', f_ext, 'seed=', seed)
 
             POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True, with_pop_act=True, verbose=args.verbose)
             initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
             ## OUTPUT AS INPUT !!!
-            rate_array = np.array([ee if ee<args.fext+2*args.f_stim else args.fext for ee in EXC_ACTS1[-1]])
             AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS, AFFERENCE_ARRAY,\
                                                                  t_array, rate_array, pop_for_conductance='A', SEED=seed)
             SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
@@ -77,6 +81,12 @@ def run_sim(args):
             EXC_ACTS2.append(POP_ACT[0].smooth_rate(window='flat',\
                                                    width=args.smoothing*brian2.ms)/brian2.Hz)
 
+    for EXC_ACTS2, EXC_ACTS3, f_ext in zip([EXC_ACTS_ACTIVE2, EXC_ACTS_REST2],
+                                           [EXC_ACTS_ACTIVE3,EXC_ACTS_REST3],
+                                           [0., args.fext]):
+        rate_array = np.array(EXC_ACTS2).mean(axis=0)
+        rate_array = np.array([ee if ee<args.fext+2*args.f_stim else args.fext for ee in rate_array])
+        for seed in range(1, args.nsim+1):
             ## SIMULATION 3
             print('[initializing simulation 3 ...], f_ext0=', f_ext, 'seed=', seed)
             POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True, with_pop_act=True, verbose=args.verbose)
