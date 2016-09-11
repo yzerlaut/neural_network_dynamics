@@ -57,7 +57,7 @@ def run_sim(args):
             EXC_ACTS1.append(POP_ACT[0].smooth_rate(window='flat',\
                                                     width=args.smoothing*brian2.ms)/brian2.Hz)
             if seed==1:
-                    np.savez('data/spikes3'+str(round(f_ext))+'.npz', args=args,
+                    np.savez('data/spikes1'+str(round(f_ext))+'.npz', args=args,
                              exc_spk = np.array(EXC_SPIKES.t),
                              inh_spk = np.array(INH_SPIKES.t),
                              exc_ids = np.array(EXC_SPIKES.i),
@@ -135,34 +135,47 @@ def run_sim(args):
 
 def get_plotting_instructions():
     return """
+import sys
+sys.path.append('../../')
+from ntwk_stim.waveform_library import double_gaussian, ramp_rise_then_constant
 args = data['args'].all()
-fig, AX = plt.subplots(2, figsize=(7,7))
-plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
+fig, AX = plt.subplots(4, 2, figsize=(5,7))
+plt.subplots_adjust(left=0.25, bottom=0.15, wspace=0.3, hspace=0.3)
 active_resp, rest_resp = [], []
+i0 = int((args.stim_start-10.*args.stim_T0)/args.DT)
+i1 = min([int((args.stim_start+15.*args.stim_T1)/args.DT), len(data['t_array'])-10])
+rate_array = double_gaussian(data['t_array'][i0:i1], args.stim_start,\
+    args.stim_T0, args.stim_T1, args.f_stim)
+AX[0,0].plot(data['t_array'][i0:i1], rate_array, 'b-', lw=2, label='quiescent')
+AX[0,0].plot(data['t_array'][i0:i1], rate_array, 'k-', lw=2, label='active')
+AX[0,0].plot(data['t_array'][i0:i1], rate_array, 'b--', lw=2)
+AX[0,0].legend(frameon=False)
+AX[1,0].plot(data['t_array'][i0:i1], data['EXC_ACTS_ACTIVE1'].mean(axis=0)[i0:i1], 'k-', lw=2)
+AX[2,0].plot(data['t_array'][i0:i1], data['EXC_ACTS_ACTIVE2'].mean(axis=0)[i0:i1], 'k-', lw=2)
+AX[3,0].plot(data['t_array'][i0:i1], data['EXC_ACTS_ACTIVE3'].mean(axis=0)[i0:i1], 'k-', lw=2)
+AX[0,0].plot(data['t_array'][i0:i1], rate_array, 'k-', lw=2)
+AX[1,0].plot(data['t_array'][i0:i1], data['EXC_ACTS_REST1'].mean(axis=0)[i0:i1], 'b-', lw=2)
+AX[2,0].plot(data['t_array'][i0:i1], data['EXC_ACTS_REST2'].mean(axis=0)[i0:i1], 'b-', lw=2)
+AX[3,0].plot(data['t_array'][i0:i1], data['EXC_ACTS_REST3'].mean(axis=0)[i0:i1], 'b-', lw=2)
+AX[0,0].plot(data['t_array'][i0]+50*np.arange(2), [2,2], '-', color='gray', lw=5)
+set_plot(AX[0,0], xticks=[], ylabel='exc. act. (Hz)')
+set_plot(AX[1,0], xticks=[], ylabel='exc. act. (Hz)')
+set_plot(AX[2,0], xticks=[], ylabel='exc. act. (Hz)')
+set_plot(AX[3,0], xticks=[], ylabel='exc. act. (Hz)')
 i0 = int((args.stim_start-2.*args.stim_T0)/args.DT)
-i1 = min([int((args.stim_start+3.*args.stim_T1)/args.DT), len(data['t_array'])-10])
-AX[1].plot(data['t_array'], data['EXC_ACTS_ACTIVE1'].mean(axis=0), 'r-', lw=1)
-AX[1].plot(data['t_array'], data['EXC_ACTS_ACTIVE2'].mean(axis=0), 'k-', lw=1)
-AX[1].plot(data['t_array'], data['EXC_ACTS_ACTIVE3'].mean(axis=0), 'k-', lw=1)
-AX[1].plot(data['t_array'], data['EXC_ACTS_REST1'].mean(axis=0), 'r-', lw=1)
-AX[1].plot(data['t_array'], data['EXC_ACTS_REST2'].mean(axis=0), 'k-', lw=1)
-AX[1].plot(data['t_array'], data['EXC_ACTS_REST3'].mean(axis=0), 'k-', lw=1)
-# for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE3'], data['EXC_ACTS_REST3']):
-#     active_resp.append(exc_act_active[i0:i1].mean()-exc_act_active[i1:].mean())
-#     rest_resp.append(exc_act_rest[i0:i1].mean()-exc_act_rest[i1:].mean())
-#     AX[1].plot(data['t_array'], exc_act_rest, 'k-')
-#     AX[1].plot(data['t_array'], exc_act_active, 'b-')
-# for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE1'], data['EXC_ACTS_REST1']):
-#     AX[1].plot(data['t_array'], exc_act_rest, 'k-')
-#     AX[1].plot(data['t_array'], exc_act_active, 'b-')
-# for exc_act_active, exc_act_rest  in zip(data['EXC_ACTS_ACTIVE2'], data['EXC_ACTS_REST2']):
-#     AX[1].plot(data['t_array'], exc_act_rest, 'k-')
-#     AX[1].plot(data['t_array'], exc_act_active, 'b-')
-# AX[0].plot(f_ext, active_resp, 'b-')
-# AX[0].plot(f_ext, rest_resp, 'k-')
-# AX[0].plot(rest_resp, rest_resp, 'k--')
-set_plot(AX[0], xlabel='drive freq. (Hz)', ylabel='mean exc. (Hz)')
-set_plot(AX[1], xlabel='drive freq. (Hz)', ylabel='mean exc. (Hz)')
+i1 = min([int((args.stim_start+4.*args.stim_T1)/args.DT), len(data['t_array'])-10])
+norm1 = np.mean(data['EXC_ACTS_REST1'].mean(axis=0)[i0:i1])/np.mean(data['EXC_ACTS_ACTIVE1'].mean(axis=0)[i0:i1])*(i1-i0)*args.DT
+norm2 = np.mean(data['EXC_ACTS_REST2'].mean(axis=0)[i0:i1])/np.mean(data['EXC_ACTS_ACTIVE2'].mean(axis=0)[i0:i1])*(i1-i0)*args.DT
+norm3 = np.mean(data['EXC_ACTS_REST3'].mean(axis=0)[i0:i1])/np.mean(data['EXC_ACTS_ACTIVE3'].mean(axis=0)[i0:i1])*(i1-i0)*args.DT
+AX[1,1].bar([2], [1], color='w', lw=0)
+AX[1,1].bar([0], [1], color='gray', edgecolor='k', lw=2)
+AX[2,1].bar([2], [1], color='w', lw=0)
+AX[2,1].bar([0], [norm2/norm1], color='gray', edgecolor='k', lw=2)
+AX[3,1].bar([2], [1], color='w', lw=0)
+AX[3,1].bar([0], [norm3/norm1], color='gray', edgecolor='k', lw=2)
+set_plot(AX[1,1], xticks=[], yticks=[0,1], ylabel='norm. response')
+set_plot(AX[2,1], xticks=[], yticks=[0,1], ylabel='(active/quiescent)')
+set_plot(AX[3,1], xticks=[], yticks=[0,1])
 """
 
 
