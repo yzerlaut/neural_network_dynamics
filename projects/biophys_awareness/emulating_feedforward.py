@@ -47,14 +47,21 @@ def run_sim(args):
             AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS, AFFERENCE_ARRAY,\
                                                                  t_array, rate_array, pop_for_conductance='A', SEED=seed)
             SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
+            EXC_SPIKES, INH_SPIKES = brian2.SpikeMonitor(POPS[0]), brian2.SpikeMonitor(POPS[1])
             net = brian2.Network(brian2.collect())
             # manually add the generated quantities
-            net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES) 
+            net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES, EXC_SPIKES, INH_SPIKES) 
             print('[running simulation 1 ...]')
             net.run(args.tstop*brian2.ms)
             print('[simulation 1 done -> saving output]')
             EXC_ACTS1.append(POP_ACT[0].smooth_rate(window='flat',\
                                                     width=args.smoothing*brian2.ms)/brian2.Hz)
+            if seed==1:
+                    np.savez('data/spikes1.npz', args=args,
+                             exc_spk = np.array(EXC_SPIKES.t),
+                             inh_spk = np.array(INH_SPIKES.t),
+                             exc_ids = np.array(EXC_SPIKES.i),
+                             inh_ids = np.array(INH_SPIKES.i))
         
     for EXC_ACTS1, EXC_ACTS2, f_ext in zip([EXC_ACTS_ACTIVE1, EXC_ACTS_REST1],
                                            [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
@@ -71,14 +78,22 @@ def run_sim(args):
             AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS, AFFERENCE_ARRAY,\
                                                                  t_array, rate_array, pop_for_conductance='A', SEED=seed)
             SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
+            EXC_SPIKES, INH_SPIKES = brian2.SpikeMonitor(POPS[0]), brian2.SpikeMonitor(POPS[1])
             net = brian2.Network(brian2.collect())
             # manually add the generated quantities
-            net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES) 
+            net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES, EXC_SPIKES, INH_SPIKES) 
             print('[running simulation 2 ...]')
             net.run(args.tstop*brian2.ms)
             print('[simulation 2 done -> saving output]')
             EXC_ACTS2.append(POP_ACT[0].smooth_rate(window='flat',\
                                                    width=args.smoothing*brian2.ms)/brian2.Hz)
+            if seed==1:
+                    np.savez('data/spikes2.npz', args=args,
+                             exc_spk = np.array(EXC_SPIKES.t),
+                             inh_spk = np.array(INH_SPIKES.t),
+                             exc_ids = np.array(EXC_SPIKES.i),
+                             inh_ids = np.array(INH_SPIKES.i))
+
 
     for EXC_ACTS2, EXC_ACTS3, f_ext in zip([EXC_ACTS_ACTIVE2, EXC_ACTS_REST2],
                                            [EXC_ACTS_ACTIVE3,EXC_ACTS_REST3],
@@ -95,14 +110,21 @@ def run_sim(args):
             AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS, AFFERENCE_ARRAY,\
                                                                  t_array, rate_array, pop_for_conductance='A', SEED=seed)
             SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
+            EXC_SPIKES, INH_SPIKES = brian2.SpikeMonitor(POPS[0]), brian2.SpikeMonitor(POPS[1])
             net = brian2.Network(brian2.collect())
             # manually add the generated quantities
-            net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES) 
+            net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES, EXC_SPIKES, INH_SPIKES) 
             print('[running simulation 3 ...]')
             net.run(args.tstop*brian2.ms)
             print('[simulation 3 done -> saving output]')
             EXC_ACTS3.append(POP_ACT[0].smooth_rate(window='flat',\
                                                    width=args.smoothing*brian2.ms)/brian2.Hz)
+            if seed==1:
+                    np.savez('data/spikes3.npz', args=args,
+                             exc_spk = np.array(EXC_SPIKES.t),
+                             inh_spk = np.array(INH_SPIKES.t),
+                             exc_ids = np.array(EXC_SPIKES.i),
+                             inh_ids = np.array(INH_SPIKES.i))
             
     np.savez(args.filename, args=args,
              EXC_ACTS_ACTIVE1=np.array(EXC_ACTS_ACTIVE1), EXC_ACTS_ACTIVE2=np.array(EXC_ACTS_ACTIVE2), EXC_ACTS_ACTIVE3=np.array(EXC_ACTS_ACTIVE3),
