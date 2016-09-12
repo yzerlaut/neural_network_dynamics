@@ -74,8 +74,8 @@ def run_sim(args):
                                            [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
                                            [args.fext, 0.]):
 
-        C = leastsq_fit(data['t_array'][i0:i1], data['EXC_ACTS_ACTIVE1'].mean(axis=0)[i0:i1], waveform, [args.stim_start, args.stim_T0, args.stim_T1, args.f_stim, 1])
-        rate_array = waveform(data['t_array'][i0:i1], C)
+        C = leastsq_fit(t_array[i0:i1], EXC_ACTS_ACTIVE1.mean(axis=0)[i0:i1], waveform, [args.stim_start, args.stim_T0, args.stim_T1, args.f_stim, 1])
+        rate_array = waveform(t_array, C)
 
         for seed in range(1, args.nsim+1):
             ## SIMULATION 2
@@ -107,8 +107,8 @@ def run_sim(args):
     for EXC_ACTS2, EXC_ACTS3, f_ext in zip([EXC_ACTS_ACTIVE2, EXC_ACTS_REST2],
                                            [EXC_ACTS_ACTIVE3,EXC_ACTS_REST3],
                                            [args.fext, 0.]):
-        C = leastsq_fit(data['t_array'][i0:i1], data['EXC_ACTS_ACTIVE2'].mean(axis=0)[i0:i1], waveform, [args.stim_start, args.stim_T0, args.stim_T1, args.f_stim, 1])
-        rate_array = waveform(data['t_array'][i0:i1], C)
+        C = leastsq_fit(t_array[i0:i1], EXC_ACTS_ACTIVE2.mean(axis=0)[i0:i1], waveform, [args.stim_start, args.stim_T0, args.stim_T1, args.f_stim, 1])
+        rate_array = waveform(t_array, C)
 
         for seed in range(1, args.nsim+1):
             ## SIMULATION 3
