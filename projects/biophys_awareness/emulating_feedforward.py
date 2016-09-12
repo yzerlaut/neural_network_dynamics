@@ -39,7 +39,7 @@ def run_sim(args):
     EXC_ACTS_REST1, EXC_ACTS_REST2, EXC_ACTS_REST3  = [], [], []
 
     i0 = int((args.stim_start-10.*args.stim_T0)/args.DT)
-    i1 = min([int((args.stim_start+15.*args.stim_T1)/args.DT), len(data['t_array'])-10])
+    i1 = min([int((args.stim_start+15.*args.stim_T1)/args.DT), len(t_array)-10])
     
     for EXC_ACTS1, f_ext in zip([EXC_ACTS_ACTIVE1, EXC_ACTS_REST1],
                                 [args.fext, 0.]):
