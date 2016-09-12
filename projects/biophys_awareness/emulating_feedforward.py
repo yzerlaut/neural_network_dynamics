@@ -5,6 +5,8 @@ import brian2, string
 import numpy as np
 
 import sys
+sys.path.append('../../../')
+from common_libraries.data_analysis.fits import leastsq_fit
 sys.path.append('../../')
 from ntwk_build.syn_and_connec_construct import build_populations,\
     build_up_recurrent_connections,\
@@ -14,6 +16,8 @@ from ntwk_stim.waveform_library import double_gaussian, ramp_rise_then_constant
 from ntwk_stim.connect_afferent_input import construct_feedforward_input
 from common_libraries.data_analysis.array_funcs import find_coincident_duplicates_in_two_arrays
 
+def waveform(x, coeffs):
+    return double_gaussian(x, *coeffs[:-1])+coeffs[-1]
 
 def run_sim(args):
     ### SIMULATION PARAMETERS
@@ -34,6 +38,9 @@ def run_sim(args):
     EXC_ACTS_ACTIVE1, EXC_ACTS_ACTIVE2, EXC_ACTS_ACTIVE3  = [], [], []
     EXC_ACTS_REST1, EXC_ACTS_REST2, EXC_ACTS_REST3  = [], [], []
 
+    i0 = int((args.stim_start-10.*args.stim_T0)/args.DT)
+    i1 = min([int((args.stim_start+15.*args.stim_T1)/args.DT), len(data['t_array'])-10])
+    
     for EXC_ACTS1, f_ext in zip([EXC_ACTS_ACTIVE1, EXC_ACTS_REST1],
                                 [args.fext, 0.]):
         rate_array = f_ext+double_gaussian(t_array, args.stim_start,\
@@ -66,8 +73,10 @@ def run_sim(args):
     for EXC_ACTS1, EXC_ACTS2, f_ext in zip([EXC_ACTS_ACTIVE1, EXC_ACTS_REST1],
                                            [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
                                            [args.fext, 0.]):
-        rate_array = np.array(EXC_ACTS1).mean(axis=0)
-        rate_array = np.array([ee if ee<args.fext+2*args.f_stim else args.fext for ee in rate_array])
+
+        C = leastsq_fit(data['t_array'][i0:i1], data['EXC_ACTS_ACTIVE1'].mean(axis=0)[i0:i1], waveform, [args.stim_start, args.stim_T0, args.stim_T1, args.f_stim, 1])
+        rate_array = waveform(data['t_array'][i0:i1], C)
+
         for seed in range(1, args.nsim+1):
             ## SIMULATION 2
             print('[initializing simulation 2 ...], f_ext0=', f_ext, 'seed=', seed)
@@ -98,8 +107,9 @@ def run_sim(args):
     for EXC_ACTS2, EXC_ACTS3, f_ext in zip([EXC_ACTS_ACTIVE2, EXC_ACTS_REST2],
                                            [EXC_ACTS_ACTIVE3,EXC_ACTS_REST3],
                                            [args.fext, 0.]):
-        rate_array = np.array(EXC_ACTS2).mean(axis=0)
-        rate_array = np.array([ee if ee<args.fext+2*args.f_stim else args.fext for ee in rate_array])
+        C = leastsq_fit(data['t_array'][i0:i1], data['EXC_ACTS_ACTIVE2'].mean(axis=0)[i0:i1], waveform, [args.stim_start, args.stim_T0, args.stim_T1, args.f_stim, 1])
+        rate_array = waveform(data['t_array'][i0:i1], C)
+
         for seed in range(1, args.nsim+1):
             ## SIMULATION 3
             print('[initializing simulation 3 ...], f_ext0=', f_ext, 'seed=', seed)
@@ -136,6 +146,10 @@ def run_sim(args):
 def get_plotting_instructions():
     return """
 import sys
+sys.path.append('../../../')
+from common_libraries.data_analysis.fits import leastsq_fit
+def waveform(x, coeffs):
+    return double_gaussian(x, *coeffs[:-1])+coeffs[-1]
 sys.path.append('../../')
 from ntwk_stim.waveform_library import double_gaussian, ramp_rise_then_constant
 args = data['args'].all()
@@ -151,8 +165,14 @@ AX[0,0].plot(data['t_array'][i0:i1], rate_array, 'k-', lw=2, label='active')
 AX[0,0].plot(data['t_array'][i0:i1], rate_array, 'b--', lw=2)
 AX[0,0].legend(frameon=False)
 AX[1,0].plot(data['t_array'][i0:i1], data['EXC_ACTS_ACTIVE1'].mean(axis=0)[i0:i1], 'k-', lw=2)
+C = leastsq_fit(data['t_array'][i0:i1], data['EXC_ACTS_ACTIVE1'].mean(axis=0)[i0:i1], waveform, [args.stim_start, args.stim_T0, args.stim_T1, args.f_stim,1])
+AX[1,0].plot(data['t_array'][i0:i1], waveform(data['t_array'][i0:i1], C), 'r--')
 AX[2,0].plot(data['t_array'][i0:i1], data['EXC_ACTS_ACTIVE2'].mean(axis=0)[i0:i1], 'k-', lw=2)
+C = leastsq_fit(data['t_array'][i0:i1], data['EXC_ACTS_ACTIVE2'].mean(axis=0)[i0:i1], waveform, [args.stim_start, args.stim_T0, args.stim_T1, args.f_stim,1])
+AX[2,0].plot(data['t_array'][i0:i1], waveform(data['t_array'][i0:i1], C), 'r--')
 AX[3,0].plot(data['t_array'][i0:i1], data['EXC_ACTS_ACTIVE3'].mean(axis=0)[i0:i1], 'k-', lw=2)
+C = leastsq_fit(data['t_array'][i0:i1], data['EXC_ACTS_ACTIVE3'].mean(axis=0)[i0:i1], waveform, [args.stim_start, args.stim_T0, args.stim_T1, args.f_stim,1])
+AX[3,0].plot(data['t_array'][i0:i1], waveform(data['t_array'][i0:i1], C), 'r--')
 AX[0,0].plot(data['t_array'][i0:i1], rate_array, 'k-', lw=2)
 AX[1,0].plot(data['t_array'][i0:i1], data['EXC_ACTS_REST1'].mean(axis=0)[i0:i1], 'b-', lw=2)
 AX[2,0].plot(data['t_array'][i0:i1], data['EXC_ACTS_REST2'].mean(axis=0)[i0:i1], 'b-', lw=2)
