@@ -219,13 +219,13 @@ if __name__=='__main__':
     parser.add_argument("--pconn", help="connection proba", type=float, default=0.05)
     parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=1.)
     parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=4.)
-    parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=2.5)
-    parser.add_argument("--fext",help="baseline external drive (Hz)",type=float, default=8.)
+    parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=2.)
+    parser.add_argument("--fext",help="baseline external drive (Hz)",type=float, default=4.)
     parser.add_argument("--f_stim",help="stimulation (Hz)",type=float, default=2.)
     # stimulation (single spike) properties
     parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)", type=float, default=800.)
-    parser.add_argument("--stim_T0",help="we multiply the single spike on the trial at this (ms)",type=float, default=10.)
-    parser.add_argument("--stim_T1",help="we multiply the single spike on the trial at this (ms)",type=float, default=20.)
+    parser.add_argument("--stim_T0",help="we multiply the single spike on the trial at this (ms)",type=float, default=20.)
+    parser.add_argument("--stim_T1",help="we multiply the single spike on the trial at this (ms)",type=float, default=40.)
     
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
     parser.add_argument("-u", "--update_plot", help="plot the figures", action="store_true")
