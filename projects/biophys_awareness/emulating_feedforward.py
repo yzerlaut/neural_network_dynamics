@@ -74,7 +74,7 @@ def run_sim(args):
                                            [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
                                            [args.fext, 0.]):
 
-        C = leastsq_fit(t_array[i0:i1], EXC_ACTS_ACTIVE1.mean(axis=0)[i0:i1], waveform, [args.stim_start, args.stim_T0, args.stim_T1, args.f_stim, 1])
+        C = leastsq_fit(t_array[i0:i1], np.array(EXC_ACTS1).mean(axis=0)[i0:i1], waveform, [args.stim_start, args.stim_T0, args.stim_T1, args.f_stim, np.array(EXC_ACTS1).mean(axis=0)[i1:].mean()])
         rate_array = waveform(t_array, C)
 
         for seed in range(1, args.nsim+1):
@@ -107,7 +107,7 @@ def run_sim(args):
     for EXC_ACTS2, EXC_ACTS3, f_ext in zip([EXC_ACTS_ACTIVE2, EXC_ACTS_REST2],
                                            [EXC_ACTS_ACTIVE3,EXC_ACTS_REST3],
                                            [args.fext, 0.]):
-        C = leastsq_fit(t_array[i0:i1], EXC_ACTS_ACTIVE2.mean(axis=0)[i0:i1], waveform, [args.stim_start, args.stim_T0, args.stim_T1, args.f_stim, 1])
+        C = leastsq_fit(t_array[i0:i1], np.array(EXC_ACTS2).mean(axis=0)[i0:i1], waveform, [args.stim_start, args.stim_T0, args.stim_T1, args.f_stim, np.array(EXC_ACTS2).mean(axis=0)[i1:].mean()])
         rate_array = waveform(t_array, C)
 
         for seed in range(1, args.nsim+1):
@@ -116,7 +116,6 @@ def run_sim(args):
             POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True, with_pop_act=True, verbose=args.verbose)
             initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
             ## OUTPUT AS INPUT !!!
-            rate_array = np.array([ee if ee<args.fext+2*args.f_stim else args.fext for ee in EXC_ACTS2[-1]])
             AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS, AFFERENCE_ARRAY,\
                                                                  t_array, rate_array, pop_for_conductance='A', SEED=seed)
             SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
@@ -221,8 +220,8 @@ if __name__=='__main__':
     parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=1.)
     parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=4.)
     parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=2.5)
-    parser.add_argument("--fext",help="baseline external drive (Hz)",type=float, default=8.5)
-    parser.add_argument("--f_stim",help="stimulation (Hz)",type=float, default=2.5)
+    parser.add_argument("--fext",help="baseline external drive (Hz)",type=float, default=8.)
+    parser.add_argument("--f_stim",help="stimulation (Hz)",type=float, default=2.)
     # stimulation (single spike) properties
     parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)", type=float, default=800.)
     parser.add_argument("--stim_T0",help="we multiply the single spike on the trial at this (ms)",type=float, default=10.)
