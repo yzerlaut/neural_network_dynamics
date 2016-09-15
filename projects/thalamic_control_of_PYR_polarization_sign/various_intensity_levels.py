@@ -30,7 +30,7 @@ def run_sim(args):
     INPUT_RATES = np.linspace(args.stim_min, args.stim_max, args.stim_discret)
     for f_ext in INPUT_RATES:
 
-        rate_array = f_ext+0.t_array
+        rate_array = f_ext+0.*t_array
     
         M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK))
         POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True, with_pop_act=True)
