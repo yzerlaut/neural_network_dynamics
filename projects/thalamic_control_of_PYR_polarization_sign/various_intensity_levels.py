@@ -97,6 +97,7 @@ if __name__=='__main__':
     # network architecture
     parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
     parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
+    parser.add_argument("--pconn", help="connection proba", type=float, default=0.05)
     # stimulation (single spike) properties
     parser.add_argument("--Qe_thal", help="thalamic excitatory weight (nS)", type=float, default=2.)
     parser.add_argument("--stim_min", help="min stim level (Hz)", type=float, default=0.)
