@@ -7,8 +7,7 @@ import numpy as np
 import sys
 sys.path.append('../../')
 from ntwk_build.syn_and_connec_construct import build_populations,\
-    build_up_recurrent_connections,\
-    initialize_to_rest
+    build_up_recurrent_connections, initialize_to_rest
 from ntwk_build.syn_and_connec_library import get_connectivity_and_synapses_matrix
 from ntwk_stim.waveform_library import double_gaussian, ramp_rise_then_constant
 from ntwk_stim.connect_afferent_input import construct_feedforward_input
@@ -121,12 +120,12 @@ if __name__=='__main__':
     parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=4.)
     parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=2.5)
     parser.add_argument("--fext_min",help="min external stim (Hz)",type=float, default=0.)
-    parser.add_argument("--fext_max",help="min external stim (Hz)",type=float, default=10.)
+    parser.add_argument("--fext_max",help="min external stim (Hz)",type=float, default=3.)
     parser.add_argument("--fext",help="baseline external drive (Hz)",type=float, default=4.)
     # stimulation (single spike) properties
     parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)", type=float, default=800.)
     parser.add_argument("--stim_T0",help="we multiply the single spike on the trial at this (ms)",type=float, default=20.)
-    parser.add_argument("--stim_T1",help="we multiply the single spike on the trial at this (ms)",type=float, default=35.)
+    parser.add_argument("--stim_T1",help="we multiply the single spike on the trial at this (ms)",type=float, default=50.)
     
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
     parser.add_argument("-u", "--update_plot", help="plot the figures", action="store_true")
