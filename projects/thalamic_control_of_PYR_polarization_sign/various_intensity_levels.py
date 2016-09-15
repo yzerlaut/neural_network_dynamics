@@ -22,15 +22,15 @@ def run_sim(args):
 
     NTWK = [{'name':'exc', 'N':args.Ne, 'type':'AdExp'},
             {'name':'inh', 'N':args.Ni, 'type':'LIF'}]
-    AFFERENCE_ARRAY = [{'Q':args.Qe_thal, 'N':400, 'pconn':0.1},
-                       {'Q':args.Qe_thal, 'N':100, 'pconn':0.1}]
+    AFFERENCE_ARRAY = [{'Q':args.Qe_thal, 'N':args.Ne, 'pconn':args.pconn},
+                       {'Q':args.Qe_thal, 'N':args.Ne, 'pconn':args.pconn}]
     
     EXC_ACTS, INH_ACTS, MEAN_VM, STD_VM, EXC_RASTER, INH_RASTER = [], [], [], [], [], []
 
     INPUT_RATES = np.linspace(args.stim_min, args.stim_max, args.stim_discret)
     for f_ext in INPUT_RATES:
 
-        rate_array = ramp_rise_then_constant(t_array, 0., 50., 0, f_ext)
+        rate_array = f_ext+0.t_array
     
         M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK))
         POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True, with_pop_act=True)
