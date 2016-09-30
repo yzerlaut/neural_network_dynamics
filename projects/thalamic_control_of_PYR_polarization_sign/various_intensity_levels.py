@@ -67,13 +67,16 @@ def run_sim(args):
 def get_plotting_instructions():
     return """
 args = data['args'].all()
-fig, AX = plt.subplots(2, 1, figsize=(5,7))
+fig, AX = plt.subplots(2, 1, figsize=(4,6))
+plt.subplots_adjust(left=.2,bottom=.2)
 data = np.load('data.npz')
 print(data['INPUT_RATES'], data['EXC_ACTS'])
 AX[0].plot(data['INPUT_RATES'], data['EXC_ACTS'], 'b')
 AX[0].plot(data['INPUT_RATES'], data['INH_ACTS'], 'r')
-set_plot(AX[0], xlabel='time (ms)', ylabel='pop. act. (Hz)')
-AX[1].plot(data['INPUT_RATES'], data['MEAN_VM'], 'k')
+set_plot(AX[0], xlabel='', xticks=[], ylabel='pop. act. (Hz)')
+AX[1].plot(data['INPUT_RATES'], 1e3*data['MEAN_VM'], 'k')
+set_plot(AX[1], xlabel='thalamic activity level (Hz)',\
+    ylabel='cortical polarization (mV)')
 """
 
 
