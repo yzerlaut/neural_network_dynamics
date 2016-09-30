@@ -86,7 +86,7 @@ from graphs.ntwk_dyn_plot import RASTER_PLOT, POP_ACT_PLOT
 from sim import *
 # RASTER_PLOT([1e3*data['exc_spk'],1e3*data['inh_spk']], [data['exc_ids'],data['inh_ids']])
 for exc_act, inh_act in zip(data['EXC_ACTS'],data['INH_ACTS']):
-    POP_ACT_PLOT(data['t_array'], [exc_act, inh_act])
+    POP_ACT_PLOT(data['t_array'], [exc_act, inh_act], pop_act_zoom=[-1,80])
     plot_autocorrel(inh_act[int(100/args.DT):], args.DT, tmax=50)
 """
 
