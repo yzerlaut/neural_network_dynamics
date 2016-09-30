@@ -21,17 +21,18 @@ def run_sim(args):
     brian2.defaultclock.dt = args.DT*brian2.ms
     t_array = np.arange(int(args.tstop/args.DT))*args.DT
 
-    NTWK = [{'name':'exc', 'N':args.Ne, 'type':'AdExp'},
+    NTWK = [{'name':'exc', 'N':args.Ne, 'type':'LIF'},
             {'name':'inh', 'N':args.Ni, 'type':'LIF'}]
     AFFERENCE_ARRAY = [{'Q':args.Qe_thal, 'N':args.Ne, 'pconn':args.pconn},
                        {'Q':args.Qe_thal, 'N':args.Ne, 'pconn':args.pconn}]
-    rate_array = t_array*0.+args.fext
+    # rate_array = t_array*0.+args.fext
+    rate_array = np.array([args.fext if tt<50 else 0 for tt in t_array])
     
     EXC_ACTS, INH_ACTS, SPK_TIMES, SPK_IDS = [], [], [], []
 
     for seed in range(1, args.nsim+1):
 
-        M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK))
+        M = get_connectivity_and_synapses_matrix('Vogels-Abbott', number=len(NTWK))
         if args.Qe!=0.:
             M[0,0]['Q'], M[0,1]['Q'] = args.Qe, args.Qe
         if args.Qi!=0.:
@@ -86,7 +87,7 @@ from sim import *
 # RASTER_PLOT([1e3*data['exc_spk'],1e3*data['inh_spk']], [data['exc_ids'],data['inh_ids']])
 for exc_act, inh_act in zip(data['EXC_ACTS'],data['INH_ACTS']):
     POP_ACT_PLOT(data['t_array'], [exc_act, inh_act])
-    plot_autocorrel(inh_act, args.DT, tmax=50)
+    plot_autocorrel(inh_act[int(100/args.DT):], args.DT, tmax=50)
 """
 
 if __name__=='__main__':
