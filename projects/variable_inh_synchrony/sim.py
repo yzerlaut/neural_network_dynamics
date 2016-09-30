@@ -107,8 +107,11 @@ if __name__=='__main__':
     parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
     parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
     parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=0.)
+    parser.add_argument("--Qe_thal", help="weight of excitatory spike (0. means default)", type=float, default=2.)
     parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=0.)
     parser.add_argument("--f_ext",help="external drive (Hz)",type=float, default=4.)
+    parser.add_argument("--pconn", help="connection proba", type=float, default=0.05)
+    parser.add_argument("--fext",help="baseline external drive (Hz)",type=float, default=4.)
     # stimulation (single spike) properties
     parser.add_argument("--rise_time", help="time of the rise of the ramp (ms)", type=float, default=1.)
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
