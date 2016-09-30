@@ -72,18 +72,14 @@ def run_sim(args):
              inh_ids = np.array(INH_SPIKES.i),
              plot=get_plotting_instructions())
 
+    
+    
 def get_plotting_instructions():
     return """
-fig1, ax = plt.subplots(1, figsize=(4,3))
 args = data['args'].all()
-plt.plot(data['exc_spk'], data['exc_ids'], 'g.')
-plt.plot(data['inh_spk'], data['exc_ids'].max()+data['inh_ids'], 'r.')
-set_plot(ax, xlabel='time (ms)', ylabel='neuron number', ylim=[3200,4200])
-fig2, ax = plt.subplots(1, figsize=(4,3))
-args = data['args'].all()
-plt.plot(data['t_array'], data['exc_act'], 'g-')
-plt.plot(data['t_array'], data['inh_act'], 'r-')
-set_plot(ax, xlabel='time (ms)', ylabel='pop. act. (Hz)')
+from graphs.ntwk_dyn_plot import RASTER_PLOT, POP_ACT_PLOT
+RASTER_PLOT([1e3*data['exc_spk'],1e3*data['inh_spk']], [data['exc_ids'],data['inh_ids']])
+POP_ACT_PLOT(data['t_array'], [data['exc_act'],data['inh_act']])
 """
 
 
