@@ -102,7 +102,7 @@ if __name__=='__main__':
     parser.add_argument("--DT",help="simulation time step (ms)",type=float, default=0.1)
     parser.add_argument("--tstop",help="simulation duration (ms)",type=float, default=200.)
     parser.add_argument("--nsim",help="number of simulations (different seeds used)", type=int, default=1)
-    parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",type=float, default=0.1)
+    parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",type=float, default=0.25)
     # network architecture
     parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
     parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
