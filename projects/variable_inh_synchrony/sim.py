@@ -62,6 +62,10 @@ def find_given_act_level_and_run_sim(args, desired_act=20.):
     df = 1 # 1 Hz increment by default
     imin = int(100/args.DT)
     exc_act = run_sim(args, return_only_exc=True)
+    if exc_act[imin:].mean()>desired_act:
+        above=True
+    else:
+        above=False
     while np.abs(exc_act[imin:].mean()-desired_act)>1:
         if exc_act[imin:].mean()>desired_act:
             if not above:
@@ -149,12 +153,12 @@ if __name__=='__main__':
     parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
     parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
     parser.add_argument("--Qe", help="weight of exc. spike (0. means default)", type=float, default=0.)
-    parser.add_argument("--Qe_thal", help="weight of exc. spike (0. means default)", type=float, default=2.)
+    parser.add_argument("--Qe_thal", help="weight of exc. spike (0. means default)", type=float, default=7.)
     parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=0.)
     parser.add_argument("--pconn", help="connection proba", type=float, default=0.05)
-    parser.add_argument("--fext_kick",help="external drive KICK (Hz)",type=float, default=4.)
+    parser.add_argument("--fext_kick",help="external drive KICK (Hz)",type=float, default=5.)
     parser.add_argument("--fext_stat",help="STATIONARY external drive (Hz)",type=float, default=0.)
-    parser.add_argument("--kick_length",help="duration of external drive KICK (ms)",type=float, default=50.)
+    parser.add_argument("--kick_length",help="duration of external drive KICK (ms)",type=float, default=30.)
     # stimulation (single spike) properties
     parser.add_argument("--rise_time", help="time of the rise of the ramp (ms)", type=float, default=1.)
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
