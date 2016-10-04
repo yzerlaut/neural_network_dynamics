@@ -72,13 +72,13 @@ def find_given_act_level_and_run_sim(args, desired_act=20.):
                 df /=2.
             args.fext_stat -= df
             above=True
-            print('raising to', args.fext_stat)
+            print('reducing to', args.fext_stat)
         if exc_act[imin:].mean()<desired_act:
             if above:
                 df /=2.
-            args.fext_stat -= df
+            args.fext_stat += df
             above=False
-            print('reducing to', args.fext_stat)
+            print('raising to', args.fext_stat)
         exc_act = run_sim(args, return_only_exc=True)
     args.tstop = previous_tstop
     run_sim(args)
