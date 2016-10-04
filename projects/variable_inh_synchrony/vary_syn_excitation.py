@@ -5,8 +5,8 @@ from bash.python_on_server import run_command
 
 Qe = np.linspace(6, 2, 4)
 qi = 67.
-qe = 3.#np.linspace(6, 2, 4)
-Qi = np.linspace(60., 100., 4)
+# qe = 3.#np.linspace(6, 2, 4)
+# Qi = np.linspace(60., 100., 4)
 DESIRED=25. # Hz, desired freq.
 
 if sys.argv[-1]=='srun':
@@ -20,7 +20,7 @@ elif sys.argv[-1]=='qt':
     sys.path.append('/Users/yzerlaut/work/common_libraries/')
     from graphs.qt_plots import *
     app = QtWidgets.QApplication(sys.argv)
-    main = Window(DATA_LIST=['data/varying_Qi_'+str(qi)+'.npz' for qi in Qi], KEYS=['plot2', 'plot3'])
+    main = Window(DATA_LIST=['data/varying_Qe_'+str(qi)+'.npz' for qe in Qe], KEYS=['plot2', 'plot3'])
     main.show()
     sys.exit(app.exec_())
 else:
@@ -35,3 +35,5 @@ else:
                 fig2, ax2 = plot_autocorrel(inh_act[int(100/args.DT):], args.DT, tmax=50)
                 fig1.savefig('data/FIG1_varying_Qe_'+str(qe)+'.svg')
                 fig2.savefig('data/FIG2_varying_Qe_'+str(qe)+'.svg')
+                fig1.savefig('data/FIG1_varying_Qe_'+str(qe)+'.png')
+                fig2.savefig('data/FIG2_varying_Qe_'+str(qe)+'.png')
