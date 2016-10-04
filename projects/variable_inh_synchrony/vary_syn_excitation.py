@@ -4,16 +4,25 @@ sys.path.append('../../../common_libraries/')
 from bash.python_on_server import run_command
 
 Qe = np.linspace(6, 2, 4)
-Qi = 67.
+qi = 67.
+qe = 3.#np.linspace(6, 2, 4)
+Qi = np.linspace(60., 100., 4)
 DESIRED=25. # Hz, desired freq.
 
 if sys.argv[-1]=='srun':
-    for qe in Qe:
-        run_command('sim.py --tstop 500 --desired_mean '+str(DESIRED)+' --Qi '+str(Qi)+' --Qe '+str(qe)+' -f data/varying_Qe_'+str(qe)+'.npz',\
-                    with_data_file='data/varying_Qe_'+str(qe)+'.npz')
+    for qi in Qi:
+        run_command('sim.py --tstop 500 --desired_mean '+str(DESIRED)+' --Qi '+str(qi)+' --Qe '+str(qe)+' -f data/varying_Qi_'+str(qi)+'.npz',\
+                    with_data_file='data/varying_Qi_'+str(qi)+'.npz')
 elif sys.argv[-1]=='run':
     import os
-    os.system('python sim.py --tstop 500 --desired_mean '+str(DESIRED)+' --Qi '+str(Qi)+' --Qe '+str(qe)+' -f data/varying_Qe_'+str(qe)+'.npz')
+    os.system('python sim.py --tstop 500 --desired_mean '+str(DESIRED)+' --Qi '+str(qi)+' --Qe '+str(qe)+' -f data/varying_Qi_'+str(qi)+'.npz')
+elif sys.argv[-1]=='qt':
+    sys.path.append('/Users/yzerlaut/work/common_libraries/')
+    from graphs.qt_plots import *
+    app = QtWidgets.QApplication(sys.argv)
+    main = Window(DATA_LIST=['data/varying_Qi_'+str(qi)+'.npz' for qi in Qi], KEYS=['plot2', 'plot3'])
+    main.show()
+    sys.exit(app.exec_())
 else:
     from graphs.ntwk_dyn_plot import RASTER_PLOT, POP_ACT_PLOT
     from sim import *

@@ -59,7 +59,7 @@ def find_given_act_level_and_run_sim(args, desired_act=20.):
 
     previous_tstop = args.tstop
     args.tstop = 200. # limiting to 200ms
-    df = 1 # 1 Hz increment by default
+    df = 5 # 1 Hz increment by default
     imin = int(100/args.DT)
     exc_act = run_sim(args, return_only_exc=True)
     if exc_act[imin:].mean()>desired_act:
@@ -69,7 +69,7 @@ def find_given_act_level_and_run_sim(args, desired_act=20.):
     while np.abs(exc_act[imin:].mean()-desired_act)>1:
         print(exc_act[imin:].mean())
         if exc_act[imin:].mean()>desired_act:
-            if not above:
+            if not above: # if previously below
                 df /=2.
             args.fext_stat -= df
             above=True
@@ -155,7 +155,7 @@ if __name__=='__main__':
     parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
     parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
     parser.add_argument("--Qe", help="weight of exc. spike (0. means default)", type=float, default=0.)
-    parser.add_argument("--Qe_thal", help="weight of exc. spike (0. means default)", type=float, default=6.)
+    parser.add_argument("--Qe_thal", help="weight of exc. spike (0. means default)", type=float, default=1.)
     parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=0.)
     parser.add_argument("--pconn", help="connection proba", type=float, default=0.05)
     parser.add_argument("--fext_kick",help="external drive KICK (Hz)",type=float, default=5.)
