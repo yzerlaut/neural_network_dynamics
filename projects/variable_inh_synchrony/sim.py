@@ -52,7 +52,7 @@ def run_sim(args, return_only_exc=False):
         np.savez(args.filename, args=args, EXC_ACTS=np.array(EXC_ACTS),
              INH_ACTS=np.array(INH_ACTS), NTWK=NTWK, t_array=t_array,
              rate_array=rate_array, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
-             plot=get_plotting_instructions(), plot1=plot1(), plot2=plot2(), plot3=plot3())
+             plot=get_plotting_instructions(), plot2=plot2(), plot3=plot3())
 
 
 def find_given_act_level_and_run_sim(args, desired_act=20.):
@@ -189,5 +189,4 @@ if __name__=='__main__':
         from ntwk_stim.waveform_library import double_gaussian, ramp_rise_then_constant
         from ntwk_stim.connect_afferent_input import construct_feedforward_input
         from common_libraries.data_analysis.array_funcs import find_coincident_duplicates_in_two_arrays
-        find_given_act_level_and_run_sim(args, desired_act=30.)
-        # run_sim(args)
+        run_sim(args)
