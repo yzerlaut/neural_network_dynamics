@@ -57,25 +57,26 @@ def run_sim(args, return_only_exc=False):
 
 def find_given_act_level_and_run_sim(args, desired_act=20.):
 
-    args0 = args.copy()
-    args0.tstop = 200. # limiting to 200ms
+    previous_tstop = args.tstop
+    args.tstop = 200. # limiting to 200ms
     df = 1 # 1 Hz increment by default
     imin = int(100/args.DT)
-    exc_act = run_sim(args0, return_only_exc=True)
+    exc_act = run_sim(args, return_only_exc=True)
     while np.abs(exc_act[imin:].mean()-desired_act)>1:
         if exc_act[imin:].mean()>desired_act:
             if not above:
                 df /=2.
-            args0.fext_stat -= df
+            args.fext_stat -= df
             above=True
-            print('raising to', args0.fext_stat)
+            print('raising to', args.fext_stat)
         if exc_act[imin:].mean()<desired_act:
             if above:
                 df /=2.
-            args0.fext_stat -= df
+            args.fext_stat -= df
             above=False
-            print('reducing to', args0.fext_stat)
-        exc_act = run_sim(args0, return_only_exc=True)
+            print('reducing to', args.fext_stat)
+        exc_act = run_sim(args, return_only_exc=True)
+    args.tstop = previous_tstop
     run_sim(args)
         
 
