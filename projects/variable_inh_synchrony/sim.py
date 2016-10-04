@@ -161,6 +161,7 @@ if __name__=='__main__':
     parser.add_argument("--fext_kick",help="external drive KICK (Hz)",type=float, default=5.)
     parser.add_argument("--fext_stat",help="STATIONARY external drive (Hz)",type=float, default=0.)
     parser.add_argument("--kick_length",help="duration of external drive KICK (ms)",type=float, default=30.)
+    parser.add_argument("--desired_mean",help="desired mean to be achieved (Hz)",type=float, default=0.)
     # stimulation (single spike) properties
     parser.add_argument("--rise_time", help="time of the rise of the ramp (ms)", type=float, default=1.)
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
@@ -189,4 +190,7 @@ if __name__=='__main__':
         from ntwk_stim.waveform_library import double_gaussian, ramp_rise_then_constant
         from ntwk_stim.connect_afferent_input import construct_feedforward_input
         from common_libraries.data_analysis.array_funcs import find_coincident_duplicates_in_two_arrays
-        run_sim(args)
+        if args.desired_mean>0:
+            find_given_act_level_and_run_sim(args, desired_act=args.desired_mean)
+        else:
+            run_sim(args)
