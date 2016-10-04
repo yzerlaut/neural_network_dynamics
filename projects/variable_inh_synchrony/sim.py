@@ -16,7 +16,7 @@ def run_sim(args, return_only_exc=False):
             {'name':'inh', 'N':args.Ni, 'type':'LIF'}]
     AFFERENCE_ARRAY = [{'Q':args.Qe_thal, 'N':args.Ne, 'pconn':args.pconn},
                        {'Q':args.Qe_thal, 'N':args.Ne, 'pconn':args.pconn}]
-    rate_array = np.array([args.fext_kick if tt<kick_length else args.fext_stat for tt in t_array])
+    rate_array = np.array([args.fext_kick if tt<args.kick_length else args.fext_stat for tt in t_array])
     
     EXC_ACTS, INH_ACTS, SPK_TIMES, SPK_IDS = [], [], [], []
 
