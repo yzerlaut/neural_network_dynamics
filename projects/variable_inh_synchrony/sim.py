@@ -67,6 +67,7 @@ def find_given_act_level_and_run_sim(args, desired_act=20.):
     else:
         above=False
     while np.abs(exc_act[imin:].mean()-desired_act)>1:
+        print(exc_act[imin:].mean())
         if exc_act[imin:].mean()>desired_act:
             if not above:
                 df /=2.
@@ -80,6 +81,7 @@ def find_given_act_level_and_run_sim(args, desired_act=20.):
             above=False
             print('raising to', args.fext_stat)
         exc_act = run_sim(args, return_only_exc=True)
+    print('mean of ', exc_act[imin:].mean(), 'Hz achieved for f_ext=', args.fext_stat)
     args.tstop = previous_tstop
     run_sim(args)
         
