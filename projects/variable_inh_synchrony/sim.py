@@ -59,7 +59,7 @@ def find_given_act_level_and_run_sim(args, desired_act=20.):
 
     previous_tstop = args.tstop
     args.tstop = 200. # limiting to 200ms
-    df = 5 # 1 Hz increment by default
+    df = 5. # 1 Hz increment by default
     imin = int(100/args.DT)
     exc_act = run_sim(args, return_only_exc=True)
     if exc_act[imin:].mean()>desired_act:
@@ -73,7 +73,7 @@ def find_given_act_level_and_run_sim(args, desired_act=20.):
                 df /=2.
             args.fext_stat -= df
             above=True
-            print('reducing to', args.fext_stat)
+            print('reducing to', args.fext_stat, ' with df=', df)
         if exc_act[imin:].mean()<desired_act:
             if above:
                 df /=2.
@@ -81,7 +81,7 @@ def find_given_act_level_and_run_sim(args, desired_act=20.):
             above=False
             print('raising to', args.fext_stat)
         exc_act = run_sim(args, return_only_exc=True)
-    print('mean of ', exc_act[imin:].mean(), 'Hz achieved for f_ext=', args.fext_stat)
+    print('mean of ', exc_act[imin:].mean(), 'Hz achieved for f_ext=', args.fext_stat, ' with df=', df)
     args.tstop = previous_tstop
     run_sim(args)
         
