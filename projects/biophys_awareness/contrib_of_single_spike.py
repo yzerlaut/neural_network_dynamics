@@ -23,20 +23,19 @@ def run_sim(args):
 
     NTWK = [{'name':'exc', 'N':args.Ne, 'type':args.NRNe},
             {'name':'inh', 'N':args.Ni, 'type':args.NRNi}]
-    AFFERENCE_ARRAY = [{'Q':args.Qe_thal, 'N':args.Ne, 'pconn':args.pconn},
-                       {'Q':args.Qe_thal, 'N':args.Ne, 'pconn':args.pconn}]
+    M = get_connectivity_and_synapses_matrix(args.NTWK, number=len(NTWK))
+    if args.Qe!=0:
+        M[0,0]['Q'], M[0,1]['Q'] = args.Qe, args.Qe
+    if args.Qi!=0:
+        M[1,0]['Q'], M[1,1]['Q'] = args.Qi, args.Qi
+    AFFERENCE_ARRAY = [{'Q':args.Qe_thal, 'N':args.Ne, 'pconn':M[0,0]['pconn']},
+                       {'Q':args.Qe_thal, 'N':args.Ne, 'pconn':M[0,0]['pconn']}]
     rate_array = np.array([args.fext_kick if tt<args.kick_length else args.fext_stat for tt in t_array])
     
     EXC_ACTS, INH_ACTS, SPK_TIMES, SPK_IDS = [], [], [], []
 
     for seed in range(1, args.nsim+1):
 
-        M = get_connectivity_and_synapses_matrix(args.NTWK, number=len(NTWK))
-        if args.Qe!=0:
-            M[0,0]['Q'], M[0,1]['Q'] = args.Qe, args.Qe
-        if args.Qi!=0:
-            M[1,0]['Q'], M[1,1]['Q'] = args.Qi, args.Qi
-            
         POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True, with_pop_act=True)
 
         initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
@@ -130,7 +129,7 @@ if __name__=='__main__':
     parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
     parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=0.)
     parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=0.)
-    parser.add_argument("--pconn", help="connection proba", type=float, default=0.05)
+    parser.add_argument("--pconn", help="connection proba", type=float, default=0.)
     parser.add_argument("--fext_kick",help="external drive KICK (Hz)",type=float, default=5.)
     parser.add_argument("--fext_stat",help="STATIONARY external drive (Hz)",type=float, default=0.)
     parser.add_argument("--kick_length",help="duration of external drive KICK (ms)",type=float, default=30.)
