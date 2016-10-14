@@ -5,7 +5,7 @@ import brian2, string
 import numpy as np
 
 import sys, os, time
-sys.path.append('../../')
+sys.path.append('../../../')
 from ntwk_build.syn_and_connec_construct import build_populations,\
     build_up_recurrent_connections,\
     initialize_to_rest
