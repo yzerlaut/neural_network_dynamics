@@ -4,7 +4,7 @@ This script sets up an afferent inhomogenous Poisson process onto the population
 import brian2, string
 import numpy as np
 
-import sys, os
+import sys, os, time
 sys.path.append('../../')
 from ntwk_build.syn_and_connec_construct import build_populations,\
     build_up_recurrent_connections,\
@@ -77,7 +77,7 @@ def run_sim(args):
         SPK_TIMES.append(spike_times)
         SPK_IDS.append(spike_ids)
         
-    np.savez(args.filename, args=args,
+    np.savez(args.filename, args=args, date=time.strftime("%c"),\
              script=os.path.abspath('./')+'/'+__file__,\
              EXC_ACTS=np.array(EXC_ACTS), INH_ACTS=np.array(INH_ACTS), NTWK=NTWK, t_array=t_array,
              rate_array=rate_array, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
