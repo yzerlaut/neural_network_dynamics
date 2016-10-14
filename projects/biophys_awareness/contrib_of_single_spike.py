@@ -21,8 +21,8 @@ def run_sim(args):
     brian2.defaultclock.dt = args.DT*brian2.ms
     t_array = np.arange(int(args.tstop/args.DT))*args.DT
 
-    NTWK = [{'name':'exc', 'N':args.Ne, 'type':'AdExp'},
-            {'name':'inh', 'N':args.Ni, 'type':'LIF'}]
+    NTWK = [{'name':'exc', 'N':args.Ne, 'type':args.NRNe},
+            {'name':'inh', 'N':args.Ni, 'type':args.NRNi}]
     AFFERENCE_ARRAY = [{'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn},
                        {'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn}]
     rate_array = args.f_ext+0.*t_array
@@ -31,7 +31,7 @@ def run_sim(args):
 
     for seed in range(1, args.nsim+1):
 
-        M = get_connectivity_and_synapses_matrix('CONFIG1', number=len(NTWK))
+        M = get_connectivity_and_synapses_matrix(args.NTWK, number=len(NTWK))
         if args.Qe!=0:
             M[0,0]['Q'], M[0,1]['Q'] = args.Qe, args.Qe
         if args.Qi!=0:
@@ -123,6 +123,9 @@ if __name__=='__main__':
     parser.add_argument("--nsim",help="number of simulations (different seeds used)", type=int, default=1)
     parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",type=float, default=0.5)
     # network architecture
+    parser.add_argument("--NRNe",help="excitatory neuron type", default='AdExp')
+    parser.add_argument("--NRNi",help="inhibitory neuron type", default='LIF')
+    parser.add_argument("--NTWK",help="baseline network architecture", default='CONFIG1')
     parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
     parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
     parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=0.)
@@ -132,8 +135,8 @@ if __name__=='__main__':
     parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)", type=float, default=100.)
     parser.add_argument("--stim_delay",help="we multiply the single spike on the trial at this (ms)",type=float, default=50.)
     parser.add_argument("--stim_jitter",help="we jitter the spike times with a gaussian distrib (ms)",type=float, default=5.)
-    parser.add_argument("--Qe_spike", help="weight of additional excitatory spike", type=float, default=1.)
-    parser.add_argument("--duplicate_spikes", help="we duplicate the spike over neurons", type=int, default=1)
+    parser.add_argument("--Qe_spike", help="weight of additional excitatory spike", type=float, default=5.)
+    parser.add_argument("--duplicate_spikes", help="we duplicate the spike over neurons", type=int, default=40)
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
     parser.add_argument("-u", "--update_plot", help="plot the figures", action="store_true")
     parser.add_argument("--filename", '-f', help="filename",type=str, default='data.npz')
