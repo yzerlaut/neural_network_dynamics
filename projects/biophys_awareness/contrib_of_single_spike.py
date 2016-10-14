@@ -23,9 +23,9 @@ def run_sim(args):
 
     NTWK = [{'name':'exc', 'N':args.Ne, 'type':args.NRNe},
             {'name':'inh', 'N':args.Ni, 'type':args.NRNi}]
-    AFFERENCE_ARRAY = [{'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn},
-                       {'Q':args.Qe_ff, 'N':args.Ne, 'pconn':args.pconn}]
-    rate_array = args.f_ext+0.*t_array
+    AFFERENCE_ARRAY = [{'Q':args.Qe_thal, 'N':args.Ne, 'pconn':args.pconn},
+                       {'Q':args.Qe_thal, 'N':args.Ne, 'pconn':args.pconn}]
+    rate_array = np.array([args.fext_kick if tt<args.kick_length else args.fext_stat for tt in t_array])
     
     EXC_ACTS, INH_ACTS, SPK_TIMES, SPK_IDS = [], [], [], []
 
@@ -64,7 +64,7 @@ def run_sim(args):
         
         FEEDFORWARD = brian2.Synapses(INPUT_SPIKES, POPS[0], on_pre='GAA_post += w', model='w:siemens')
         FEEDFORWARD.connect('i==j')
-        FEEDFORWARD.w=args.Qe_spike*brian2.nS
+        FEEDFORWARD.w=args.Qe_thal*brian2.nS
         
         net = brian2.Network(brian2.collect())
         # manually add the generated quantities
@@ -130,12 +130,14 @@ if __name__=='__main__':
     parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
     parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=0.)
     parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=0.)
-    parser.add_argument("--f_ext",help="external drive (Hz)",type=float, default=4.)
+    parser.add_argument("--fext_kick",help="external drive KICK (Hz)",type=float, default=5.)
+    parser.add_argument("--fext_stat",help="STATIONARY external drive (Hz)",type=float, default=0.)
+    parser.add_argument("--kick_length",help="duration of external drive KICK (ms)",type=float, default=30.)
     # stimulation (single spike) properties
     parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)", type=float, default=100.)
     parser.add_argument("--stim_delay",help="we multiply the single spike on the trial at this (ms)",type=float, default=50.)
     parser.add_argument("--stim_jitter",help="we jitter the spike times with a gaussian distrib (ms)",type=float, default=5.)
-    parser.add_argument("--Qe_spike", help="weight of additional excitatory spike", type=float, default=5.)
+    parser.add_argument("--Qe_thal", help="weight of additional excitatory spike", type=float, default=5.)
     parser.add_argument("--duplicate_spikes", help="we duplicate the spike over neurons", type=int, default=40)
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
     parser.add_argument("-u", "--update_plot", help="plot the figures", action="store_true")
