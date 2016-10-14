@@ -129,7 +129,7 @@ if __name__=='__main__':
     parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
     parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=0.)
     parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=0.)
-    parser.add_argument("--fext_kick",help="external drive KICK (Hz)",type=float, default=5.)
+    parser.add_argument("--fext_kick",help="external drive KICK (Hz)",type=float, default=2.)
     parser.add_argument("--fext_stat",help="STATIONARY external drive (Hz)",type=float, default=4.)
     parser.add_argument("--kick_length",help="duration of external drive KICK (ms)",type=float, default=30.)
     # stimulation (single spike) properties
