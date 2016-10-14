@@ -1,3 +1,0 @@
-[submodule "common_libraries"]
-	path = common_libraries
-	url = git@bitbucket.org:yzerlaut/common_libraries.git
