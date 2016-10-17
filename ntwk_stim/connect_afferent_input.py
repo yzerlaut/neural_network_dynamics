@@ -4,7 +4,6 @@ This script sets up an afferent inhomogenous Poisson process onto the population
 import brian2, string
 import numpy as np
 
-
 def set_spikes_from_time_varying_rate(time_array, rate_array, N, Nsyn, SEED=1):
     
     brian2.seed(SEED) # setting the seed !
