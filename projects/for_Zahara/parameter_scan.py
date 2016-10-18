@@ -11,7 +11,7 @@ if sys.argv[-1]=='run':
         for ext_input in EXT_INPUT:
             ii+=1
             os.system('python script.py --Qe '+str(5./qiqe)+\
-                      ' --Qi 5. --f_ext '+str(ext_input)+' --params_scan -f data_'+str(ii)+'.npz --nrec 20')
+                      ' --Qi 5. --f_ext '+str(ext_input)+' --params_scan -f data_'+str(ii)+'.npz --nrec 20 --tstop 1000.')
 elif sys.argv[-1]=='plot':
     for qiqe in Qi_over_Qe:
         for ext_input in EXT_INPUT:
