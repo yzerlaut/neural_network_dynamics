@@ -70,8 +70,7 @@ def run_sim(args):
              exc_spk = np.array(EXC_SPIKES.t),
              inh_spk = np.array(INH_SPIKES.t),
              exc_ids = np.array(EXC_SPIKES.i),
-             inh_ids = np.array(INH_SPIKES.i),
-             plot=get_plotting_instructions())
+             inh_ids = np.array(INH_SPIKES.i))
 
 
 if __name__=='__main__':
