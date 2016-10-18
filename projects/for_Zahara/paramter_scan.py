@@ -11,4 +11,23 @@ if sys.argv[-1]=='run':
         for ext_input in EXT_INPUT:
             ii+=1
             os.system('python script.py --Qe '+str(5./qiqe)+\
-                      ' --Qi 5. --f_ext '+str(ext_input)+' --params_scan -f data_'+str(ii)+'.npz --tstop 0.2')
+                      ' --Qi 5. --f_ext '+str(ext_input)+' --params_scan -f data_'+str(ii)+'.npz --tstop 0.2 --Ne 20 --Ni 5')
+elif sys.argv[-1]=='plot':
+    for qiqe in Qi_over_Qe:
+        for ext_input in EXT_INPUT:
+            ii+=1
+            data = np.load('data_'+str(ii)+'.npz')
+            print('===========================================')
+            print('for Qi/Qe', qiqe, '  Fext=', ext_input)
+            print(data['mean_G_exc']) # values of each individual neuron
+            print(data['std_G_exc'])
+            print(data['mean_G_inh'])
+            print(data['std_G_inh'])
+            print(data['mean_Vm'])
+            print(data['std_Vm'])
+else:
+    print('=====================================================================')
+    print('need to specify plot or run argument !!!')
+    print('=====================================================================')
+        
+            

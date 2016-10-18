@@ -55,9 +55,9 @@ def run_sim(args, for_parameter_scan=False):
     # manually add the generated quantities
     
     if for_parameter_scan:
-        trace_Ge_exc = brian2.StateMonitor(exc_neurons, 'GAA', record=range(args.nrec))
-        trace_Gi_exc = brian2.StateMonitor(exc_neurons, 'GBA', record=range(args.nrec))
-        trace_Vm_exc = brian2.StateMonitor(exc_neurons, 'V', record=range(args.nrec))
+        trace_Ge_exc = brian2.StateMonitor(POPS[0], 'GAA', record=range(args.nrec))
+        trace_Gi_exc = brian2.StateMonitor(POPS[0], 'GBA', record=range(args.nrec))
+        trace_Vm_exc = brian2.StateMonitor(POPS[0], 'V', record=range(args.nrec))
         net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES, EXC_SPIKES, INH_SPIKES, trace_Ge_exc, trace_Gi_exc, trace_Vm_exc) 
     else:
         net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES, EXC_SPIKES, INH_SPIKES)
@@ -74,12 +74,12 @@ def run_sim(args, for_parameter_scan=False):
     
     if for_parameter_scan:
         np.savez(args.filename, args=args,
-                 mean_G_exc = np.array([x.mean() for x in trace_Ge_exc]),
-                 std_G_exc = np.array([x.std() for x in trace_Ge_exc]),
-                 mean_G_inh = np.array([x.mean() for x in trace_Ge_inh]),
-                 std_G_inh = np.array([x.std() for x in trace_Ge_inh]),
-                 mean_Vm = np.array([x.mean() for x in trace_Vm]),
-                 std_Vm = np.array([x.std() for x in trace_Vm]))
+                 mean_G_exc = np.array([np.array(x.GAA/brian2.nS).mean() for x in trace_Ge_exc]),
+                 std_G_exc = np.array([np.array(x.GAA/brian2.nS).std() for x in trace_Ge_exc]),
+                 mean_G_inh = np.array([np.array(x.GBA/brian2.nS).mean() for x in trace_Gi_exc]),
+                 std_G_inh = np.array([np.array(x.GBA/brian2.nS).std() for x in trace_Gi_exc]),
+                 mean_Vm = np.array([np.array(x.V/brian2.mV).mean() for x in trace_Vm_exc]),
+                 std_Vm = np.array([np.array(x.V/brian2.mV).std() for x in trace_Vm_exc]))
     else:
         np.savez(args.filename, args=args,
              t_array=t_array,
