@@ -16,7 +16,7 @@ from ntwk_stim.connect_afferent_input import construct_feedforward_input
 from common_libraries.data_analysis.array_funcs import find_coincident_duplicates_in_two_arrays
 
 
-def run_sim(args):
+def run_sim(args, for_parameter_scan=False):
     ### SIMULATION PARAMETERS
 
     print('[initializing simulation ...]')
@@ -53,7 +53,15 @@ def run_sim(args):
 
     net = brian2.Network(brian2.collect())
     # manually add the generated quantities
-    net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES, EXC_SPIKES, INH_SPIKES) 
+    
+    if for_parameter_scan:
+        trace_Ge_exc = brian2.StateMonitor(exc_neurons, 'GAA', record=range(args.nrec))
+        trace_Gi_exc = brian2.StateMonitor(exc_neurons, 'GBA', record=range(args.nrec))
+        trace_Vm_exc = brian2.StateMonitor(exc_neurons, 'V', record=range(args.nrec))
+        net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES, EXC_SPIKES, INH_SPIKES, trace_Ge_exc, trace_Gi_exc, trace_Vm_exc) 
+    else:
+        net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES, EXC_SPIKES, INH_SPIKES)
+        
     print('[running simulation ...]')
     net.run(args.tstop*brian2.ms)
     print('[simulation done -> saving output]')
@@ -63,7 +71,17 @@ def run_sim(args):
     INH_ACTS = POP_ACT[1].smooth_rate(window='flat',\
                                            width=args.smoothing*brian2.ms)/brian2.Hz
 
-    np.savez(args.filename, args=args,
+    
+    if for_parameter_scan:
+        np.savez(args.filename, args=args,
+                 mean_G_exc = np.array([x.mean() for x in trace_Ge_exc]),
+                 std_G_exc = np.array([x.std() for x in trace_Ge_exc]),
+                 mean_G_inh = np.array([x.mean() for x in trace_Ge_inh]),
+                 std_G_inh = np.array([x.std() for x in trace_Ge_inh]),
+                 mean_Vm = np.array([x.mean() for x in trace_Vm]),
+                 std_Vm = np.array([x.std() for x in trace_Vm]))
+    else:
+        np.savez(args.filename, args=args,
              t_array=t_array,
              exc_act = np.array(EXC_ACTS),
              inh_act = np.array(INH_ACTS),
@@ -86,6 +104,7 @@ if __name__=='__main__':
     parser.add_argument("--DT",help="simulation time step (ms)",type=float, default=0.1)
     parser.add_argument("--tstop",help="simulation duration (ms)",type=float, default=200.)
     parser.add_argument("--nsim",help="number of simulations (different seeds used)", type=int, default=1)
+    parser.add_argument("--nrec",help="number of recorded neurons", type=int, default=4)
     parser.add_argument("--SEED",help="seed for numerical sims", type=int, default=3)
     parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",type=float, default=0.5)
     # network architecture
@@ -98,6 +117,7 @@ if __name__=='__main__':
     parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=2.)
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
     parser.add_argument("-p", "--plot", help="plot the figures", action="store_true")
+    parser.add_argument("--params_scan", action="store_true")
     parser.add_argument("--filename", '-f', help="filename",type=str, default='data.npz')
     args = parser.parse_args()
 
@@ -112,4 +132,4 @@ if __name__=='__main__':
         POP_ACT_PLOT(data['t_array'], [data['exc_act'],data['inh_act']])
         plt.show()
     else:
-        run_sim(args)
+        run_sim(args, for_parameter_scan=args.params_scan)
