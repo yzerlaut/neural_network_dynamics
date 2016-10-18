@@ -1,7 +1,7 @@
 import os, sys
 import numpy as np
 
-DISCRETIZATION = 2
+DISCRETIZATION = 10
 Qi_over_Qe = np.logspace(np.log(1.2)/np.log(10), np.log(1.2)/np.log(10), DISCRETIZATION)
 EXT_INPUT = np.linspace(0, 6, DISCRETIZATION)
 
