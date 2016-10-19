@@ -31,10 +31,12 @@ def build_populations(NTWK, M, with_raster=False, with_pop_act=False, verbose=Tr
     """
     POPS = []
     for ntwk, ii in zip(NTWK, range(len(NTWK))):
-        POPS.append(\
-                    get_membrane_equation(\
-                    get_neuron_params(ntwk['type'], number=ntwk['N'], verbose=verbose),
-                                          M[:,ii]))
+        if 'params' in ntwk.keys():
+            neuron_params = ntwk['params']
+        else:
+            neuron_params = get_neuron_params(ntwk['type'], number=ntwk['N'], verbose=verbose)
+            ntwk['params'] = neuron_params
+        POPS.append(get_membrane_equation(neuron_params, M[:,ii]))
     if with_pop_act:
         POP_ACT = []
         for pop in POPS:
@@ -62,7 +64,7 @@ def initialize_to_rest(POPS, NTWK):
     /!\ one population has the same conditions on all its targets !! /!\
     """
     for ii, l in zip(range(len(POPS)), string.ascii_uppercase[:len(POPS)]):
-        POPS[ii].V = get_neuron_params(NTWK[ii]['type'], verbose=False)['El']*brian2.mV
+        POPS[ii].V = NTWK[ii]['params']['El']*brian2.mV
         for t in string.ascii_uppercase[:len(POPS)]:
             exec("POPS[ii].G"+t+l+" = 0.*brian2.nS")
 

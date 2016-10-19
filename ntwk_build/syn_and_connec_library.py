@@ -41,6 +41,34 @@ def get_connectivity_and_synapses_matrix(NAME, number=2, SI_units=False, verbose
 
     return M
 
+def print_parameters(NRNS, params):
+    params['pconnec_p'] = 100.*params['pconnec']
+    S = """ ======= Network parameters =========
+    """
+    for nrn in NRNS:
+        S+="""
+        ---------------------------------
+        %(name)s
+           $C_m$=%(Cm)s pF, $G_L$=%(Gl)s nS, 
+           $E_L$=%(El)s mV, 
+           $V_{reset}$=%(Vreset)s mV, $V_{thre}$=%(Vthre)s mV, 
+           $a$=%(a)s nS, $b$=%(b)s pA, $\\tau_w$=%(tauw)g ms
+        """ % nrn
+    S+="""
+    ---------------------------------
+    Synapses :
+       $Q_e$=%(Qe)s nS, $Q_i$=%(Qi)s nS,
+       $E_e$=%(Ee)s mV, $E_i$=%(Ei)s mV""" % params
+    S+="""
+    ---------------------------------
+    Architecture : <====
+       $N_{tot}$=%(Ntot)i , $p_{connec}$=%(pconnec_p)s, 
+       $g_{ie}$=%(gei)s , $\\nu_{ext}$=%(ext_drive)s
+    """ % params
+    print(S)
+    return S
+        
+    
 if __name__=='__main__':
 
     print(__doc__)
