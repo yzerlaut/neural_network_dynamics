@@ -4,7 +4,7 @@ This script sets up an afferent inhomogenous Poisson process onto the population
 import brian2, string
 import numpy as np
 
-import sys
+import sys, os, time
 sys.path.append('../../')
 from ntwk_build.syn_and_connec_construct import build_populations,\
     build_up_recurrent_connections,\
@@ -60,7 +60,7 @@ def run_sim(args):
 
     EXC_SPIKES, INH_SPIKES = brian2.SpikeMonitor(POPS[0]), brian2.SpikeMonitor(POPS[1])
     trace_Vm_exc = brian2.StateMonitor(POPS[0], 'V', record=np.arange(5))
-    trace_Vm_inh = brian2.StateMonitor(POPS[1], 'V', record=np.arange(2))
+    trace_Vm_inh = brian2.StateMonitor(POPS[1], 'V', record=np.arange(5))
     trace_Ge = brian2.StateMonitor(POPS[0], 'GAA', record=10)
     trace_Gi = brian2.StateMonitor(POPS[0], 'GBA', record=10)
 
@@ -85,55 +85,48 @@ def run_sim(args):
              exc_ids = np.array(EXC_SPIKES.i),
              inh_ids = np.array(INH_SPIKES.i),
              Vm_exc = [np.array(x.V/brian2.mV) for x in trace_Vm_exc],
-             Vm2 = np.array(trace_Vm_exc[1].V/brian2.mV),
-             Vm3 = np.array(trace_Vm_inh[0].V/brian2.mV),
-             Vm4 = np.array(trace_Vm_inh[1].V/brian2.mV),
+             Vm_inh = [np.array(x.V/brian2.mV) for x in trace_Vm_inh],
              Ge = np.array(trace_Ge[10].GAA/brian2.nS),
              Gi = np.array(trace_Gi[10].GBA/brian2.nS),
              infos = print_parameters([exc_nrn_params, inh_nrn_params], vars(args)),
              plot=get_plotting_instructions())
-
+    os.system('cp '+args.filename+ ' /tmp/'+time.strftime("%Y_%m_%d-%H:%M:%S")+'.npz')
     
     
 def get_plotting_instructions():
     return """
 args = data['args'].all()
 from graphs.ntwk_dyn_plot import RASTER_PLOT, POP_ACT_PLOT
-RASTER_PLOT([1e3*data['exc_spk'],1e3*data['inh_spk']], [data['exc_ids'],data['inh_ids']])
+RASTER_PLOT([1e3*data['exc_spk'],1e3*data['inh_spk']], [data['exc_ids'],data['inh_ids']], MS=2)
 POP_ACT_PLOT(data['t_array'], [data['exc_act'],data['inh_act']])
 from graphs.my_graph import set_plot
 fig = plt.figure(figsize=(5,3))
-plt.subplots_adjust(left=.2, bottom=.2)
+plt.subplots_adjust(left=.25, bottom=.25)
 for i in range(len(data['Vm_exc'])):
-    plt.plot(data['t_array'], data['Vm_exc'][i], 'g-')
+    plt.plot(data['t_array'], data['Vm_exc'][i]-i*20., 'g-')
     for k in np.argwhere(data['exc_ids']==i).flatten():
-       plt.plot(1e3*data['exc_spk'][k]*np.ones(2), [-50, 0], 'g-')
-set_plot(plt.gca(), ylabel='$V_m$ (mV)', xlabel='time (ms)')
-fig3 = plt.figure(figsize=(5,3))
-plt.subplots_adjust(left=.2, bottom=.2)
-for k in np.argwhere(data['exc_ids']==1).flatten():
-    plt.plot(1e3*data['exc_spk'][k]*np.ones(2), [-50, 0], 'g-')
-plt.plot(data['t_array'], data['Vm2'], 'g-')
-fig5 = plt.figure(figsize=(5,3))
-plt.subplots_adjust(left=.2, bottom=.2)
-plt.plot(data['t_array'], data['Vm3'], 'r-')
-for k in np.argwhere(data['inh_ids']==0).flatten():
-    plt.plot(1e3*data['inh_spk'][k]*np.ones(2), [-54, 0], 'r-')
-set_plot(plt.gca(), ylabel='$V_m$ (mV)', xlabel='time (ms)')
-fig6 = plt.figure(figsize=(5,3))
-plt.subplots_adjust(left=.2, bottom=.2)
-plt.plot(data['t_array'], data['Vm4'], 'r-')
-for k in np.argwhere(data['inh_ids']==1).flatten():
-    plt.plot(1e3*data['inh_spk'][k]*np.ones(2), [-54, 0], 'r-')
+       plt.plot(1e3*data['exc_spk'][k]*np.ones(2), [-50-i*20, -i*20], 'g-')
+plt.plot([50,50], [-30,-10], 'k-', lw=4)
+plt.annotate('20mV', (60,-7))
+set_plot(plt.gca(), ['bottom'], ylabel='$V_m$ (mV)', xlabel='time (ms)', yticks=[])
+fig4 = plt.figure(figsize=(5,3))
+plt.subplots_adjust(left=.25, bottom=.25)
+for i in range(len(data['Vm_inh'])):
+    plt.plot(data['t_array'], data['Vm_inh'][i]-i*20., 'r-')
+    for k in np.argwhere(data['inh_ids']==i).flatten():
+       plt.plot(1e3*data['inh_spk'][k]*np.ones(2), [-54-i*20, -4-i*20], 'r-')
+plt.plot([50,50], [-30,-10], 'k-', lw=4)
+plt.annotate('20mV', (60,-10))
+set_plot(plt.gca(), ['bottom'], ylabel='$V_m$ (mV)', xlabel='time (ms)', yticks=[])
 fig7 = plt.figure(figsize=(5,3))
-plt.subplots_adjust(left=.2, bottom=.2)
+plt.subplots_adjust(left=.25, bottom=.25)
 plt.plot(data['t_array'], data['Gi'], 'r-', label='inh.')
 plt.plot(data['t_array'], data['Ge'], 'g-', label='exc.')
 plt.legend(frameon=False, prop={'size':'x-small'})
 set_plot(plt.gca(), ylabel='$G$ (nS)', xlabel='time (ms)')
-fig8 = plt.figure()
+fig8 = plt.figure(figsize=(5,3))
 plt.gca().axis('off')
-plt.annotate(data['infos'], (0, 0))
+plt.annotate(data['infos'], (0, 0), fontsize=3)
 """
 
 
@@ -188,7 +181,8 @@ if __name__=='__main__':
     parser.add_argument("--Ei", type=float, default=-80.)
     # miscellaneous
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
-    parser.add_argument("-u", "--update_plot", help="plot the figures", action="store_true")
+    parser.add_argument("-u", "--update_plot", help="update the instructions", action="store_true")
+    parser.add_argument("-p", "--plot", help="plot the figures", action="store_true")
     parser.add_argument("--filename", '-f', help="filename",type=str, default='data.npz')
     args = parser.parse_args()
 
@@ -196,5 +190,11 @@ if __name__=='__main__':
         data = dict(np.load(args.filename))
         data['plot'] = get_plotting_instructions()
         np.savez(args.filename, **data)
+        os.system('cp '+args.filename+ ' /tmp/'+time.strftime("%Y_%m_%d-%H:%M:%S")+'.npz')
+    elif args.plot:
+        import matplotlib.pylab as plt
+        data = np.load(args.filename)
+        exec(str(data['plot']))
+        plt.show()
     else:
         run_sim(args)
