@@ -88,7 +88,7 @@ def run_sim(args):
 def get_plotting_instructions():
     return """
 args = data['args'].all()
-fig, AX = plt.subplots(2, 1, figsize=(5,7))
+fig, AX = plt.subplots(3, 1, figsize=(5,10))
 plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
 AX[0].plot(data['t_array'][-1000:], data['rate_array'][-1000:], 'b')
 AX[0].plot(data['t_array'][-1000:], data['EXC_ACTS'].mean(axis=0)[-1000:], 'g')
@@ -106,6 +106,9 @@ for spike_times, exc_act in zip(data['SPK_TIMES'], data['EXC_ACTS']):
 AX[1].plot(t_zoom, trace/counter, 'k-', lw=2)
 set_plot(AX[0], xlabel='time (ms)', ylabel='pop. act. (Hz)')
 set_plot(AX[1], xlabel='time lag (ms)', ylabel='pop. act. (Hz)')
+AX[2].plot(t_zoom, 0.*t_zoom, 'k-', lw=2)
+AX[2].plot(t_zoom, 100.*trace/trace.mean(), 'k-', lw=2)
+set_plot(AX[2], xlabel='time lag (ms)', ylabel='pop. act. (%) \\n norm. to baseline', ylim=[-10, 120], yticks=[0.,50.,100.])
 """
 
 

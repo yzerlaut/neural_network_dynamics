@@ -124,9 +124,10 @@ plt.plot(data['t_array'], data['Gi'], 'r-', label='inh.')
 plt.plot(data['t_array'], data['Ge'], 'g-', label='exc.')
 plt.legend(frameon=False, prop={'size':'x-small'})
 set_plot(plt.gca(), ylabel='$G$ (nS)', xlabel='time (ms)')
-fig8 = plt.figure(figsize=(5,3))
-plt.gca().axis('off')
-plt.annotate(data['infos'], (0, 0), fontsize=3)
+fig8, ax = plt.subplots(1, figsize=(5,3))
+ax.axis('off')
+ax.annotate(data['infos'], (0, 0), fontsize=3)
+fig8.savefig('fig.svg')
 """
 
 
