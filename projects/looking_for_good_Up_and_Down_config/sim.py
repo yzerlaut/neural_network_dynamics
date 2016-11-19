@@ -96,7 +96,7 @@ def run_sim(args):
 def get_plotting_instructions():
     return """
 args = data['args'].all()
-from graphs.ntwk_dyn_plot import RASTER_PLOT, POP_ACT_PLOT
+from special_plots.ntwk_dyn_plot import RASTER_PLOT, POP_ACT_PLOT
 RASTER_PLOT([1e3*data['exc_spk'],1e3*data['inh_spk']], [data['exc_ids'],data['inh_ids']], MS=2)
 POP_ACT_PLOT(data['t_array'], [data['exc_act'],data['inh_act']])
 from graphs.my_graph import set_plot
