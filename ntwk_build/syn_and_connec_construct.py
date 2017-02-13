@@ -37,6 +37,7 @@ def build_populations(NTWK, M, with_raster=False, with_pop_act=False, verbose=Tr
             neuron_params = get_neuron_params(ntwk['type'], number=ntwk['N'], verbose=verbose)
             ntwk['params'] = neuron_params
         POPS.append(get_membrane_equation(neuron_params, M[:,ii]))
+        
     if with_pop_act:
         POP_ACT = []
         for pop in POPS:
