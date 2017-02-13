@@ -74,7 +74,8 @@ def run_sim(args):
                                            [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
                                            [args.fext, 0.]):
 
-        C = leastsq_fit(t_array[i0:i1], np.array(EXC_ACTS1).mean(axis=0)[i0:i1], waveform, [args.stim_start, args.stim_T0, args.stim_T1, args.f_stim, np.array(EXC_ACTS1).mean(axis=0)[i1:].mean()])
+        C = leastsq_fit(t_array[i0:i1], np.array(EXC_ACTS1).mean(axis=0)[i0:i1], waveform,\
+                        [args.stim_start, args.stim_T0, args.stim_T1, args.f_stim, np.array(EXC_ACTS1).mean(axis=0)[i1:].mean()])
         rate_array = waveform(t_array, C)
 
         for seed in range(1, args.nsim+1):
