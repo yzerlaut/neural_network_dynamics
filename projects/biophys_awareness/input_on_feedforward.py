@@ -117,17 +117,17 @@ fig, AX = plt.subplots(3, figsize=(5,3))
 plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
 mean_exc_freq = []
 t = data['t_array']
+print(args.stim_start)
 for ax, exc_act in zip(AX, [data['EXC_ACTS_ACTIVE1'].mean(axis=0),
                             data['EXC_ACTS_ACTIVE2'].mean(axis=0),
                             data['EXC_ACTS_ACTIVE3'].mean(axis=0)]):
-    ax.plot(t[t>args['stim_start']], exc_act[t>args['stim_start']], 'b')
+    ax.plot(t[t>args.stim_start], exc_act[t>args.stim_start], 'b')
 for ax, exc_act in zip(AX, [data['EXC_ACTS_REST1'].mean(axis=0),
                             data['EXC_ACTS_REST2'].mean(axis=0),
                             data['EXC_ACTS_REST3'].mean(axis=0)]):
-    ax.plot(t[t>args['stim_start']], exc_act[t>args['stim_start']], 'k')
+    ax.plot(t[t>args.stim_start], exc_act[t>args.stim_start], 'k')
     set_plot(ax, xlabel='time (ms)', ylabel='exc. (Hz)')
 """
-
 
 if __name__=='__main__':
     import argparse
@@ -161,10 +161,10 @@ if __name__=='__main__':
     parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD",
                         type=float, default=2.5)
     parser.add_argument("--fext",help="baseline external drive (Hz)",
-                        type=float, default=4.)
+                        type=float, default=4.5)
     # stimulation (single spike) properties
     parser.add_argument("--f_stim",help="peak external input (Hz)",
-                        type=float, default=2.)
+                        type=float, default=1.5)
     parser.add_argument("--stim_start",
                         help="time of the start for the additional spike (ms)",
                         type=float, default=400.)

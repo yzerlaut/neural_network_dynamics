@@ -40,7 +40,6 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         Gsyn = 'G'+synapse['name']
         eqs += """
         """+'d'+Gsyn+'/dt = -'+Gsyn+'*(1./(%(Tsyn)f*ms)) : siemens' % synapse
-        print(synapse)
     eqs += """
         I0 : amp """
     # adexp, pratical detection threshold Vthre+5*delta_v
@@ -49,7 +48,6 @@ def get_membrane_equation(neuron_params, synaptic_array,\
                threshold='V>'+str(neuron_params['Vthre']+5.*neuron_params['delta_v'])+'*mV',
                reset='V='+str(neuron_params['Vreset'])+'*mV; w_adapt+='+str(neuron_params['b'])+'*pA')
                                  
-    print(eqs)
     if return_equations:
         return neurons, eqs
     else:
