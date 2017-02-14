@@ -73,19 +73,19 @@ def initialize_to_rest(POPS, NTWK):
         for t in string.ascii_uppercase[:len(POPS)]:
             exec("POPS[ii].G"+t+l+" = 0.*brian2.nS")
 
-def initialize_to_random(POPS, NTWK, Gmean_MATRIX, Gstd_MATRIX, Vmean, Vstd):
-    """
-    REST BY DEFAULT !
+# def initialize_to_random(POPS, NTWK, Gmean_MATRIX, Gstd_MATRIX, Vmean, Vstd):
+#     """
+#     REST BY DEFAULT !
 
-    membrane potential is an absolute value !
-    while conductances are relative to leak conductance of the neuron !
-    /!\ one population has the same conditions on all its targets !! /!\
-    """
-    for ii, l in zip(range(len(POPS)), string.ascii_uppercase[:len(POPS)]):
-        POPS[ii].V = "(Vmean+Vstd*randn())*brian2.mV"
-        for t, jj in zip(string.ascii_uppercase[:len(POPS)], range(len(POPS))):
-            exec("POPS[ii].G"+t+l+" = "+str(Gmean_MATRIX[jj, ii])+\
-                 "+randn()*"str(Gstd_MATRIX[jj, ii]))+")*brian2.nS")
+#     membrane potential is an absolute value !
+#     while conductances are relative to leak conductance of the neuron !
+#     /!\ one population has the same conditions on all its targets !! /!\
+#     """
+#     for ii, l in zip(range(len(POPS)), string.ascii_uppercase[:len(POPS)]):
+#         POPS[ii].V = "(Vmean+Vstd*randn())*brian2.mV"
+#         for t, jj in zip(string.ascii_uppercase[:len(POPS)], range(len(POPS))):
+#             exec("POPS[ii].G"+t+l+" = "+str(Gmean_MATRIX[jj, ii])+\
+#                  "+randn()*"str(Gstd_MATRIX[jj, ii]))+")*brian2.nS")
             
 if __name__=='__main__':
 
