@@ -73,7 +73,7 @@ def initialize_to_rest(POPS, NTWK):
         for t in string.ascii_uppercase[:len(POPS)]:
             exec("POPS[ii].G"+t+l+" = 0.*brian2.nS")
 
-def initialize_to_random(POPS, NTWK, G_MATRIX):
+def initialize_to_random(POPS, NTWK, Gmean_MATRIX, Gstd_MATRIX, Vmean, Vstd):
     """
     REST BY DEFAULT !
 
@@ -82,9 +82,10 @@ def initialize_to_random(POPS, NTWK, G_MATRIX):
     /!\ one population has the same conditions on all its targets !! /!\
     """
     for ii, l in zip(range(len(POPS)), string.ascii_uppercase[:len(POPS)]):
-        POPS[ii].V = NTWK[ii]['params']['El']*brian2.mV
-        for t in string.ascii_uppercase[:len(POPS)]:
-            exec("POPS[ii].G"+t+l+" = 0.*brian2.nS")
+        POPS[ii].V = "(Vmean+Vstd*randn())*brian2.mV"
+        for t, jj in zip(string.ascii_uppercase[:len(POPS)], range(len(POPS))):
+            exec("POPS[ii].G"+t+l+" = "+str(Gmean_MATRIX[jj, ii])+\
+                 "+randn()*"str(Gstd_MATRIX[jj, ii]))+")*brian2.nS")
             
 if __name__=='__main__':
 
