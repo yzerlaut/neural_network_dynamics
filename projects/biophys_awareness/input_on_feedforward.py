@@ -109,24 +109,44 @@ def run_sim(args):
              rate_array=rate_array, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
              plot=get_plotting_instructions())
 
-    
+def average_all_stim(ACTS, args):
+    sim_average = ACTS.mean(axis=0) # averaging over simulations
+    dt = args.DT
+    tt0 = args.stim_start
+    n = int(2*(args.stim_T0+args.stim_T1)/args.DT)
+    t, VV = np.arange(n)*args.DT, []
+    k = 0
+    while (args.stim_start+k*args.stim_periodicity<args.tstop):
+        ii = int((args.stim_start+k*args.stim_periodicity)/args.DT)
+        VV.append(sim_average[ii:ii+n])
+        k+=1
+    return t, np.array(VV).mean(axis=0), np.array(VV).std(axis=0)
+
 def get_plotting_instructions():
     return """
 args = data['args'].all()
-fig, AX = plt.subplots(3, figsize=(5,3))
+fig, ax = plt.subplots(1, figsize=(6,2))
+ax.plot(data['EXC_ACTS_ACTIVE1'][0])
+fig2, AX = plt.subplots(3, figsize=(3,6))
 plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
+from input_on_feedforward import average_all_stim
 mean_exc_freq = []
-t = data['t_array']
 print(args.stim_start)
-for ax, exc_act in zip(AX, [data['EXC_ACTS_ACTIVE1'].mean(axis=0),
-                            data['EXC_ACTS_ACTIVE2'].mean(axis=0),
-                            data['EXC_ACTS_ACTIVE3'].mean(axis=0)]):
-    ax.plot(t[t>args.stim_start], exc_act[t>args.stim_start], 'b')
-for ax, exc_act in zip(AX, [data['EXC_ACTS_REST1'].mean(axis=0),
-                            data['EXC_ACTS_REST2'].mean(axis=0),
-                            data['EXC_ACTS_REST3'].mean(axis=0)]):
-    ax.plot(t[t>args.stim_start], exc_act[t>args.stim_start], 'k')
-    set_plot(ax, xlabel='time (ms)', ylabel='exc. (Hz)')
+for ax, exc_act in zip(AX, [data['EXC_ACTS_ACTIVE1'],
+                            data['EXC_ACTS_ACTIVE2'],
+                            data['EXC_ACTS_ACTIVE3']]):
+    print(exc_act)
+    t, v, sv = average_all_stim(exc_act, args)
+    ax.plot(t, v, 'b')
+    ax.fill_between(t, v-sv, v+sv, color='b', alpha=.4)
+for ax, exc_act in zip(AX, [data['EXC_ACTS_REST1'],
+                            data['EXC_ACTS_REST2'],
+                            data['EXC_ACTS_REST3']]):
+    t, v, sv = average_all_stim(exc_act, args)
+    ax.plot(t, v, 'k')
+    ax.fill_between(t, v-sv, v+sv, color='k', alpha=.3)
+    set_plot(ax, ['left'], xticks=[], ylabel='exc. (Hz)')
+set_plot(ax, xlabel='time (ms)', ylabel='exc. (Hz)')
 """
 
 if __name__=='__main__':
