@@ -12,7 +12,7 @@ def get_connectivity_and_synapses_matrix(NAME, number=2, SI_units=False, verbose
     M = np.empty((number, number), dtype=object)
     # default initialisation
     for i, j in itertools.product(range(number), range(number)):
-        M[i, j] = {'pconn': 0., 'Q': 0., 'Tsyn': 0., 'Erev': 0.,\
+        M[i, j] = {'pconn': 0., 'Q': 1., 'Tsyn': 5., 'Erev': 0.,\
                    'name':string.ascii_uppercase[i]+string.ascii_uppercase[j]}
 
     if NAME=='Vogels-Abbott':

@@ -4,8 +4,9 @@ This script sets up an afferent inhomogenous Poisson process onto the population
 import brian2, string
 import numpy as np
 
-import sys
+import sys, os
 sys.path.append('../../')
+sys.path.append(os.path.expanduser('~')+os.path.sep+'work')
 from ntwk_build.syn_and_connec_construct import build_populations,\
     build_up_recurrent_connections,\
     initialize_to_rest
@@ -52,9 +53,9 @@ def run_sim(args):
     EXC_ACTS_REST1, EXC_ACTS_REST2, EXC_ACTS_REST3  = [], [], []
 
     for EXC_ACTS1, EXC_ACTS2, EXC_ACTS3, f_ext in zip([EXC_ACTS_ACTIVE1,EXC_ACTS_REST1],
-                                                     [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
-                                                     [EXC_ACTS_ACTIVE3,EXC_ACTS_REST3],
-                                                     [0., args.fext]):
+                                                      [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
+                                                      [EXC_ACTS_ACTIVE3,EXC_ACTS_REST3],
+                                                      [args.fext, 0.]):
 
         for seed in range(1, args.nsim+1):
             
@@ -62,18 +63,25 @@ def run_sim(args):
             
             rate_array = f_ext+double_gaussian(t_array, args.stim_start,\
                                                args.stim_T0, args.stim_T1, args.f_stim)
+            # now we add the repeated stimulation
+            tt0 = args.stim_start+args.stim_periodicity
+            while (tt0<args.tstop):
+                rate_array+=+double_gaussian(t_array, tt0,\
+                                             args.stim_T0, args.stim_T1, args.f_stim)
+                tt0+=args.stim_periodicity
             
             POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True,\
-                                                      with_pop_act=True, verbose=args.verbose)
-            print(M)
-            initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
+                                                      with_pop_act=True,
+                                                      verbose=args.verbose)
+            # (fully quiescent State as initial conditions)
+            initialize_to_rest(POPS, NTWK)
 
-            AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS[:2],
-                                                                 AFFERENCE_ARRAY,\
-                                                                 t_array,
-                                                                 rate_array,\
-                                                                 pop_for_conductance='A',
-                                                                 SEED=seed)
+            AFF_SPKS,AFF_SYNAPSES = construct_feedforward_input(POPS[:2],
+                                                                AFFERENCE_ARRAY,\
+                                                                t_array,
+                                                                rate_array,\
+                                                                pop_for_conductance='A',
+                                                                SEED=seed)
             SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
 
             net = brian2.Network(brian2.collect())
@@ -89,9 +97,14 @@ def run_sim(args):
                                                    width=args.smoothing*brian2.ms)/brian2.Hz)
             EXC_ACTS3.append(POP_ACT[4].smooth_rate(window='flat',\
                                                    width=args.smoothing*brian2.ms)/brian2.Hz)
+            
     np.savez(args.filename, args=args,
-             EXC_ACTS_ACTIVE1=np.array(EXC_ACTS_ACTIVE1), EXC_ACTS_ACTIVE2=np.array(EXC_ACTS_ACTIVE2), EXC_ACTS_ACTIVE3=np.array(EXC_ACTS_ACTIVE3),
-             EXC_ACTS_REST1=np.array(EXC_ACTS_REST1), EXC_ACTS_REST2=np.array(EXC_ACTS_REST2), EXC_ACTS_REST3=np.array(EXC_ACTS_REST3),
+             EXC_ACTS_ACTIVE1=np.array(EXC_ACTS_ACTIVE1),
+             EXC_ACTS_ACTIVE2=np.array(EXC_ACTS_ACTIVE2),
+             EXC_ACTS_ACTIVE3=np.array(EXC_ACTS_ACTIVE3),
+             EXC_ACTS_REST1=np.array(EXC_ACTS_REST1),
+             EXC_ACTS_REST2=np.array(EXC_ACTS_REST2),
+             EXC_ACTS_REST3=np.array(EXC_ACTS_REST3),
              NTWK=NTWK, t_array=t_array,
              rate_array=rate_array, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
              plot=get_plotting_instructions())
@@ -100,15 +113,19 @@ def run_sim(args):
 def get_plotting_instructions():
     return """
 args = data['args'].all()
-fig, AX = plt.subplots(1, figsize=(5,3))
+fig, AX = plt.subplots(3, figsize=(5,3))
 plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
-f_ext = np.linspace(args.fext_min, args.fext_max, args.nsim)
 mean_exc_freq = []
-for exc_act in data['EXC_ACTS']:
-    print(exc_act[int(args.tstop/2/args.DT)+1:].mean())
-    mean_exc_freq.append(exc_act[int(args.tstop/2/args.DT)+1:].mean())
-AX.plot(f_ext, mean_exc_freq, 'k-')
-set_plot(AX, xlabel='drive freq. (Hz)', ylabel='mean exc. (Hz)')
+t = data['t_array']
+for ax, exc_act in zip(AX, [data['EXC_ACTS_ACTIVE1'].mean(axis=0),
+                            data['EXC_ACTS_ACTIVE2'].mean(axis=0),
+                            data['EXC_ACTS_ACTIVE3'].mean(axis=0)]):
+    ax.plot(t[t>args['stim_start']], exc_act[t>args['stim_start']], 'b')
+for ax, exc_act in zip(AX, [data['EXC_ACTS_REST1'].mean(axis=0),
+                            data['EXC_ACTS_REST2'].mean(axis=0),
+                            data['EXC_ACTS_REST3'].mean(axis=0)]):
+    ax.plot(t[t>args['stim_start']], exc_act[t>args['stim_start']], 'k')
+    set_plot(ax, xlabel='time (ms)', ylabel='exc. (Hz)')
 """
 
 
@@ -122,26 +139,51 @@ if __name__=='__main__':
     ,formatter_class=argparse.RawTextHelpFormatter)
 
     # simulation parameters
-    parser.add_argument("--DT",help="simulation time step (ms)",type=float, default=0.1)
-    parser.add_argument("--tstop",help="simulation duration (ms)",type=float, default=200.)
-    parser.add_argument("--nsim",help="number of simulations (different seeds used)", type=int, default=3)
-    parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",type=float, default=0.5)
+    parser.add_argument("--DT",help="simulation time step (ms)",
+                        type=float, default=0.1)
+    parser.add_argument("--tstop",help="simulation duration (ms)",
+                        type=float, default=500.)
+    parser.add_argument("--nsim",help="number of simulations (different seeds used)",
+                        type=int, default=2)
+    parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",
+                        type=float, default=0.5)
     # network architecture
-    parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
-    parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
-    parser.add_argument("--pconn", help="connection proba", type=float, default=0.05)
-    parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=1.)
-    parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=4.)
-    parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=2.5)
-    parser.add_argument("--fext",help="baseline external drive (Hz)",type=float, default=8.5)
-    parser.add_argument("--f_stim",help="baseline external drive (Hz)",type=float,default=3.)
-    parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)", type=float, default=800.)
-    parser.add_argument("--stim_T0",help="we multiply the single spike on the trial at this (ms)",type=float, default=10.)
-    parser.add_argument("--stim_T1",help="we multiply the single spike on the trial at this (ms)",type=float, default=20.)
+    parser.add_argument("--Ne",help="excitatory neuron number",
+                        type=int, default=4000)
+    parser.add_argument("--Ni",help="inhibitory neuron number",
+                        type=int, default=1000)
+    parser.add_argument("--pconn", help="connection proba",
+                        type=float, default=0.05)
+    parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)",
+                        type=float, default=1.)
+    parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)",
+                        type=float, default=4.)
+    parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD",
+                        type=float, default=2.5)
+    parser.add_argument("--fext",help="baseline external drive (Hz)",
+                        type=float, default=4.)
     # stimulation (single spike) properties
-    parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
-    parser.add_argument("-u", "--update_plot", help="plot the figures", action="store_true")
-    parser.add_argument("--filename", '-f', help="filename",type=str, default='data.npz')
+    parser.add_argument("--f_stim",help="peak external input (Hz)",
+                        type=float, default=2.)
+    parser.add_argument("--stim_start",
+                        help="time of the start for the additional spike (ms)",
+                        type=float, default=400.)
+    parser.add_argument("--stim_periodicity",
+                        help="each xx ms, we send a new input (ms)",
+                        type=float, default=400.)
+    parser.add_argument("--stim_T0",
+                        help="we multiply the single spike on the trial at this (ms)",
+                        type=float, default=10.)
+    parser.add_argument("--stim_T1",
+                        help="we multiply the single spike on the trial at this (ms)",
+                        type=float, default=40.)
+    # various settings
+    parser.add_argument("-v", "--verbose",
+                        help="increase output verbosity", action="store_true")
+    parser.add_argument("-u", "--update_plot",
+                        help="plot the figures", action="store_true")
+    parser.add_argument("--filename", '-f', help="filename",
+                        type=str, default='data.npz')
     args = parser.parse_args()
 
     if args.update_plot:

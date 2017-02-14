@@ -210,27 +210,47 @@ if __name__=='__main__':
 
     
     # simulation parameters
-    parser.add_argument("--DT",help="simulation time step (ms)",type=float, default=0.1)
-    parser.add_argument("--tstop",help="simulation duration (ms)",type=float, default=1000.)
-    parser.add_argument("--nsim",help="number of simulations (different seeds used)", type=int, default=3)
-    parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",type=float, default=4.9)
+    parser.add_argument("--DT",help="simulation time step (ms)",
+                        type=float, default=0.1)
+    parser.add_argument("--tstop",help="simulation duration (ms)",
+                        type=float, default=1000.)
+    parser.add_argument("--nsim",help="number of simulations (different seeds used)",
+                        type=int, default=3)
+    parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",
+                        type=float, default=4.9)
     # network architecture
-    parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
-    parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
-    parser.add_argument("--pconn", help="connection proba", type=float, default=0.05)
-    parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=1.)
-    parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=4.)
-    parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD", type=float, default=2.5)
-    parser.add_argument("--fext",help="baseline external drive (Hz)",type=float, default=4.)
-    parser.add_argument("--f_stim",help="stimulation (Hz)",type=float, default=2.)
+    parser.add_argument("--Ne",help="excitatory neuron number",
+                        type=int, default=4000)
+    parser.add_argument("--Ni",help="inhibitory neuron number",
+                        type=int, default=1000)
+    parser.add_argument("--pconn", help="connection proba",
+                        type=float, default=0.05)
+    parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)",
+                        type=float, default=1.)
+    parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)",
+                        type=float, default=4.)
+    parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD",
+                        type=float, default=2.5)
+    parser.add_argument("--fext",help="baseline external drive (Hz)",
+                        type=float, default=3.)
+    parser.add_argument("--f_stim",help="stimulation (Hz)",
+                        type=float, default=2.)
     # stimulation (single spike) properties
-    parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)", type=float, default=800.)
-    parser.add_argument("--stim_T0",help="we multiply the single spike on the trial at this (ms)",type=float, default=20.)
-    parser.add_argument("--stim_T1",help="we multiply the single spike on the trial at this (ms)",type=float, default=40.)
-    
-    parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
-    parser.add_argument("-u", "--update_plot", help="plot the figures", action="store_true")
-    parser.add_argument("--filename", '-f', help="filename",type=str, default='data.npz')
+    parser.add_argument("--stim_start",
+                        help="time of the start for the additional spike (ms)",
+                        type=float, default=800.)
+    parser.add_argument("--stim_T0",
+                        help="we multiply the single spike on the trial at this (ms)",
+                        type=float, default=20.)
+    parser.add_argument("--stim_T1",
+                        help="we multiply the single spike on the trial at this (ms)",
+                        type=float, default=40.)
+    parser.add_argument("-v", "--verbose", help="increase output verbosity",
+                        action="store_true")
+    parser.add_argument("-u", "--update_plot", help="plot the figures",
+                        action="store_true")
+    parser.add_argument("--filename", '-f', help="filename",type=str,
+                        default='data.npz')
     args = parser.parse_args()
 
     if args.update_plot:
