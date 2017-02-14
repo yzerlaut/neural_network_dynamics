@@ -131,11 +131,9 @@ fig2, AX = plt.subplots(3, figsize=(3,6))
 plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
 from input_on_feedforward import average_all_stim
 mean_exc_freq = []
-print(args.stim_start)
 for ax, exc_act in zip(AX, [data['EXC_ACTS_ACTIVE1'],
                             data['EXC_ACTS_ACTIVE2'],
                             data['EXC_ACTS_ACTIVE3']]):
-    print(exc_act)
     t, v, sv = average_all_stim(exc_act, args)
     ax.plot(t, v, 'b')
     ax.fill_between(t, v-sv, v+sv, color='b', alpha=.4)
@@ -184,10 +182,10 @@ if __name__=='__main__':
                         type=float, default=4.5)
     # stimulation (single spike) properties
     parser.add_argument("--f_stim",help="peak external input (Hz)",
-                        type=float, default=1.5)
+                        type=float, default=2.5)
     parser.add_argument("--stim_start",
                         help="time of the start for the additional spike (ms)",
-                        type=float, default=400.)
+                        type=float, default=800.)
     parser.add_argument("--stim_periodicity",
                         help="each xx ms, we send a new input (ms)",
                         type=float, default=400.)
