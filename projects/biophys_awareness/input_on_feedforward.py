@@ -61,7 +61,7 @@ def run_sim(args):
 
         for seed in range(1, args.nsim+1):
             
-            print('[initializing simulation ...], f_ext0=', f_ext, 'seed=', seed)
+            print('[initializing simulation ...], f_ext0=', f_ext1, 'seed=', seed)
 
             # rising ramp for the external drive
             rate_array1 = f_ext1*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
