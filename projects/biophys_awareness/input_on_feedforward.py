@@ -60,11 +60,12 @@ def run_sim(args):
         for seed in range(1, args.nsim+1):
             
             print('[initializing simulation ...], f_ext0=', f_ext, 'seed=', seed)
+
+            # rising ramp for the external drive
+            rate_array = f_ext*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
             
-            rate_array = f_ext+double_gaussian(t_array, args.stim_start,\
-                                               args.stim_T0, args.stim_T1, args.f_stim)
             # now we add the repeated stimulation
-            tt0 = args.stim_start+args.stim_periodicity
+            tt0 = args.stim_start
             while (tt0<args.tstop):
                 rate_array+=+double_gaussian(t_array, tt0,\
                                              args.stim_T0, args.stim_T1, args.f_stim)
