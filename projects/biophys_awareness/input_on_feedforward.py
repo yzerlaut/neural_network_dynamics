@@ -187,13 +187,13 @@ if __name__=='__main__':
     parser.add_argument("--fext",help="baseline external drive (Hz)",
                         type=float, default=2.1)
     parser.add_argument("--fext_rise",help="rise of external drive (ms)",
-                        type=float, default=1000)
+                        type=float, default=500)
     # stimulation (single spike) properties
     parser.add_argument("--f_stim",help="peak external input (Hz)",
                         type=float, default=2.5)
     parser.add_argument("--stim_start",
                         help="time of the start for the additional spike after ext rise !! (ms)",
-                        type=float, default=100.)
+                        type=float, default=200.)
     parser.add_argument("--stim_periodicity",
                         help="each xx ms, we send a new input (ms)",
                         type=float, default=400.)
