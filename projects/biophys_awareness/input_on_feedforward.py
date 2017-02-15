@@ -132,7 +132,7 @@ for i in range(3):
     AX[i].plot(data['EXC_ACTS_ACTIVE'+str(i+1)][0])
 fig2, AX = plt.subplots(4, figsize=(3,6))
 plt.subplots_adjust(left=0.25, bottom=0.05, wspace=0.2, hspace=0.2)
-from input_on_feedforward import average_all_stim
+from input_on_feedforward import *
 try:
     mean_exc_freq = []
     for ax, exc_act in zip(AX[1:], [data['EXC_ACTS_ACTIVE1'],
@@ -149,6 +149,8 @@ try:
         ax.fill_between(t, v-sv, v+sv, color='k', alpha=.3)
         set_plot(ax, ['left'], xticks=[], ylabel='exc. (Hz)')
     set_plot(ax, ['bottom', 'left'], xlabel='time (ms)', ylabel='exc. (Hz)', xticks=[0,50,100])
+    AX[0].plot(t, double_gaussian(t, 2*args.stim_T0, args.stim_T0, args.stim_T1, args.f_stim), 'b-')
+    AX[0].plot(t, double_gaussian(t, 2*args.stim_T0, args.stim_T0, args.stim_T1, args.f_stim), 'k--')
 except ValueError:
     pass
 """
