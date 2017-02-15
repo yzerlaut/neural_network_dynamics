@@ -52,22 +52,24 @@ def run_sim(args):
     EXC_ACTS_ACTIVE1, EXC_ACTS_ACTIVE2, EXC_ACTS_ACTIVE3  = [], [], []
     EXC_ACTS_REST1, EXC_ACTS_REST2, EXC_ACTS_REST3  = [], [], []
 
-    for EXC_ACTS1, EXC_ACTS2, EXC_ACTS3, f_ext in zip([EXC_ACTS_ACTIVE1,EXC_ACTS_REST1],
-                                                      [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
-                                                      [EXC_ACTS_ACTIVE3,EXC_ACTS_REST3],
-                                                      [args.fext, 0.]):
+    for EXC_ACTS1, EXC_ACTS2, EXC_ACTS3, f_ext1, f_ext2, fext3 in zip([EXC_ACTS_ACTIVE1,EXC_ACTS_REST1],
+                                                                      [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
+                                                                      [EXC_ACTS_ACTIVE3,EXC_ACTS_REST3],
+                                                                      [args.fext1, 0.],
+                                                                      [args.fext2, 0.],
+                                                                      [args.fext2, 0.]):
 
         for seed in range(1, args.nsim+1):
             
             print('[initializing simulation ...], f_ext0=', f_ext, 'seed=', seed)
 
             # rising ramp for the external drive
-            rate_array = f_ext*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
+            rate_array1 = f_ext1*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
             
             # now we add the repeated stimulation
             tt0 = args.fext_rise+args.stim_start
             while (tt0<args.tstop):
-                rate_array+=double_gaussian(t_array, tt0,\
+                rate_array1+=double_gaussian(t_array, tt0,\
                                             args.stim_T0, args.stim_T1, args.f_stim)
                 tt0+=args.stim_periodicity
             
@@ -77,12 +79,27 @@ def run_sim(args):
             # (fully quiescent State as initial conditions)
             initialize_to_rest(POPS, NTWK)
 
-            AFF_SPKS,AFF_SYNAPSES = construct_feedforward_input(POPS[:2],
+            AFF_SPKS1,AFF_SYNAPSES1 = construct_feedforward_input(POPS[:2],
                                                                 AFFERENCE_ARRAY,\
                                                                 t_array,
-                                                                rate_array,\
+                                                                rate_array1,\
                                                                 pop_for_conductance='A',
                                                                 SEED=seed)
+            rate_array2 = f_ext2*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
+            AFF_SPKS2,AFF_SYNAPSES2 = construct_feedforward_input(POPS[2:4],
+                                                                AFFERENCE_ARRAY,\
+                                                                t_array,
+                                                                rate_array2,\
+                                                                pop_for_conductance='C',
+                                                                  SEED=seed+15)
+            rate_array3 = f_ext3*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
+            AFF_SPKS2,AFF_SYNAPSES2 = construct_feedforward_input(POPS[2:4],
+                                                                  AFFERENCE_ARRAY,\
+                                                                  t_array,
+                                                                  rate_array3,\
+                                                                  pop_for_conductance='E',
+                                                                  SEED=seed+37)
+            
             SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
 
             net = brian2.Network(brian2.collect())
@@ -107,7 +124,7 @@ def run_sim(args):
              EXC_ACTS_REST2=np.array(EXC_ACTS_REST2),
              EXC_ACTS_REST3=np.array(EXC_ACTS_REST3),
              NTWK=NTWK, t_array=t_array,
-             rate_array=rate_array, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
+             rate_array1=rate_array1, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
              plot=get_plotting_instructions())
 
 def average_all_stim(ACTS, args):
@@ -186,8 +203,13 @@ if __name__=='__main__':
                         type=float, default=4.)
     parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD",
                         type=float, default=2.5)
-    parser.add_argument("--fext",help="baseline external drive (Hz)",
+    # external drive properties
+    parser.add_argument("--fext1",help="baseline external drive on layer 1 (Hz)",
                         type=float, default=2.1)
+    parser.add_argument("--fext2",help="baseline external drive on layer 2 (Hz)",
+                        type=float, default=1.1)
+    parser.add_argument("--fext3",help="baseline external drive on layer 3 (Hz)",
+                        type=float, default=1.1)
     parser.add_argument("--fext_rise",help="rise of external drive (ms)",
                         type=float, default=500)
     # stimulation (single spike) properties
