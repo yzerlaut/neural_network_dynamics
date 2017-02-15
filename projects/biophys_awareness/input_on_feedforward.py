@@ -93,7 +93,7 @@ def run_sim(args):
                                                                 pop_for_conductance='C',
                                                                   SEED=seed+15)
             rate_array3 = f_ext3*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
-            AFF_SPKS2,AFF_SYNAPSES2 = construct_feedforward_input(POPS[2:4],
+            AFF_SPKS3,AFF_SYNAPSES3 = construct_feedforward_input(POPS[2:4],
                                                                   AFFERENCE_ARRAY,\
                                                                   t_array,
                                                                   rate_array3,\
