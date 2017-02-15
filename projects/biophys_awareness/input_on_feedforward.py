@@ -113,25 +113,27 @@ def average_all_stim(ACTS, args):
     sim_average = ACTS.mean(axis=0) # averaging over simulations
     dt = args.DT
     tt0 = args.stim_start
-    n = int(2*(args.stim_T0+args.stim_T1)/args.DT)
-    t, VV = np.arange(n)*args.DT, []
+    n, n0 = int(2*(4.*args.stim_T0+args.stim_T1)/args.DT), int(3*args.stim_T0/args.DT)
+    t, VV = (np.arange(n)-n0)*args.DT, []
     k = 0
     while (args.stim_start+k*args.stim_periodicity<args.tstop):
         ii = int((args.stim_start+k*args.stim_periodicity)/args.DT)
-        VV.append(sim_average[ii:ii+n])
+        VV.append(sim_average[ii-n0:ii-n0+n])
         k+=1
     return t, np.array(VV).mean(axis=0), np.array(VV).std(axis=0)
 
 def get_plotting_instructions():
     return """
 args = data['args'].all()
-fig, ax = plt.subplots(1, figsize=(6,2))
-ax.plot(data['EXC_ACTS_ACTIVE1'][0])
-fig2, AX = plt.subplots(3, figsize=(3,6))
-plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
+fig, AX = plt.subplots(3, figsize=(6,6))
+plt.subplots_adjust(left=0.25, bottom=0.05, wspace=0.2, hspace=0.2)
+for i in range(3):
+    AX[i].plot(data['EXC_ACTS_ACTIVE'+str(i+1)][0])
+fig2, AX = plt.subplots(4, figsize=(3,6))
+plt.subplots_adjust(left=0.25, bottom=0.05, wspace=0.2, hspace=0.2)
 from input_on_feedforward import average_all_stim
 mean_exc_freq = []
-for ax, exc_act in zip(AX, [data['EXC_ACTS_ACTIVE1'],
+for ax, exc_act in zip(AX[1:], [data['EXC_ACTS_ACTIVE1'],
                             data['EXC_ACTS_ACTIVE2'],
                             data['EXC_ACTS_ACTIVE3']]):
     t, v, sv = average_all_stim(exc_act, args)
@@ -144,7 +146,7 @@ for ax, exc_act in zip(AX, [data['EXC_ACTS_REST1'],
     ax.plot(t, v, 'k')
     ax.fill_between(t, v-sv, v+sv, color='k', alpha=.3)
     set_plot(ax, ['left'], xticks=[], ylabel='exc. (Hz)')
-set_plot(ax, xlabel='time (ms)', ylabel='exc. (Hz)')
+set_plot(ax, ['bottom', 'left'], xlabel='time (ms)', ylabel='exc. (Hz)', xticks=[0,50,100])
 """
 
 if __name__=='__main__':
