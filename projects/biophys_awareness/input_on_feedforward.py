@@ -52,12 +52,12 @@ def run_sim(args):
     EXC_ACTS_ACTIVE1, EXC_ACTS_ACTIVE2, EXC_ACTS_ACTIVE3  = [], [], []
     EXC_ACTS_REST1, EXC_ACTS_REST2, EXC_ACTS_REST3  = [], [], []
 
-    for EXC_ACTS1, EXC_ACTS2, EXC_ACTS3, f_ext1, f_ext2, fext3 in zip([EXC_ACTS_ACTIVE1,EXC_ACTS_REST1],
+    for EXC_ACTS1, EXC_ACTS2, EXC_ACTS3, f_ext1, f_ext2, f_ext3 in zip([EXC_ACTS_ACTIVE1,EXC_ACTS_REST1],
                                                                       [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
                                                                       [EXC_ACTS_ACTIVE3,EXC_ACTS_REST3],
                                                                       [args.fext1, 0.],
                                                                       [args.fext2, 0.],
-                                                                      [args.fext2, 0.]):
+                                                                      [args.fext3, 0.]):
 
         for seed in range(1, args.nsim+1):
             
