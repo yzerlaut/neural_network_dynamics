@@ -65,7 +65,7 @@ def run_sim(args):
             rate_array = f_ext*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
             
             # now we add the repeated stimulation
-            tt0 = args.fext_rise+args.start_stim
+            tt0 = args.fext_rise+args.stim_start
             while (tt0<args.tstop):
                 rate_array+=double_gaussian(t_array, tt0,\
                                             args.stim_T0, args.stim_T1, args.f_stim)
@@ -113,12 +113,12 @@ def run_sim(args):
 def average_all_stim(ACTS, args):
     sim_average = ACTS.mean(axis=0) # averaging over simulations
     dt = args.DT
-    tt0 = args.fext_rise+args.start_stim
+    tt0 = args.fext_rise+args.stim_start
     n, n0 = int(2*(4.*args.stim_T0+args.stim_T1)/args.DT), int(3*args.stim_T0/args.DT)
     t, VV = (np.arange(n)-n0)*args.DT, []
     k = 0
-    while (args.fext_rise+args.start_stim+k*args.stim_periodicity<args.tstop):
-        ii = int((args.fext_rise+args.start_stim +k*args.stim_periodicity)/args.DT)
+    while (args.fext_rise+args.stim_start+k*args.stim_periodicity<args.tstop):
+        ii = int((args.fext_rise+args.stim_start +k*args.stim_periodicity)/args.DT)
         VV.append(sim_average[ii-n0:ii-n0+n])
         k+=1
     return t, np.array(VV).mean(axis=0), np.array(VV).std(axis=0)
