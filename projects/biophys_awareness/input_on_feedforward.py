@@ -104,7 +104,8 @@ def run_sim(args):
 
             net = brian2.Network(brian2.collect())
             # manually add the generated quantities
-            net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES) 
+            net.add(POPS, SYNAPSES, RASTER, POP_ACT,
+                    AFF_SPKS1, AFF_SYNAPSES1, AFF_SPKS2, AFF_SYNAPSES2, AFF_SPKS3, AFF_SYNAPSES3) 
             print('[running simulation ...]')
             net.run(args.tstop*brian2.ms)
             print('[simulation done -> saving output]')
