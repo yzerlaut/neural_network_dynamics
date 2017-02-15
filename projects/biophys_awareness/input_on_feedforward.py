@@ -130,24 +130,27 @@ fig, AX = plt.subplots(3, figsize=(6,6))
 plt.subplots_adjust(left=0.25, bottom=0.05, wspace=0.2, hspace=0.2)
 for i in range(3):
     AX[i].plot(data['EXC_ACTS_ACTIVE'+str(i+1)][0])
-fig2, AX = plt.subplots(4, figsize=(3,6))
-plt.subplots_adjust(left=0.25, bottom=0.05, wspace=0.2, hspace=0.2)
-from input_on_feedforward import average_all_stim
-mean_exc_freq = []
-for ax, exc_act in zip(AX[1:], [data['EXC_ACTS_ACTIVE1'],
-                            data['EXC_ACTS_ACTIVE2'],
-                            data['EXC_ACTS_ACTIVE3']]):
-    t, v, sv = average_all_stim(exc_act, args)
-    ax.plot(t, v, 'b')
-    ax.fill_between(t, v-sv, v+sv, color='b', alpha=.4)
-for ax, exc_act in zip(AX, [data['EXC_ACTS_REST1'],
-                            data['EXC_ACTS_REST2'],
-                            data['EXC_ACTS_REST3']]):
-    t, v, sv = average_all_stim(exc_act, args)
-    ax.plot(t, v, 'k')
-    ax.fill_between(t, v-sv, v+sv, color='k', alpha=.3)
-    set_plot(ax, ['left'], xticks=[], ylabel='exc. (Hz)')
-set_plot(ax, ['bottom', 'left'], xlabel='time (ms)', ylabel='exc. (Hz)', xticks=[0,50,100])
+try:
+    fig2, AX = plt.subplots(4, figsize=(3,6))
+    plt.subplots_adjust(left=0.25, bottom=0.05, wspace=0.2, hspace=0.2)
+    from input_on_feedforward import average_all_stim
+    mean_exc_freq = []
+    for ax, exc_act in zip(AX[1:], [data['EXC_ACTS_ACTIVE1'],
+                                data['EXC_ACTS_ACTIVE2'],
+                                data['EXC_ACTS_ACTIVE3']]):
+        t, v, sv = average_all_stim(exc_act, args)
+        ax.plot(t, v, 'b')
+        ax.fill_between(t, v-sv, v+sv, color='b', alpha=.4)
+    for ax, exc_act in zip(AX, [data['EXC_ACTS_REST1'],
+                                data['EXC_ACTS_REST2'],
+                                data['EXC_ACTS_REST3']]):
+        t, v, sv = average_all_stim(exc_act, args)
+        ax.plot(t, v, 'k')
+        ax.fill_between(t, v-sv, v+sv, color='k', alpha=.3)
+        set_plot(ax, ['left'], xticks=[], ylabel='exc. (Hz)')
+    set_plot(ax, ['bottom', 'left'], xlabel='time (ms)', ylabel='exc. (Hz)', xticks=[0,50,100])
+except ValueError:
+    pass
 """
 
 if __name__=='__main__':
