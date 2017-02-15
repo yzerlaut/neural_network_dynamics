@@ -65,10 +65,10 @@ def run_sim(args):
             rate_array = f_ext*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
             
             # now we add the repeated stimulation
-            tt0 = args.stim_start
+            tt0 = args.fext_rise+args.start_stim
             while (tt0<args.tstop):
-                rate_array+=+double_gaussian(t_array, tt0,\
-                                             args.stim_T0, args.stim_T1, args.f_stim)
+                rate_array+=double_gaussian(t_array, tt0,\
+                                            args.stim_T0, args.stim_T1, args.f_stim)
                 tt0+=args.stim_periodicity
             
             POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True,\
@@ -113,12 +113,12 @@ def run_sim(args):
 def average_all_stim(ACTS, args):
     sim_average = ACTS.mean(axis=0) # averaging over simulations
     dt = args.DT
-    tt0 = args.stim_start
+    tt0 = args.fext_rise+args.start_stim
     n, n0 = int(2*(4.*args.stim_T0+args.stim_T1)/args.DT), int(3*args.stim_T0/args.DT)
     t, VV = (np.arange(n)-n0)*args.DT, []
     k = 0
-    while (args.stim_start+k*args.stim_periodicity<args.tstop):
-        ii = int((args.stim_start+k*args.stim_periodicity)/args.DT)
+    while (args.fext_rise+args.start_stim+k*args.stim_periodicity<args.tstop):
+        ii = int((args.fext_rise+args.start_stim +k*args.stim_periodicity)/args.DT)
         VV.append(sim_average[ii-n0:ii-n0+n])
         k+=1
     return t, np.array(VV).mean(axis=0), np.array(VV).std(axis=0)
@@ -182,13 +182,15 @@ if __name__=='__main__':
     parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD",
                         type=float, default=2.5)
     parser.add_argument("--fext",help="baseline external drive (Hz)",
-                        type=float, default=4.5)
+                        type=float, default=2.1)
+    parser.add_argument("--fext_rise",help="rise of external drive (ms)",
+                        type=float, default=1000)
     # stimulation (single spike) properties
     parser.add_argument("--f_stim",help="peak external input (Hz)",
                         type=float, default=2.5)
     parser.add_argument("--stim_start",
-                        help="time of the start for the additional spike (ms)",
-                        type=float, default=800.)
+                        help="time of the start for the additional spike after ext rise !! (ms)",
+                        type=float, default=100.)
     parser.add_argument("--stim_periodicity",
                         help="each xx ms, we send a new input (ms)",
                         type=float, default=400.)
