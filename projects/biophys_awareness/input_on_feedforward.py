@@ -39,15 +39,15 @@ def run_sim(args, return_firing_rate_only=False):
         # recurrent exc-exc and exc-inh connection !
         for m in [M[0,0], M[2,2], M[4,4], M[0,1], M[2,3], M[4,5]]:
             m[key] = val
-    # feedforward excitation
-    for key, val in zip(['Q', 'pconn', 'Erev', 'Tsyn'], [args.Qe_ff, args.pconn, 0., 5.]):
-        # feedforward excitatory connection on excitation and inhibition!
-        for m in [M[0,2], M[2,4], M[0,3], M[2,5]]:
-            m[key] = val
     # recurrent inhibition
     for key, val in zip(['Q', 'pconn', 'Erev', 'Tsyn'], [args.Qi, args.pconn, -80., 5.]):
         # recurrent inh.
         for m in [M[1,1], M[3,3], M[5,5], M[1,0], M[3,2], M[5,4]]:
+            m[key] = val
+    # feedforward excitation
+    for key, val in zip(['Q', 'pconn', 'Erev', 'Tsyn'], [args.Qe_ff, args.pconn, 0., 5.]):
+        # feedforward excitatory connection on excitation and inhibition!
+        for m in [M[0,2], M[2,4], M[0,3], M[2,5]]:
             m[key] = val
     
     # over various stims...
@@ -159,7 +159,8 @@ args = data['args'].all()
 fig, AX = plt.subplots(3, figsize=(6,6))
 plt.subplots_adjust(left=0.25, bottom=0.05, wspace=0.2, hspace=0.2)
 for i in range(3):
-    AX[i].plot(data['EXC_ACTS_ACTIVE'+str(i+1)][0])
+    AX[i].plot(data['EXC_ACTS_ACTIVE'+str(i+1)][0], 'k-')
+    AX[i].plot(data['EXC_ACTS_REST'+str(i+1)][0], 'b-')
 fig2, AX = plt.subplots(4, figsize=(3,6))
 plt.subplots_adjust(left=0.25, bottom=0.05, wspace=0.2, hspace=0.2)
 from input_on_feedforward import *
@@ -210,6 +211,8 @@ if __name__=='__main__':
                         type=int, default=1000)
     parser.add_argument("--pconn", help="connection proba",
                         type=float, default=0.05)
+    parser.add_argument("--pconn_ff", help="connection proba",
+                        type=float, default=0.01)
     parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)",
                         type=float, default=1.)
     parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)",
@@ -218,11 +221,11 @@ if __name__=='__main__':
                         type=float, default=2.5)
     # external drive properties
     parser.add_argument("--fext1",help="baseline external drive on layer 1 (Hz)",
-                        type=float, default=2.)
+                        type=float, default=3.)
     parser.add_argument("--fext2",help="baseline external drive on layer 2 (Hz)",
-                        type=float, default=2.)
+                        type=float, default=3.)
     parser.add_argument("--fext3",help="baseline external drive on layer 3 (Hz)",
-                        type=float, default=2.)
+                        type=float, default=3.)
     parser.add_argument("--fext_rise",help="rise of external drive (ms)",
                         type=float, default=1000)
     # stimulation (single spike) properties
