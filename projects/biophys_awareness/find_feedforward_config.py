@@ -23,10 +23,10 @@ def find_equal_activity_levels(args):
     fe1, fe2, fe3 = run_sim(args, return_firing_rate_only=True)
     while ((abs(fe1-desF)>0.5) or (abs(fe2-desF)>0.5) or (abs(fe3-desF)>0.5)) and (i<100):
         print('step ', i, 'fe1=', fe1, 'fe2=', fe2, 'fe3=', fe3)
-        # if fe1>desF+0.5:
-        #     args.fext1 -= 0.1
-        # elif fe1<desF-0.5:
-        #     args.fext1 += 0.1
+        if fe1>desF+0.5:
+            args.fext1 -= 0.1
+        elif fe1<desF-0.5:
+            args.fext1 += 0.1
         if fe2>desF+0.5:
             args.fext2 -= 0.2
         elif fe2<desF-0.5:

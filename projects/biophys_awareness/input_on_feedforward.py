@@ -34,14 +34,17 @@ def run_sim(args, return_firing_rate_only=False):
     M = get_connectivity_and_synapses_matrix('', number=len(NTWK))
 
     # Manually construct the 6 by 6 matrix:
+    # recurrent excitation
     for key, val in zip(['Q', 'pconn', 'Erev', 'Tsyn'], [args.Qe, args.pconn, 0., 5.]):
         # recurrent exc-exc and exc-inh connection !
         for m in [M[0,0], M[2,2], M[4,4], M[0,1], M[2,3], M[4,5]]:
             m[key] = val
+    # feedforward excitation
     for key, val in zip(['Q', 'pconn', 'Erev', 'Tsyn'], [args.Qe_ff, args.pconn, 0., 5.]):
         # feedforward excitatory connection on excitation and inhibition!
         for m in [M[0,2], M[2,4], M[0,3], M[2,5]]:
             m[key] = val
+    # recurrent inhibition
     for key, val in zip(['Q', 'pconn', 'Erev', 'Tsyn'], [args.Qi, args.pconn, -80., 5.]):
         # recurrent inh.
         for m in [M[1,1], M[3,3], M[5,5], M[1,0], M[3,2], M[5,4]]:
@@ -215,11 +218,11 @@ if __name__=='__main__':
                         type=float, default=2.5)
     # external drive properties
     parser.add_argument("--fext1",help="baseline external drive on layer 1 (Hz)",
-                        type=float, default=3.1)
+                        type=float, default=3.)
     parser.add_argument("--fext2",help="baseline external drive on layer 2 (Hz)",
-                        type=float, default=0.7)
+                        type=float, default=3.)
     parser.add_argument("--fext3",help="baseline external drive on layer 3 (Hz)",
-                        type=float, default=6.5)
+                        type=float, default=3.)
     parser.add_argument("--fext_rise",help="rise of external drive (ms)",
                         type=float, default=1000)
     # stimulation (single spike) properties
