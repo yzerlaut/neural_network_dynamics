@@ -21,20 +21,20 @@ def find_equal_activity_levels(args):
     desF = args.desired_freq
     i = 0 
     fe1, fe2, fe3 = run_sim(args, return_firing_rate_only=True)
-    while (abs(fe1-desF)>0.5) and (abs(fe2-desF)>0.5) and (abs(fe3-desF)>0.5) and (i<100):
+    while ((abs(fe1-desF)>0.5) or (abs(fe2-desF)>0.5) or (abs(fe3-desF)>0.5)) and (i<100):
         print('step ', i, 'fe1=', fe1, 'fe2=', fe2, 'fe3=', fe3)
-        if fe1>desF+0.5:
-            args.fext1 -= 0.1
-        elif fe1<desF-0.5:
-            args.fext1 += 0.1
-        elif fe2>desF+0.5:
-            args.fext2 -= 0.1
+        # if fe1>desF+0.5:
+        #     args.fext1 -= 0.1
+        # elif fe1<desF-0.5:
+        #     args.fext1 += 0.1
+        if fe2>desF+0.5:
+            args.fext2 -= 0.2
         elif fe2<desF-0.5:
-            args.fext2 += 0.1
+            args.fext2 += 0.2
         elif fe3>desF+0.5:
-            args.fext3 -= 0.1
+            args.fext3 -= 0.2
         elif fe3<desF-0.5:
-            args.fext3 += 0.1
+            args.fext3 += 0.2
         print('===========>', 'f1=', args.fext1, 'f2=', args.fext2, 'f3=', args.fext3)
         fe1, fe2, fe3 = run_sim(args, return_firing_rate_only=True)
         i += 1
@@ -74,7 +74,7 @@ if __name__=='__main__':
     parser.add_argument("--desired_freq",help="desired frequency (Hz)",
                         type=float, default=3.)
     parser.add_argument("--fext1",help="baseline external drive on layer 1 (Hz)",
-                        type=float, default=2.0)
+                        type=float, default=3.1)
     parser.add_argument("--fext2",help="baseline external drive on layer 2 (Hz)",
                         type=float, default=0.1)
     parser.add_argument("--fext3",help="baseline external drive on layer 3 (Hz)",
