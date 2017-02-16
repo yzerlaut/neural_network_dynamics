@@ -144,7 +144,7 @@ def average_all_stim(ACTS, args):
     sim_average = ACTS.mean(axis=0) # averaging over simulations
     dt = args.DT
     tt0 = args.fext_rise+args.stim_start
-    n, n0 = int(2*(4.*args.stim_T0+args.stim_T1)/args.DT), int(3*args.stim_T0/args.DT)
+    n, n0 = int(8.*args.stim_T0/args.DT), int(3*args.stim_T0/args.DT)
     t, VV = (np.arange(n)-n0)*args.DT, []
     k = 0
     while (args.fext_rise+args.stim_start+k*args.stim_periodicity<args.tstop):
@@ -152,6 +152,9 @@ def average_all_stim(ACTS, args):
         VV.append(sim_average[ii-n0:ii-n0+n])
         k+=1
     return t, np.array(VV).mean(axis=0), np.array(VV).std(axis=0)
+
+def fit_a_gaussian():
+    return 0
 
 def get_plotting_instructions():
     return """
@@ -180,8 +183,8 @@ try:
         ax.fill_between(t, v-sv, v+sv, color='k', alpha=.3)
         set_plot(ax, ['left'], xticks=[], ylabel='exc. (Hz)')
     set_plot(ax, ['bottom', 'left'], xlabel='time (ms)', ylabel='exc. (Hz)', xticks=[0,50,100])
-    AX[0].plot(t, double_gaussian(t, 2*args.stim_T0, args.stim_T0, args.stim_T1, args.f_stim), 'b-')
-    AX[0].plot(t, double_gaussian(t, 2*args.stim_T0, args.stim_T0, args.stim_T1, args.f_stim), 'k--')
+    AX[0].plot(t, gaussian(t, 2*args.stim_T0, args.stim_T0, args.f_stim), 'b-')
+    AX[0].plot(t, gaussian(t, 2*args.stim_T0, args.stim_T0, args.f_stim), 'k--')
 except ValueError:
     pass
 """
@@ -211,7 +214,7 @@ parser.add_argument("--Ni",help="inhibitory neuron number",
 parser.add_argument("--pconn", help="connection proba",
                     type=float, default=0.05)
 parser.add_argument("--pconn_ff", help="connection proba",
-                    type=float, default=0.01)
+                    type=float, default=0.02)
 parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)",
                     type=float, default=1.)
 parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)",
@@ -239,9 +242,6 @@ parser.add_argument("--stim_periodicity",
 parser.add_argument("--stim_T0",
                     help="we multiply the single spike on the trial at this (ms)",
                     type=float, default=100.)
-parser.add_argument("--stim_T1",
-                    help="we multiply the single spike on the trial at this (ms)",
-                    type=float, default=200.)
 # various settings
 parser.add_argument("-v", "--verbose",
                     help="increase output verbosity", action="store_true")
