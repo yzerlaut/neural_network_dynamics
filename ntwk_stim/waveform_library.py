@@ -17,6 +17,10 @@ def double_gaussian(t, t0, T1, T2, amplitude):
                       np.exp(-(t-t0)**2/2./T1**2)*heaviside(-(t-t0))+\
                       np.exp(-(t-t0)**2/2./T2**2)*heaviside(t-t0))
 
+def gaussian(t, t0, sT, amplitude):
+    gauss = np.exp(-(t-t0)**2/2./sT**2)
+    return amplitude*gauss/gauss.max()
+
 def ramp_rise_then_constant(t, t1, t2, amp1, amp2):
     return 0*t+amp1+heaviside(t-t1)*heaviside(t2-t)*(t-t1)/(t2-t1)*(amp2-amp1)+\
         heaviside(t-t2)*(amp2-amp1)
