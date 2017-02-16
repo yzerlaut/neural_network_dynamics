@@ -15,12 +15,6 @@ from ntwk_stim.waveform_library import double_gaussian, ramp_rise_then_constant
 from ntwk_stim.connect_afferent_input import construct_feedforward_input
 from common_libraries.data_analysis.array_funcs import find_coincident_duplicates_in_two_arrays
 
-from input_on_feedforward import run_sim
-
-def find_equal_activity_levels():
-
-    fe1, fe2, fe3 = run_sim(args, return_firing_rate_only=True)
-
 def run_sim(args, return_firing_rate_only=False):
     
     """ SIMULATION PARAMETERS """
@@ -126,7 +120,7 @@ def run_sim(args, return_firing_rate_only=False):
                                                    width=args.smoothing*brian2.ms)/brian2.Hz)
 
     if return_firing_rate_only:
-        return EXC_ACTS1[-1].mean(), EXC_ACTS2[-1].mean(), EXC_ACTS3[-1].mean()
+        return EXC_ACTS1[-1][-5000:].mean(), EXC_ACTS2[-1][-5000:].mean(), EXC_ACTS3[-1][-5000:].mean()
     else:
         # save data
         np.savez(args.filename, args=args,
@@ -199,7 +193,7 @@ if __name__=='__main__':
     parser.add_argument("--DT",help="simulation time step (ms)",
                         type=float, default=0.1)
     parser.add_argument("--tstop",help="simulation duration (ms)",
-                        type=float, default=500.)
+                        type=float, default=1500.)
     parser.add_argument("--nsim",help="number of simulations (different seeds used)",
                         type=int, default=2)
     parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",
@@ -221,11 +215,11 @@ if __name__=='__main__':
     parser.add_argument("--fext1",help="baseline external drive on layer 1 (Hz)",
                         type=float, default=2.1)
     parser.add_argument("--fext2",help="baseline external drive on layer 2 (Hz)",
-                        type=float, default=1.1)
+                        type=float, default=0.1)
     parser.add_argument("--fext3",help="baseline external drive on layer 3 (Hz)",
-                        type=float, default=1.1)
+                        type=float, default=0.1)
     parser.add_argument("--fext_rise",help="rise of external drive (ms)",
-                        type=float, default=1500)
+                        type=float, default=1000)
     # stimulation (single spike) properties
     parser.add_argument("--f_stim",help="peak external input (Hz)",
                         type=float, default=2.5)

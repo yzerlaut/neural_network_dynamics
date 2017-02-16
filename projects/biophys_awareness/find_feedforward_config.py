@@ -15,10 +15,33 @@ from ntwk_stim.waveform_library import double_gaussian, ramp_rise_then_constant
 from ntwk_stim.connect_afferent_input import construct_feedforward_input
 from common_libraries.data_analysis.array_funcs import find_coincident_duplicates_in_two_arrays
 
-import pprint
+from input_on_feedforward import run_sim
 
-def run_sim(args, fe1, fe2, f3):
-    ### SIMULATION PARAMETERS
+def find_equal_activity_levels():
+    desF = args.desired_
+    i = 0 
+    fe1, fe2, fe3 = run_sim(args, return_firing_rate_only=True)
+    while (abs(fe1-desF)>0.5) and (abs(fe2-desF)>0.5) and (abs(fe3-desF)>0.5) and (i<100):
+        print('step ', i, 'fe1=', fe1, 'fe2=', fe2, 'fe3=', fe3)
+        print('===========>', 'f1=', args.fext1, 'f2=', args.fext2, 'f3=', args.fext3)
+        if fe1>desF+0.5:
+            args.fext1 += 0.1
+        elif fe1<desF-0.5:
+            args.fext1 -= 0.1
+        elif fe2>desF+0.5:
+            args.fext2 += 0.1
+        elif fe2<desF-0.5:
+            args.fext2 -= 0.1
+        elif fe3>desF+0.5:
+            args.fext3 += 0.1
+        elif fe3<desF-0.5:
+            args.fext3 -= 0.1
+        fe1, fe2, fe3 = run_sim(args, return_firing_rate_only=True)
+        i += 1
+
+def run_sim(args, return_firing_rate_only=False):
+    
+    """ SIMULATION PARAMETERS """
 
     brian2.defaultclock.dt = args.DT*brian2.ms
     t_array = np.arange(int(args.tstop/args.DT))*args.DT
@@ -52,22 +75,24 @@ def run_sim(args, fe1, fe2, f3):
     EXC_ACTS_ACTIVE1, EXC_ACTS_ACTIVE2, EXC_ACTS_ACTIVE3  = [], [], []
     EXC_ACTS_REST1, EXC_ACTS_REST2, EXC_ACTS_REST3  = [], [], []
 
-    for EXC_ACTS1, EXC_ACTS2, EXC_ACTS3, f_ext in zip([EXC_ACTS_ACTIVE1,EXC_ACTS_REST1],
-                                                      [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
-                                                      [EXC_ACTS_ACTIVE3,EXC_ACTS_REST3],
-                                                      [args.fext, 0.]):
+    for EXC_ACTS1, EXC_ACTS2, EXC_ACTS3, f_ext1, f_ext2, f_ext3 in zip([EXC_ACTS_ACTIVE1,EXC_ACTS_REST1],
+                                                                      [EXC_ACTS_ACTIVE2,EXC_ACTS_REST2],
+                                                                      [EXC_ACTS_ACTIVE3,EXC_ACTS_REST3],
+                                                                      [args.fext1, 0.],
+                                                                      [args.fext2, 0.],
+                                                                      [args.fext3, 0.]):
 
         for seed in range(1, args.nsim+1):
             
-            print('[initializing simulation ...], f_ext0=', f_ext, 'seed=', seed)
+            print('[initializing simulation ...], f_ext0=', f_ext1, 'seed=', seed)
 
             # rising ramp for the external drive
-            rate_array = f_ext*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
+            rate_array1 = f_ext1*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
             
             # now we add the repeated stimulation
             tt0 = args.fext_rise+args.stim_start
             while (tt0<args.tstop):
-                rate_array+=double_gaussian(t_array, tt0,\
+                rate_array1+=double_gaussian(t_array, tt0,\
                                             args.stim_T0, args.stim_T1, args.f_stim)
                 tt0+=args.stim_periodicity
             
@@ -76,18 +101,37 @@ def run_sim(args, fe1, fe2, f3):
                                                       verbose=args.verbose)
             # (fully quiescent State as initial conditions)
             initialize_to_rest(POPS, NTWK)
-
-            AFF_SPKS,AFF_SYNAPSES = construct_feedforward_input(POPS[:2],
-                                                                AFFERENCE_ARRAY,\
-                                                                t_array,
-                                                                rate_array,\
-                                                                pop_for_conductance='A',
-                                                                SEED=seed)
+            # afferent external drive on to each populations
+            AFF_SPKS1,AFF_SYNAPSES1 = construct_feedforward_input(POPS[:2],
+                                                                  AFFERENCE_ARRAY,\
+                                                                  t_array,
+                                                                  rate_array1,\
+                                                                  pop_for_conductance='A',
+                                                                  target_conductances=['A', 'B'],
+                                                                  SEED=seed)
+            rate_array2 = f_ext2*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
+            AFF_SPKS2,AFF_SYNAPSES2 = construct_feedforward_input(POPS[2:4],
+                                                                  AFFERENCE_ARRAY,\
+                                                                  t_array,
+                                                                  rate_array2,\
+                                                                  pop_for_conductance='C',
+                                                                  target_conductances=['C', 'D'],
+                                                                  SEED=seed+15)
+            rate_array3 = f_ext3*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
+            AFF_SPKS3,AFF_SYNAPSES3 = construct_feedforward_input(POPS[4:6],
+                                                                  AFFERENCE_ARRAY,\
+                                                                  t_array,
+                                                                  rate_array3,\
+                                                                  pop_for_conductance='E',
+                                                                  target_conductances=['E', 'F'],
+                                                                  SEED=seed+37)
+            
             SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
 
             net = brian2.Network(brian2.collect())
             # manually add the generated quantities
-            net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES) 
+            net.add(POPS, SYNAPSES, RASTER, POP_ACT,
+                    AFF_SPKS1, AFF_SYNAPSES1, AFF_SPKS2, AFF_SYNAPSES2, AFF_SPKS3, AFF_SYNAPSES3) 
             print('[running simulation ...]')
             net.run(args.tstop*brian2.ms)
             print('[simulation done -> saving output]')
@@ -98,8 +142,12 @@ def run_sim(args, fe1, fe2, f3):
                                                    width=args.smoothing*brian2.ms)/brian2.Hz)
             EXC_ACTS3.append(POP_ACT[4].smooth_rate(window='flat',\
                                                    width=args.smoothing*brian2.ms)/brian2.Hz)
-            
-    np.savez(args.filename, args=args,
+
+    if return_firing_rate_only:
+        return EXC_ACTS1[-1][-5000:].mean(), EXC_ACTS2[-1][-5000:].mean(), EXC_ACTS3[-1][-5000:].mean()
+    else:
+        # save data
+        np.savez(args.filename, args=args,
              EXC_ACTS_ACTIVE1=np.array(EXC_ACTS_ACTIVE1),
              EXC_ACTS_ACTIVE2=np.array(EXC_ACTS_ACTIVE2),
              EXC_ACTS_ACTIVE3=np.array(EXC_ACTS_ACTIVE3),
@@ -107,9 +155,10 @@ def run_sim(args, fe1, fe2, f3):
              EXC_ACTS_REST2=np.array(EXC_ACTS_REST2),
              EXC_ACTS_REST3=np.array(EXC_ACTS_REST3),
              NTWK=NTWK, t_array=t_array,
-             rate_array=rate_array, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
+             rate_array1=rate_array1, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
              plot=get_plotting_instructions())
 
+        
 def average_all_stim(ACTS, args):
     sim_average = ACTS.mean(axis=0) # averaging over simulations
     dt = args.DT
@@ -168,7 +217,7 @@ if __name__=='__main__':
     parser.add_argument("--DT",help="simulation time step (ms)",
                         type=float, default=0.1)
     parser.add_argument("--tstop",help="simulation duration (ms)",
-                        type=float, default=500.)
+                        type=float, default=1500.)
     parser.add_argument("--nsim",help="number of simulations (different seeds used)",
                         type=int, default=2)
     parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",
@@ -186,10 +235,15 @@ if __name__=='__main__':
                         type=float, default=4.)
     parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD",
                         type=float, default=2.5)
-    parser.add_argument("--desired_firing",help="baseline external drive (Hz)",
-                        type=float, default=3.)
+    # external drive properties
+    parser.add_argument("--fext1",help="baseline external drive on layer 1 (Hz)",
+                        type=float, default=2.1)
+    parser.add_argument("--fext2",help="baseline external drive on layer 2 (Hz)",
+                        type=float, default=1.1)
+    parser.add_argument("--fext3",help="baseline external drive on layer 3 (Hz)",
+                        type=float, default=1.1)
     parser.add_argument("--fext_rise",help="rise of external drive (ms)",
-                        type=float, default=500)
+                        type=float, default=1000)
     # stimulation (single spike) properties
     parser.add_argument("--f_stim",help="peak external input (Hz)",
                         type=float, default=2.5)
