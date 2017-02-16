@@ -50,17 +50,19 @@ def run_sim(args):
         SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
 
         # Then single spike addition
-        # spikes tergetting randomly one neuron in the network
+        # spikes targetting randomly one neuron in the network
         Nspikes = int((args.tstop-args.stim_start)/args.stim_delay)
         spike_times = args.stim_start+np.arange(Nspikes)*args.stim_delay+np.random.randn(Nspikes)*args.stim_jitter
         spike_ids = np.empty(0, dtype=int)
         Spk_times = np.empty(0, dtype=int)
         for ii in range(len(spike_times)):
             # non repetitive ids
-            spike_ids = np.concatenate([spike_ids, np.random.choice(np.arange(POPS[0].N), args.duplicate_spikes, replace=False)])
+            spike_ids = np.concatenate([spike_ids, np.random.choice(np.arange(POPS[0].N),
+                                                                    args.duplicate_spikes, replace=False)])
 
         spike_times = np.sort(np.meshgrid(spike_times, np.ones(args.duplicate_spikes))[0].flatten())
-        INPUT_SPIKES = brian2.SpikeGeneratorGroup(POPS[0].N, spike_ids, spike_times*brian2.ms) # targetting purely exc pop
+        # targetting purely exc pop
+        INPUT_SPIKES = brian2.SpikeGeneratorGroup(POPS[0].N, spike_ids, spike_times*brian2.ms) 
         
         FEEDFORWARD = brian2.Synapses(INPUT_SPIKES, POPS[0], on_pre='GAA_post += w', model='w:siemens')
         FEEDFORWARD.connect('i==j')
@@ -102,7 +104,8 @@ for spike_times, exc_act in zip(data['SPK_TIMES'], data['EXC_ACTS']):
         counter +=1
         trace += exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1]
         if counter%i_plot==0:
-            AX[1].plot(t_zoom, exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1], '-', color='gray', lw=0.2)
+            AX[1].plot(t_zoom, exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1],
+                      '-', color='gray', lw=0.2)
 AX[1].plot(t_zoom, trace/counter, 'k-', lw=2)
 set_plot(AX[0], xlabel='time (ms)', ylabel='pop. act. (Hz)')
 set_plot(AX[1], xlabel='time lag (ms)', ylabel='pop. act. (Hz)')
@@ -138,9 +141,12 @@ if __name__=='__main__':
     parser.add_argument("--fext_stat",help="STATIONARY external drive (Hz)",type=float, default=4.)
     parser.add_argument("--kick_length",help="duration of external drive KICK (ms)",type=float, default=30.)
     # stimulation (single spike) properties
-    parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)", type=float, default=100.)
-    parser.add_argument("--stim_delay",help="we multiply the single spike on the trial at this (ms)",type=float, default=50.)
-    parser.add_argument("--stim_jitter",help="we jitter the spike times with a gaussian distrib (ms)",type=float, default=5.)
+    parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)",
+                        type=float, default=100.)
+    parser.add_argument("--stim_delay",help="we multiply the single spike on the trial at this (ms)",
+                        type=float, default=50.)
+    parser.add_argument("--stim_jitter",help="we jitter the spike times with a gaussian distrib (ms)",
+                        type=float, default=5.)
     parser.add_argument("--Qe_thal", help="weight of additional excitatory spike", type=float, default=5.)
     parser.add_argument("--duplicate_spikes", help="we duplicate the spike over neurons", type=int, default=40)
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
