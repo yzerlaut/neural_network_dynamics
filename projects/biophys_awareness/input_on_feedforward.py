@@ -15,10 +15,9 @@ from ntwk_stim.waveform_library import double_gaussian, ramp_rise_then_constant
 from ntwk_stim.connect_afferent_input import construct_feedforward_input
 from common_libraries.data_analysis.array_funcs import find_coincident_duplicates_in_two_arrays
 
-import pprint
-
 def run_sim(args):
-    ### SIMULATION PARAMETERS
+    
+    """ SIMULATION PARAMETERS """
 
     brian2.defaultclock.dt = args.DT*brian2.ms
     t_array = np.arange(int(args.tstop/args.DT))*args.DT
@@ -212,7 +211,7 @@ if __name__=='__main__':
     parser.add_argument("--fext3",help="baseline external drive on layer 3 (Hz)",
                         type=float, default=1.1)
     parser.add_argument("--fext_rise",help="rise of external drive (ms)",
-                        type=float, default=500)
+                        type=float, default=1500)
     # stimulation (single spike) properties
     parser.add_argument("--f_stim",help="peak external input (Hz)",
                         type=float, default=2.5)
