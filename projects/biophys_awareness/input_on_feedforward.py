@@ -218,7 +218,7 @@ if __name__=='__main__':
                         type=float, default=2.5)
     # external drive properties
     parser.add_argument("--fext1",help="baseline external drive on layer 1 (Hz)",
-                        type=float, default=2.)
+                        type=float, default=4.)
     parser.add_argument("--fext2",help="baseline external drive on layer 2 (Hz)",
                         type=float, default=2.)
     parser.add_argument("--fext3",help="baseline external drive on layer 3 (Hz)",
@@ -227,7 +227,7 @@ if __name__=='__main__':
                         type=float, default=1000)
     # stimulation (single spike) properties
     parser.add_argument("--f_stim",help="peak external input (Hz)",
-                        type=float, default=2.)
+                        type=float, default=0.5)
     parser.add_argument("--stim_start",
                         help="time of the start for the additional spike after ext rise !! (ms)",
                         type=float, default=200.)
@@ -236,10 +236,10 @@ if __name__=='__main__':
                         type=float, default=500.)
     parser.add_argument("--stim_T0",
                         help="we multiply the single spike on the trial at this (ms)",
-                        type=float, default=50.)
+                        type=float, default=100.)
     parser.add_argument("--stim_T1",
                         help="we multiply the single spike on the trial at this (ms)",
-                        type=float, default=100.)
+                        type=float, default=200.)
     # various settings
     parser.add_argument("-v", "--verbose",
                         help="increase output verbosity", action="store_true")
