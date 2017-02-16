@@ -77,7 +77,7 @@ def run_sim(args):
                                                       verbose=args.verbose)
             # (fully quiescent State as initial conditions)
             initialize_to_rest(POPS, NTWK)
-
+            # afferent external drive on to each populations
             AFF_SPKS1,AFF_SYNAPSES1 = construct_feedforward_input(POPS[:2],
                                                                   AFFERENCE_ARRAY,\
                                                                   t_array,
@@ -94,7 +94,7 @@ def run_sim(args):
                                                                   target_conductances=['C', 'D'],
                                                                   SEED=seed+15)
             rate_array3 = f_ext3*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
-            AFF_SPKS3,AFF_SYNAPSES3 = construct_feedforward_input(POPS[2:4],
+            AFF_SPKS3,AFF_SYNAPSES3 = construct_feedforward_input(POPS[5:7],
                                                                   AFFERENCE_ARRAY,\
                                                                   t_array,
                                                                   rate_array3,\
