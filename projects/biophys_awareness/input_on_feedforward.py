@@ -218,11 +218,11 @@ if __name__=='__main__':
                         type=float, default=2.5)
     # external drive properties
     parser.add_argument("--fext1",help="baseline external drive on layer 1 (Hz)",
-                        type=float, default=3.)
+                        type=float, default=2.)
     parser.add_argument("--fext2",help="baseline external drive on layer 2 (Hz)",
-                        type=float, default=3.)
+                        type=float, default=2.)
     parser.add_argument("--fext3",help="baseline external drive on layer 3 (Hz)",
-                        type=float, default=3.)
+                        type=float, default=2.)
     parser.add_argument("--fext_rise",help="rise of external drive (ms)",
                         type=float, default=1000)
     # stimulation (single spike) properties
