@@ -141,7 +141,10 @@ def run_sim(args, return_firing_rate_only=False):
 
         
 def average_all_stim(ACTS, args):
-    sim_average = ACTS.mean(axis=0) # averaging over simulations
+    if len(ACTS.shape)>1:
+        sim_average = ACTS.mean(axis=0) # averaging over simulations
+    else:
+        sim_average = ACTS
     dt = args.DT
     tt0 = args.fext_rise+args.stim_start
     n, n0 = int(8.*args.stim_T0/args.DT), int(3*args.stim_T0/args.DT)
@@ -153,8 +156,16 @@ def average_all_stim(ACTS, args):
         k+=1
     return t, np.array(VV).mean(axis=0), np.array(VV).std(axis=0)
 
-def fit_a_gaussian():
-    return 0
+
+from scipy.optimize import minimize
+def fit_a_gaussian(t, v, args):
+    def gaussian_with_shift(X):
+        t0, sT, amplitude, baseline = X
+        return np.sum(np.abs(baseline+gaussian(t, t0, sT, amplitude)-v))
+    x0 = [0, args.stim_T0/2., args.f_stim, 1.]
+    res = minimize(gaussian_with_shift, x0, tol=1e-7, options={'maxiter':10000})
+    onset, width, amp, baseline = res.x
+    return onset, width, amp, baseline
 
 def get_plotting_instructions():
     return """
@@ -166,25 +177,61 @@ for i in range(3):
     AX[i].plot(data['EXC_ACTS_REST'+str(i+1)][0], 'b-')
 fig2, AX = plt.subplots(4, figsize=(3,6))
 plt.subplots_adjust(left=0.25, bottom=0.05, wspace=0.2, hspace=0.2)
+fig3, AX2 = plt.subplots(4, 3, figsize=(2,6))
+plt.subplots_adjust(left=0.25, bottom=0.05, wspace=0.3, hspace=0.2)
 from input_on_feedforward import *
 try:
-    mean_exc_freq = []
+    # input
+    t, v, sv = average_all_stim(data['rate_array1'], args)
+    AX[0].plot(t, v, 'k-', lw=2)
+    AX[0].plot([0,100], [0,0], lw=5)
+    # set_plot(AX[0], ['left'], ylabel='rate (Hz)', xticks=[], yticks=[0, 1, 2, 3])
+    _, width0, amp0, bsl = fit_a_gaussian(t, v, args)
+    onset0 = t[v-bsl>.1][0]
+    AX[0].arrow(onset0, 0.4, 0, -0.2, fc='k', ec='k', head_width=0.5, head_length=0.1, linewidth=2)
+
+    # active state output
+    onset_act, width_act, amp_act = [], [], []
     for ax, exc_act in zip(AX[1:], [data['EXC_ACTS_ACTIVE1'],
                                 data['EXC_ACTS_ACTIVE2'],
                                 data['EXC_ACTS_ACTIVE3']]):
         t, v, sv = average_all_stim(exc_act, args)
         ax.plot(t, v, 'b')
         ax.fill_between(t, v-sv, v+sv, color='b', alpha=.4)
+        onset, width, amp, bsl = fit_a_gaussian(t, v, args)
+        ax.plot(t, bsl+gaussian(t, onset, width, amp), 'r--')
+        onset = t[v-bsl>sv[:100].mean()][0]
+        ax.arrow(onset, bsl+3, 0, -2, fc='b', ec='b')
+        ax.plot([onset], [bsl], 'kD')
+        onset_act.append(onset0-onset)
+        width_act.append(width)
+        amp_act.append(amp)
+
+    # resting state output
+    onset_rest, width_rest, amp_rest = [], [], []
     for ax, exc_act in zip(AX[1:], [data['EXC_ACTS_REST1'],
                                 data['EXC_ACTS_REST2'],
                                 data['EXC_ACTS_REST3']]):
         t, v, sv = average_all_stim(exc_act, args)
         ax.plot(t, v, 'k')
         ax.fill_between(t, v-sv, v+sv, color='k', alpha=.3)
-        set_plot(ax, ['left'], xticks=[], ylabel='exc. (Hz)')
-    set_plot(ax, ['bottom', 'left'], xlabel='time (ms)', ylabel='exc. (Hz)', xticks=[0,50,100])
-    AX[0].plot(t, gaussian(t, 2*args.stim_T0, args.stim_T0, args.f_stim), 'b-')
-    AX[0].plot(t, gaussian(t, 2*args.stim_T0, args.stim_T0, args.f_stim), 'k--')
+        # set_plot(ax, ['left'], xticks=[], ylabel='rate (Hz)', yticks=[0,5,10,15])
+        onset, width, amp, bsl = fit_a_gaussian(t, v, args)
+        ax.plot(t, bsl+gaussian(t, onset, width, amp), 'r--')
+        onset = t[v>0][0]
+        ax.arrow(onset, bsl+3, 0, -2, fc='k', ec='k')
+        onset_rest.append(onset-onset0)
+        width_rest.append(width)
+        amp_rest.append(amp)
+    for i, quant_act, quant_rest, ylabel, ylim in zip(range(3),
+           [onset_act, width_act, amp_act], [onset_rest, width_rest, amp_rest],
+           ['onset $t_0$ (ms)', 'width. T (ms)', 'amp. A (Hz)'], 
+           [[0,30], [0,60], [0,10]]):
+        for j in range(3):
+           AX2[j+1, i].bar([0], quant_act[j])
+           AX2[j+1, i].bar([1], quant_rest[j])
+           AX2[j+1, i].plot([0.5, 0.5], ylim, 'w.')
+           set_plot(AX2[j+1, i], ['left'], ylabel=ylabel, xticks=[], ylim=ylim) 
 except ValueError:
     pass
 """
@@ -196,6 +243,7 @@ parser=argparse.ArgumentParser(description=
  Investigates what is the network response of a single spike 
  """
 ,formatter_class=argparse.RawTextHelpFormatter)
+
 
 # simulation parameters
 parser.add_argument("--DT",help="simulation time step (ms)",
