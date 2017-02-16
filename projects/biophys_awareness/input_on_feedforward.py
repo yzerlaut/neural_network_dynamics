@@ -58,69 +58,71 @@ def run_sim(args, return_firing_rate_only=False):
                                                                       [args.fext2, 0.],
                                                                       [args.fext3, 0.]):
 
-        for seed in range(1, args.nsim+1):
-            
-            print('[initializing simulation ...], f_ext0=', f_ext1, 'seed=', seed)
+        if (not return_firing_rate_only) or (fext1>0):
+            for seed in range(1, args.nsim+1):
 
-            # rising ramp for the external drive
-            rate_array1 = f_ext1*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
-            
-            # now we add the repeated stimulation
-            tt0 = args.fext_rise+args.stim_start
-            while (tt0<args.tstop):
-                rate_array1+=double_gaussian(t_array, tt0,\
-                                            args.stim_T0, args.stim_T1, args.f_stim)
-                tt0+=args.stim_periodicity
-            
-            POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True,\
-                                                      with_pop_act=True,
-                                                      verbose=args.verbose)
-            # (fully quiescent State as initial conditions)
-            initialize_to_rest(POPS, NTWK)
-            # afferent external drive on to each populations
-            AFF_SPKS1,AFF_SYNAPSES1 = construct_feedforward_input(POPS[:2],
-                                                                  AFFERENCE_ARRAY,\
-                                                                  t_array,
-                                                                  rate_array1,\
-                                                                  pop_for_conductance='A',
-                                                                  target_conductances=['A', 'B'],
-                                                                  SEED=seed)
-            rate_array2 = f_ext2*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
-            AFF_SPKS2,AFF_SYNAPSES2 = construct_feedforward_input(POPS[2:4],
-                                                                  AFFERENCE_ARRAY,\
-                                                                  t_array,
-                                                                  rate_array2,\
-                                                                  pop_for_conductance='C',
-                                                                  target_conductances=['C', 'D'],
-                                                                  SEED=seed+15)
-            rate_array3 = f_ext3*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
-            AFF_SPKS3,AFF_SYNAPSES3 = construct_feedforward_input(POPS[4:6],
-                                                                  AFFERENCE_ARRAY,\
-                                                                  t_array,
-                                                                  rate_array3,\
-                                                                  pop_for_conductance='E',
-                                                                  target_conductances=['E', 'F'],
-                                                                  SEED=seed+37)
-            
-            SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
+                print('[initializing simulation ...], f_ext0=', f_ext1, 'seed=', seed)
 
-            net = brian2.Network(brian2.collect())
-            # manually add the generated quantities
-            net.add(POPS, SYNAPSES, RASTER, POP_ACT,
-                    AFF_SPKS1, AFF_SYNAPSES1, AFF_SPKS2, AFF_SYNAPSES2, AFF_SPKS3, AFF_SYNAPSES3) 
-            print('[running simulation ...]')
-            net.run(args.tstop*brian2.ms)
-            print('[simulation done -> saving output]')
+                # rising ramp for the external drive
+                rate_array1 = f_ext1*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
 
-            EXC_ACTS1.append(POP_ACT[0].smooth_rate(window='flat',\
-                                                           width=args.smoothing*brian2.ms)/brian2.Hz)
-            EXC_ACTS2.append(POP_ACT[2].smooth_rate(window='flat',\
-                                                   width=args.smoothing*brian2.ms)/brian2.Hz)
-            EXC_ACTS3.append(POP_ACT[4].smooth_rate(window='flat',\
-                                                   width=args.smoothing*brian2.ms)/brian2.Hz)
+                # now we add the repeated stimulation
+                tt0 = args.fext_rise+args.stim_start
+                while (tt0<args.tstop):
+                    rate_array1+=double_gaussian(t_array, tt0,\
+                                                args.stim_T0, args.stim_T1, args.f_stim)
+                    tt0+=args.stim_periodicity
+
+                POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True,\
+                                                          with_pop_act=True,
+                                                          verbose=args.verbose)
+                # (fully quiescent State as initial conditions)
+                initialize_to_rest(POPS, NTWK)
+                # afferent external drive on to each populations
+                AFF_SPKS1,AFF_SYNAPSES1 = construct_feedforward_input(POPS[:2],
+                                                                      AFFERENCE_ARRAY,\
+                                                                      t_array,
+                                                                      rate_array1,\
+                                                                      pop_for_conductance='A',
+                                                                      target_conductances=['A', 'B'],
+                                                                      SEED=seed)
+                rate_array2 = f_ext2*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
+                AFF_SPKS2,AFF_SYNAPSES2 = construct_feedforward_input(POPS[2:4],
+                                                                      AFFERENCE_ARRAY,\
+                                                                      t_array,
+                                                                      rate_array2,\
+                                                                      pop_for_conductance='C',
+                                                                      target_conductances=['C', 'D'],
+                                                                      SEED=seed+15)
+                rate_array3 = f_ext3*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
+                AFF_SPKS3,AFF_SYNAPSES3 = construct_feedforward_input(POPS[4:6],
+                                                                      AFFERENCE_ARRAY,\
+                                                                      t_array,
+                                                                      rate_array3,\
+                                                                      pop_for_conductance='E',
+                                                                      target_conductances=['E', 'F'],
+                                                                      SEED=seed+37)
+
+                SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
+
+                net = brian2.Network(brian2.collect())
+                # manually add the generated quantities
+                net.add(POPS, SYNAPSES, RASTER, POP_ACT,
+                        AFF_SPKS1, AFF_SYNAPSES1, AFF_SPKS2, AFF_SYNAPSES2, AFF_SPKS3, AFF_SYNAPSES3) 
+                print('[running simulation ...]')
+                net.run(args.tstop*brian2.ms)
+                print('[simulation done -> saving output]')
+
+                EXC_ACTS1.append(POP_ACT[0].smooth_rate(window='flat',\
+                                                               width=args.smoothing*brian2.ms)/brian2.Hz)
+                EXC_ACTS2.append(POP_ACT[2].smooth_rate(window='flat',\
+                                                       width=args.smoothing*brian2.ms)/brian2.Hz)
+                EXC_ACTS3.append(POP_ACT[4].smooth_rate(window='flat',\
+                                                       width=args.smoothing*brian2.ms)/brian2.Hz)
 
     if return_firing_rate_only:
-        return EXC_ACTS1[-1][-5000:].mean(), EXC_ACTS2[-1][-5000:].mean(), EXC_ACTS3[-1][-5000:].mean()
+        return EXC_ACTS_ACTIVE1[-1][-5000:].mean(), EXC_ACTS_ACTIVE2[-1][-5000:].mean(),\
+            EXC_ACTS_ACTIVE3[-1][-5000:].mean()
     else:
         # save data
         np.savez(args.filename, args=args,
