@@ -238,10 +238,10 @@ parser.add_argument("--stim_start",
                     type=float, default=200.)
 parser.add_argument("--stim_periodicity",
                     help="each xx ms, we send a new input (ms)",
-                    type=float, default=500.)
+                    type=float, default=600.)
 parser.add_argument("--stim_T0",
                     help="we multiply the single spike on the trial at this (ms)",
-                    type=float, default=100.)
+                    type=float, default=60.)
 # various settings
 parser.add_argument("-v", "--verbose",
                     help="increase output verbosity", action="store_true")
