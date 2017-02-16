@@ -58,7 +58,7 @@ def run_sim(args, return_firing_rate_only=False):
                                                                       [args.fext2, 0.],
                                                                       [args.fext3, 0.]):
 
-        if (not return_firing_rate_only) or (fext1>0):
+        if (not return_firing_rate_only) or (f_ext1>0):
             for seed in range(1, args.nsim+1):
 
                 print('[initializing simulation ...], f_ext0=', f_ext1, 'seed=', seed)
