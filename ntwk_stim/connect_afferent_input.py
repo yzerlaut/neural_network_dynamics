@@ -26,7 +26,9 @@ def set_spikes_from_time_varying_rate(time_array, rate_array, N, Nsyn, SEED=1):
 
 def construct_feedforward_input(POPS, AFFERENCE_ARRAY,\
                                 time_array, rate_array,\
-                                pop_for_conductance='A', SEED=1):
+                                pop_for_conductance='A',\
+                                target_conductances = None,
+                                SEED=1):
     """
     POPS and AFFERENCE_ARRAY should be 1D arrrays as their is only one 
     source population
@@ -37,6 +39,9 @@ def construct_feedforward_input(POPS, AFFERENCE_ARRAY,\
 
     SPKS, SYNAPSES = [], []
 
+    if target_conductances is None:
+        target_conductances = [s for s in string.ascii_uppercase[:len(POPS)]]
+        
     for ii in range(len(POPS)):
         # number of synapses per neuron
         Nsyn = AFFERENCE_ARRAY[ii]['pconn']*AFFERENCE_ARRAY[ii]['N']
@@ -45,7 +50,7 @@ def construct_feedforward_input(POPS, AFFERENCE_ARRAY,\
                             time_array, rate_array,\
                             POPS[ii].N, Nsyn, SEED=(SEED+ii)**2%100)
             SPKS.append(brian2.SpikeGeneratorGroup(POPS[ii].N, indices, times))
-            pre_increment = 'G'+pop_for_conductance+string.ascii_uppercase[ii]+' += w'
+            pre_increment = 'G'+pop_for_conductance+target_conductances[ii]+' += w'
             SYNAPSES.append(brian2.Synapses(SPKS[-1], POPS[ii], on_pre=pre_increment,\
                                             model='w:siemens'))
             SYNAPSES[-1].connect('i==j')

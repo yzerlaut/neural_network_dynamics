@@ -79,17 +79,19 @@ def run_sim(args):
             initialize_to_rest(POPS, NTWK)
 
             AFF_SPKS1,AFF_SYNAPSES1 = construct_feedforward_input(POPS[:2],
-                                                                AFFERENCE_ARRAY,\
-                                                                t_array,
-                                                                rate_array1,\
-                                                                pop_for_conductance='A',
-                                                                SEED=seed)
+                                                                  AFFERENCE_ARRAY,\
+                                                                  t_array,
+                                                                  rate_array1,\
+                                                                  pop_for_conductance='A',
+                                                                  target_conductances=['A', 'B'],
+                                                                  SEED=seed)
             rate_array2 = f_ext2*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
             AFF_SPKS2,AFF_SYNAPSES2 = construct_feedforward_input(POPS[2:4],
-                                                                AFFERENCE_ARRAY,\
-                                                                t_array,
-                                                                rate_array2,\
-                                                                pop_for_conductance='C',
+                                                                  AFFERENCE_ARRAY,\
+                                                                  t_array,
+                                                                  rate_array2,\
+                                                                  pop_for_conductance='C',
+                                                                  target_conductances=['C', 'D'],
                                                                   SEED=seed+15)
             rate_array3 = f_ext3*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
             AFF_SPKS3,AFF_SYNAPSES3 = construct_feedforward_input(POPS[2:4],
@@ -97,6 +99,7 @@ def run_sim(args):
                                                                   t_array,
                                                                   rate_array3,\
                                                                   pop_for_conductance='E',
+                                                                  target_conductances=['E', 'F'],
                                                                   SEED=seed+37)
             
             SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
