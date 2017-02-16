@@ -15,7 +15,13 @@ from ntwk_stim.waveform_library import double_gaussian, ramp_rise_then_constant
 from ntwk_stim.connect_afferent_input import construct_feedforward_input
 from common_libraries.data_analysis.array_funcs import find_coincident_duplicates_in_two_arrays
 
-def run_sim(args):
+from input_on_feedforward import run_sim
+
+def find_equal_activity_levels():
+
+    fe1, fe2, fe3 = run_sim(args, return_firing_rate_only=True)
+
+def run_sim(args, return_firing_rate_only=False):
     
     """ SIMULATION PARAMETERS """
 
@@ -94,7 +100,7 @@ def run_sim(args):
                                                                   target_conductances=['C', 'D'],
                                                                   SEED=seed+15)
             rate_array3 = f_ext3*np.array([tt/args.fext_rise if tt< args.fext_rise else 1 for tt in t_array])
-            AFF_SPKS3,AFF_SYNAPSES3 = construct_feedforward_input(POPS[5:7],
+            AFF_SPKS3,AFF_SYNAPSES3 = construct_feedforward_input(POPS[4:6],
                                                                   AFFERENCE_ARRAY,\
                                                                   t_array,
                                                                   rate_array3,\
@@ -118,8 +124,12 @@ def run_sim(args):
                                                    width=args.smoothing*brian2.ms)/brian2.Hz)
             EXC_ACTS3.append(POP_ACT[4].smooth_rate(window='flat',\
                                                    width=args.smoothing*brian2.ms)/brian2.Hz)
-            
-    np.savez(args.filename, args=args,
+
+    if return_firing_rate_only:
+        return EXC_ACTS1[-1].mean(), EXC_ACTS2[-1].mean(), EXC_ACTS3[-1].mean()
+    else:
+        # save data
+        np.savez(args.filename, args=args,
              EXC_ACTS_ACTIVE1=np.array(EXC_ACTS_ACTIVE1),
              EXC_ACTS_ACTIVE2=np.array(EXC_ACTS_ACTIVE2),
              EXC_ACTS_ACTIVE3=np.array(EXC_ACTS_ACTIVE3),
@@ -130,6 +140,7 @@ def run_sim(args):
              rate_array1=rate_array1, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
              plot=get_plotting_instructions())
 
+        
 def average_all_stim(ACTS, args):
     sim_average = ACTS.mean(axis=0) # averaging over simulations
     dt = args.DT
