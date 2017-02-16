@@ -227,19 +227,19 @@ if __name__=='__main__':
                         type=float, default=1000)
     # stimulation (single spike) properties
     parser.add_argument("--f_stim",help="peak external input (Hz)",
-                        type=float, default=2.5)
+                        type=float, default=2.)
     parser.add_argument("--stim_start",
                         help="time of the start for the additional spike after ext rise !! (ms)",
                         type=float, default=200.)
     parser.add_argument("--stim_periodicity",
                         help="each xx ms, we send a new input (ms)",
-                        type=float, default=400.)
+                        type=float, default=500.)
     parser.add_argument("--stim_T0",
                         help="we multiply the single spike on the trial at this (ms)",
-                        type=float, default=10.)
+                        type=float, default=50.)
     parser.add_argument("--stim_T1",
                         help="we multiply the single spike on the trial at this (ms)",
-                        type=float, default=40.)
+                        type=float, default=100.)
     # various settings
     parser.add_argument("-v", "--verbose",
                         help="increase output verbosity", action="store_true")
