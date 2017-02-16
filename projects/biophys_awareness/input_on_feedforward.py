@@ -45,7 +45,7 @@ def run_sim(args, return_firing_rate_only=False):
         for m in [M[1,1], M[3,3], M[5,5], M[1,0], M[3,2], M[5,4]]:
             m[key] = val
     # feedforward excitation
-    for key, val in zip(['Q', 'pconn', 'Erev', 'Tsyn'], [args.Qe_ff, args.pconn, 0., 5.]):
+    for key, val in zip(['Q', 'pconn', 'Erev', 'Tsyn'], [args.Qe_ff, args.pconn_ff, 0., 5.]):
         # feedforward excitatory connection on excitation and inhibition!
         for m in [M[0,2], M[2,4], M[0,3], M[2,5]]:
             m[key] = val
@@ -186,72 +186,73 @@ except ValueError:
     pass
 """
 
+import argparse
+# First a nice documentation 
+parser=argparse.ArgumentParser(description=
+ """ 
+ Investigates what is the network response of a single spike 
+ """
+,formatter_class=argparse.RawTextHelpFormatter)
+
+# simulation parameters
+parser.add_argument("--DT",help="simulation time step (ms)",
+                    type=float, default=0.1)
+parser.add_argument("--tstop",help="simulation duration (ms)",
+                    type=float, default=1500.)
+parser.add_argument("--nsim",help="number of simulations (different seeds used)",
+                    type=int, default=2)
+parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",
+                    type=float, default=0.5)
+# network architecture
+parser.add_argument("--Ne",help="excitatory neuron number",
+                    type=int, default=4000)
+parser.add_argument("--Ni",help="inhibitory neuron number",
+                    type=int, default=1000)
+parser.add_argument("--pconn", help="connection proba",
+                    type=float, default=0.05)
+parser.add_argument("--pconn_ff", help="connection proba",
+                    type=float, default=0.01)
+parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)",
+                    type=float, default=1.)
+parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)",
+                    type=float, default=4.)
+parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD",
+                    type=float, default=2.5)
+# external drive properties
+parser.add_argument("--fext1",help="baseline external drive on layer 1 (Hz)",
+                    type=float, default=4.)
+parser.add_argument("--fext2",help="baseline external drive on layer 2 (Hz)",
+                    type=float, default=3.)
+parser.add_argument("--fext3",help="baseline external drive on layer 3 (Hz)",
+                    type=float, default=3.)
+parser.add_argument("--fext_rise",help="rise of external drive (ms)",
+                    type=float, default=1000)
+# stimulation (single spike) properties
+parser.add_argument("--f_stim",help="peak external input (Hz)",
+                    type=float, default=0.5)
+parser.add_argument("--stim_start",
+                    help="time of the start for the additional spike after ext rise !! (ms)",
+                    type=float, default=200.)
+parser.add_argument("--stim_periodicity",
+                    help="each xx ms, we send a new input (ms)",
+                    type=float, default=500.)
+parser.add_argument("--stim_T0",
+                    help="we multiply the single spike on the trial at this (ms)",
+                    type=float, default=100.)
+parser.add_argument("--stim_T1",
+                    help="we multiply the single spike on the trial at this (ms)",
+                    type=float, default=200.)
+# various settings
+parser.add_argument("-v", "--verbose",
+                    help="increase output verbosity", action="store_true")
+parser.add_argument("-u", "--update_plot",
+                    help="plot the figures", action="store_true")
+parser.add_argument("--filename", '-f', help="filename",
+                    type=str, default='data.npz')
+
 if __name__=='__main__':
-    import argparse
-    # First a nice documentation 
-    parser=argparse.ArgumentParser(description=
-     """ 
-     Investigates what is the network response of a single spike 
-     """
-    ,formatter_class=argparse.RawTextHelpFormatter)
-
-    # simulation parameters
-    parser.add_argument("--DT",help="simulation time step (ms)",
-                        type=float, default=0.1)
-    parser.add_argument("--tstop",help="simulation duration (ms)",
-                        type=float, default=1500.)
-    parser.add_argument("--nsim",help="number of simulations (different seeds used)",
-                        type=int, default=2)
-    parser.add_argument("--smoothing",help="smoothing window (flat) of the pop. act.",
-                        type=float, default=0.5)
-    # network architecture
-    parser.add_argument("--Ne",help="excitatory neuron number",
-                        type=int, default=4000)
-    parser.add_argument("--Ni",help="inhibitory neuron number",
-                        type=int, default=1000)
-    parser.add_argument("--pconn", help="connection proba",
-                        type=float, default=0.05)
-    parser.add_argument("--pconn_ff", help="connection proba",
-                        type=float, default=0.01)
-    parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)",
-                        type=float, default=1.)
-    parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)",
-                        type=float, default=4.)
-    parser.add_argument("--Qe_ff", help="weight of excitatory spike FEEDFORWARD",
-                        type=float, default=2.5)
-    # external drive properties
-    parser.add_argument("--fext1",help="baseline external drive on layer 1 (Hz)",
-                        type=float, default=3.)
-    parser.add_argument("--fext2",help="baseline external drive on layer 2 (Hz)",
-                        type=float, default=3.)
-    parser.add_argument("--fext3",help="baseline external drive on layer 3 (Hz)",
-                        type=float, default=3.)
-    parser.add_argument("--fext_rise",help="rise of external drive (ms)",
-                        type=float, default=1000)
-    # stimulation (single spike) properties
-    parser.add_argument("--f_stim",help="peak external input (Hz)",
-                        type=float, default=0.5)
-    parser.add_argument("--stim_start",
-                        help="time of the start for the additional spike after ext rise !! (ms)",
-                        type=float, default=200.)
-    parser.add_argument("--stim_periodicity",
-                        help="each xx ms, we send a new input (ms)",
-                        type=float, default=500.)
-    parser.add_argument("--stim_T0",
-                        help="we multiply the single spike on the trial at this (ms)",
-                        type=float, default=100.)
-    parser.add_argument("--stim_T1",
-                        help="we multiply the single spike on the trial at this (ms)",
-                        type=float, default=200.)
-    # various settings
-    parser.add_argument("-v", "--verbose",
-                        help="increase output verbosity", action="store_true")
-    parser.add_argument("-u", "--update_plot",
-                        help="plot the figures", action="store_true")
-    parser.add_argument("--filename", '-f', help="filename",
-                        type=str, default='data.npz')
+    
     args = parser.parse_args()
-
     if args.update_plot:
         data = dict(np.load(args.filename))
         data['plot'] = get_plotting_instructions()
