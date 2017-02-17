@@ -1,5 +1,5 @@
-Nsim=2
-TSTOP=10000
+Nsim=10
+TSTOP=100000
 # RS-FS configuration
 python contrib_of_single_spike.py -f data/active.npz --tstop $TSTOP --nsim $Nsim
 # Vogels-Abbott configuration
