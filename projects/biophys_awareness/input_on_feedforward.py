@@ -162,7 +162,7 @@ def fit_a_gaussian(t, v, args):
     def gaussian_with_shift(X):
         t0, sT, amplitude, baseline = X
         return np.sum(np.abs(baseline+gaussian(t, t0, sT, amplitude)-v))
-    x0 = [0, args.stim_T0/2., args.f_stim, 1.]
+    x0 = [0, args.stim_T0/2., v.max(), 1.]
     res = minimize(gaussian_with_shift, x0, tol=1e-7, options={'maxiter':10000})
     onset, width, amp, baseline = res.x
     return onset, width, amp, baseline
@@ -170,26 +170,22 @@ def fit_a_gaussian(t, v, args):
 def get_plotting_instructions():
     return """
 args = data['args'].all()
-fig, AX = plt.subplots(3, figsize=(6,6))
-plt.subplots_adjust(left=0.25, bottom=0.05, wspace=0.2, hspace=0.2)
-for i in range(3):
-    AX[i].plot(data['EXC_ACTS_ACTIVE'+str(i+1)][0], 'k-')
-    AX[i].plot(data['EXC_ACTS_REST'+str(i+1)][0], 'b-')
+fig1, AX0 = plt.subplots(4, 3, figsize=(4,6))
+plt.subplots_adjust(left=0.25, bottom=0.05, wspace=0.5, hspace=0.5)
 fig2, AX = plt.subplots(4, figsize=(3,6))
 plt.subplots_adjust(left=0.25, bottom=0.05, wspace=0.2, hspace=0.2)
-fig3, AX2 = plt.subplots(4, 3, figsize=(2,6))
-plt.subplots_adjust(left=0.25, bottom=0.05, wspace=0.3, hspace=0.2)
+fig3, AX2 = plt.subplots(4, 3, figsize=(4,6))
+plt.subplots_adjust(left=0.25, bottom=0.05, wspace=0.5, hspace=0.5)
 from input_on_feedforward import *
 try:
     # input
     t, v, sv = average_all_stim(data['rate_array1'], args)
     AX[0].plot(t, v, 'k-', lw=2)
     AX[0].plot([0,100], [0,0], lw=5)
-    # set_plot(AX[0], ['left'], ylabel='rate (Hz)', xticks=[], yticks=[0, 1, 2, 3])
+    set_plot(AX[0], ['left'], ylabel='rate (Hz)', xticks=[], yticks=[0, 1.5, 3])
     _, width0, amp0, bsl = fit_a_gaussian(t, v, args)
-    onset0 = t[v-bsl>.1][0]
-    AX[0].arrow(onset0, 0.4, 0, -0.2, fc='k', ec='k', head_width=0.5, head_length=0.1, linewidth=2)
-
+    onset0 = t[v>.05*v.max()][0]
+    AX[0].plot([onset0], [0.6], 'kD')
     # active state output
     onset_act, width_act, amp_act = [], [], []
     for ax, exc_act in zip(AX[1:], [data['EXC_ACTS_ACTIVE1'],
@@ -198,12 +194,10 @@ try:
         t, v, sv = average_all_stim(exc_act, args)
         ax.plot(t, v, 'b')
         ax.fill_between(t, v-sv, v+sv, color='b', alpha=.4)
-        onset, width, amp, bsl = fit_a_gaussian(t, v, args)
-        ax.plot(t, bsl+gaussian(t, onset, width, amp), 'r--')
-        onset = t[v-bsl>sv[:100].mean()][0]
-        ax.arrow(onset, bsl+3, 0, -2, fc='b', ec='b')
-        ax.plot([onset], [bsl], 'kD')
-        onset_act.append(onset0-onset)
+        _, width, amp, bsl = fit_a_gaussian(t, v, args)
+        onset = t[v>sv[:100].mean()+v[:100].mean()][0]
+        ax.plot([onset], [sv[:100].mean()+v[:100].mean()+3], 'kD')
+        onset_act.append(onset-onset0)
         width_act.append(width)
         amp_act.append(amp)
 
@@ -215,25 +209,38 @@ try:
         t, v, sv = average_all_stim(exc_act, args)
         ax.plot(t, v, 'k')
         ax.fill_between(t, v-sv, v+sv, color='k', alpha=.3)
-        # set_plot(ax, ['left'], xticks=[], ylabel='rate (Hz)', yticks=[0,5,10,15])
+        set_plot(ax, ['left'], xticks=[], ylabel='rate (Hz)', yticks=[0,5,10,15])
         onset, width, amp, bsl = fit_a_gaussian(t, v, args)
-        ax.plot(t, bsl+gaussian(t, onset, width, amp), 'r--')
-        onset = t[v>0][0]
-        ax.arrow(onset, bsl+3, 0, -2, fc='k', ec='k')
+        # ax.plot(t, bsl+gaussian(t, onset, width, amp), 'r--')
+        onset = t[v>.1*v.max()][0]
+        ax.plot([onset], [sv[:100].mean()+v[:100].mean()+3], 'kD')
         onset_rest.append(onset-onset0)
         width_rest.append(width)
-        amp_rest.append(amp)
-    for i, quant_act, quant_rest, ylabel, ylim in zip(range(3),
+        amp_rest.append(v.max())
+    onset_rest, width_rest, amp_rest = np.array(onset_rest), np.array(width_rest), np.array(amp_rest)
+    onset_act, width_act, amp_act = np.array(onset_act), np.array(width_act), np.array(amp_act)
+    for i, quant_act, quant_rest, ylabel, ylim, yticks in zip(range(3),
            [onset_act, width_act, amp_act], [onset_rest, width_rest, amp_rest],
-           ['onset $t_0$ (ms)', 'width. T (ms)', 'amp. A (Hz)'], 
-           [[0,30], [0,60], [0,10]]):
+           ['$t_0$ (ms)', 'T (ms)', 'A (Hz)'], 
+           [[0,150], [0,60], [0,10]], [[0,75,150], [0,30,60], [0,5,10]]):
         for j in range(3):
            AX2[j+1, i].bar([0], quant_act[j])
            AX2[j+1, i].bar([1], quant_rest[j])
            AX2[j+1, i].plot([0.5, 0.5], ylim, 'w.')
-           set_plot(AX2[j+1, i], ['left'], ylabel=ylabel, xticks=[], ylim=ylim) 
+           set_plot(AX2[j+1, i], ['left'], ylabel=ylabel, xticks=[], ylim=ylim, yticks=yticks) 
+    for i, quant, ylabel, ylim, yticks, ytickslabels in zip(range(3),
+           [onset_rest-onset_act, width_act/width_rest, np.log(amp_act/amp_rest)/np.log(10)],
+           ['$t_0^{quiesc}$-$t_0^{act}$ (ms)', '$T^{act}$/$T^{quiesc}$', '$A^{act}$/$A^{quiesc}$'], 
+           [[0,150], [0,5], [0,2.]], [[0,75,150], [0,2,4], [0,1,2]], [['0','75','150'], ['0','2','4'], ['1','10','100']]):
+        for j in range(3):
+           AX0[j+1, i].plot([0.1, 0.1], ylim, 'w.')
+           AX0[j+1, i].bar([0], quant[j], facecolor='lightgray', edgecolor='k', lw=2)
+           set_plot(AX0[j+1, i], ['left'], ylabel=ylabel, xticks=[], ylim=ylim, yticks=yticks, yticks_labels=ytickslabels) 
 except ValueError:
     pass
+fig1.savefig(os.path.expanduser('~')+os.path.sep+'Desktop/1.svg')
+fig2.savefig(os.path.expanduser('~')+os.path.sep+'Desktop/2.svg')
+fig3.savefig(os.path.expanduser('~')+os.path.sep+'Desktop/3.svg')
 """
 
 import argparse
