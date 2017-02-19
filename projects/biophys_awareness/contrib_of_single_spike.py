@@ -103,9 +103,12 @@ for spike_times, exc_act in zip(data['SPK_TIMES'], data['EXC_ACTS']):
         i_spk = int(t_spk/args.DT)
         counter +=1
         trace += exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1]
-        if counter%i_plot==0:
-            AX[1].plot(t_zoom, exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1],
+        try:
+           if counter%i_plot==0:
+               AX[1].plot(t_zoom, exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1],
                       '-', color='gray', lw=0.2)
+        except ZeroDivisionError:
+           pass
 AX[1].plot(t_zoom, trace/counter, 'k-', lw=2)
 set_plot(AX[0], xlabel='time (ms)', ylabel='pop. act. (Hz)')
 set_plot(AX[1], xlabel='time lag (ms)', ylabel='pop. act. (Hz)')
@@ -135,8 +138,8 @@ if __name__=='__main__':
     parser.add_argument("--NTWK",help="baseline network architecture", default='CONFIG1')
     parser.add_argument("--Ne",help="excitatory neuron number", type=int, default=4000)
     parser.add_argument("--Ni",help="inhibitory neuron number", type=int, default=1000)
-    parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=0.)
-    parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=0.)
+    parser.add_argument("--Qe", help="weight of excitatory spike (0. means default)", type=float, default=1.)
+    parser.add_argument("--Qi", help="weight of inhibitory spike (0. means default)", type=float, default=4.)
     parser.add_argument("--fext_kick",help="external drive KICK (Hz)",type=float, default=2.)
     parser.add_argument("--fext_stat",help="STATIONARY external drive (Hz)",type=float, default=4.)
     parser.add_argument("--kick_length",help="duration of external drive KICK (ms)",type=float, default=30.)
@@ -147,8 +150,8 @@ if __name__=='__main__':
                         type=float, default=50.)
     parser.add_argument("--stim_jitter",help="we jitter the spike times with a gaussian distrib (ms)",
                         type=float, default=5.)
-    parser.add_argument("--Qe_thal", help="weight of additional excitatory spike", type=float, default=5.)
-    parser.add_argument("--duplicate_spikes", help="we duplicate the spike over neurons", type=int, default=40)
+    parser.add_argument("--Qe_thal", help="weight of additional excitatory spike", type=float, default=2.5)
+    parser.add_argument("--duplicate_spikes", help="we duplicate the spike over neurons", type=int, default=50)
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
     parser.add_argument("-u", "--update_plot", help="plot the figures", action="store_true")
     parser.add_argument("--filename", '-f', help="filename",type=str, default='data.npz')
