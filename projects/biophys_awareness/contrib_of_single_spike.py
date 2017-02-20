@@ -153,9 +153,9 @@ if __name__=='__main__':
     parser.add_argument("--stim_start", help="time of the start for the additional spike (ms)",
                         type=float, default=100.)
     parser.add_argument("--stim_delay",help="we multiply the single spike on the trial at this (ms)",
-                        type=float, default=50.)
+                        type=float, default=100.)
     parser.add_argument("--stim_jitter",help="we jitter the spike times with a gaussian distrib (ms)",
-                        type=float, default=5.)
+                        type=float, default=20.)
     parser.add_argument("--Qe_thal", help="weight of additional excitatory spike", type=float, default=2.5)
     parser.add_argument("--duplicate_spikes", help="we duplicate the spike over neurons", type=int, default=50)
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
