@@ -109,7 +109,10 @@ for spike_times, exc_act in zip(data['SPK_TIMES'], data['EXC_ACTS']):
                       '-', color='gray', lw=0.2)
         except ZeroDivisionError:
            pass
-AX[1].plot(t_zoom, trace/counter, 'k-', lw=2)
+try:
+    AX[1].plot(t_zoom, trace/counter, 'k-', lw=2)
+except ZeroDivisionError:
+    pass
 set_plot(AX[0], xlabel='time (ms)', ylabel='pop. act. (Hz)')
 set_plot(AX[1], xlabel='time lag (ms)', ylabel='pop. act. (Hz)')
 AX[2].plot(t_zoom, 0.*t_zoom, 'k-', lw=2)
