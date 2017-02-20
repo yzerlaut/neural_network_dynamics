@@ -92,9 +92,12 @@ def get_plotting_instructions():
 args = data['args'].all()
 fig, AX = plt.subplots(3, 1, figsize=(5,10))
 plt.subplots_adjust(left=0.15, bottom=0.15, wspace=0.2, hspace=0.2)
-AX[0].plot(data['t_array'][-1000:], data['rate_array'][-1000:], 'b')
-AX[0].plot(data['t_array'][-1000:], data['EXC_ACTS'].mean(axis=0)[-1000:], 'g')
-AX[0].plot(data['t_array'][-1000:], data['INH_ACTS'].mean(axis=0)[-1000:], 'r')
+AX[0].plot(data['rate_array'][:1000], 'b')
+AX[0].plot(data['EXC_ACTS'].mean(axis=0)[:1000], 'g')
+AX[0].plot(data['INH_ACTS'].mean(axis=0)[:1000], 'r')
+AX[0].plot(data['rate_array'][-1000:], 'b')
+AX[0].plot(data['EXC_ACTS'].mean(axis=0)[-1000:], 'g')
+AX[0].plot(data['INH_ACTS'].mean(axis=0)[-1000:], 'r')
 t_zoom = np.linspace(-10, 30, int(40/args.DT)+1)
 trace, counter = 0.*t_zoom, 0
 for spike_times, exc_act in zip(data['SPK_TIMES'], data['EXC_ACTS']):
