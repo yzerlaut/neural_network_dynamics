@@ -1,4 +1,4 @@
-Nsim=10
+Nsim=3
 TSTOP=500000
 # RS-FS configuration
 python contrib_of_single_spike.py -f data/active.npz --tstop $TSTOP --nsim $Nsim
