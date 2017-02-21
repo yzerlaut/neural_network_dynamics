@@ -104,13 +104,13 @@ for spike_times, exc_act in zip(data['SPK_TIMES'], data['EXC_ACTS']):
     i_plot = int(data['SPK_TIMES'].shape[0]*len(np.unique(spike_times))/20)
     for t_spk in np.unique(spike_times):
         i_spk = int(t_spk/args.DT)
-        counter +=1
-        trace += exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1]
         try:
+           counter +=1
+           trace += exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1]
            if counter%i_plot==0:
                AX[1].plot(t_zoom, exc_act[i_spk+int(t_zoom[0]/args.DT):i_spk+int(t_zoom[-1]/args.DT)+1],
                       '-', color='gray', lw=0.2)
-        except ZeroDivisionError:
+        except ZeroDivisionError and ValueError:
            pass
 try:
     AX[1].plot(t_zoom, trace/counter, 'k-', lw=2)
