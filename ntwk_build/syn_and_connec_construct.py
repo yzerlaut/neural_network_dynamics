@@ -29,7 +29,7 @@ def build_up_recurrent_connections(Pops, M, SEED=1):
             
     return CONN2
 
-def build_populations(NTWK, M, with_raster=False, with_pop_act=False, verbose=True):
+def build_populations(NTWK, M, with_raster=False, with_pop_act=False, with_Vm=0, verbose=True):
     """
     sets up the neuronal populations
     """
@@ -50,13 +50,23 @@ def build_populations(NTWK, M, with_raster=False, with_pop_act=False, verbose=Tr
         RASTER = []
         for pop in POPS:
             RASTER.append(brian2.SpikeMonitor(pop))
+    if with_Vm>0:
+        VMS = []
+        for pop in POPS:
+            VMS.append(brian2.StateMonitor(G, 'V', record=np.arange(with_Vm))            
 
-    if with_pop_act and with_raster:
+    if with_pop_act and with_raster and (with_Vm>0):
+        return POPS, RASTER, POP_ACT, VMS
+    elif with_pop_act and with_raster:
         return POPS, RASTER, POP_ACT
+    elif with_pop_act and (with_Vm>0):
+        return POPS, POP_ACT, VMS
     elif with_raster:
         return POPS, RASTER
     elif with_pop_act:
         return POPS, POP_ACT
+    elif (with_Vm>0):
+        return POPS, VMS
     else:
         return POPS
 

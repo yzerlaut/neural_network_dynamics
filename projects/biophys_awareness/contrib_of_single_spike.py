@@ -47,7 +47,8 @@ def run_sim(args):
                                                              rate_array,\
                                                              pop_for_conductance='A',
                                                              SEED=seed)
-        SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
+        # SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
+        SYNAPSES, VMS= build_up_recurrent_connections(POPS, M, SEED=seed+1, with_Vm=4)
 
         # Then single spike addition
         # spikes targetting randomly one neuron in the network
@@ -70,7 +71,7 @@ def run_sim(args):
         
         net = brian2.Network(brian2.collect())
         # manually add the generated quantities
-        net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES, FEEDFORWARD, INPUT_SPIKES) 
+        net.add(POPS, SYNAPSES, RASTER, POP_ACT, AFF_SPKS, AFF_SYNAPSES, FEEDFORWARD, INPUT_SPIKES, VMS) 
         net.run(args.tstop*brian2.ms)
 
         EXC_ACTS.append(POP_ACT[0].smooth_rate(window='flat',\
@@ -84,7 +85,7 @@ def run_sim(args):
              script=os.path.abspath('./')+'/'+__file__,\
              EXC_ACTS=np.array(EXC_ACTS), INH_ACTS=np.array(INH_ACTS), NTWK=NTWK, t_array=t_array,
              rate_array=rate_array, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
-             SPK_IDS=SPK_IDS, SPK_TIMES=SPK_TIMES,
+             SPK_IDS=SPK_IDS, SPK_TIMES=SPK_TIMES, VMS=VMS,
              plot=get_plotting_instructions())
 
 def get_plotting_instructions():
