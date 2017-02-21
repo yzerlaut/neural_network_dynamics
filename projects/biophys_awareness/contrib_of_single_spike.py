@@ -85,7 +85,7 @@ def run_sim(args):
              script=os.path.abspath('./')+'/'+__file__,\
              EXC_ACTS=np.array(EXC_ACTS), INH_ACTS=np.array(INH_ACTS), NTWK=NTWK, t_array=t_array,
              rate_array=rate_array, AFFERENCE_ARRAY=AFFERENCE_ARRAY,
-             SPK_IDS=SPK_IDS, SPK_TIMES=SPK_TIMES, VMS=VMS,
+             SPK_IDS=SPK_IDS, SPK_TIMES=SPK_TIMES, VMS=np.array([vv.V/brian2.mV for vv in VMS]),
              plot=get_plotting_instructions())
 
 def get_plotting_instructions():
