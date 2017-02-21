@@ -53,7 +53,7 @@ def build_populations(NTWK, M, with_raster=False, with_pop_act=False, with_Vm=0,
     if with_Vm>0:
         VMS = []
         for pop in POPS:
-            VMS.append(brian2.StateMonitor(G, 'V', record=np.arange(with_Vm))            
+            VMS.append(brian2.StateMonitor(G, 'V', record=np.arange(with_Vm)))
 
     if with_pop_act and with_raster and with_Vm:
         return POPS, RASTER, POP_ACT, VMS
