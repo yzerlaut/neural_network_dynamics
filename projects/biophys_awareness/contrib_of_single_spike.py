@@ -37,7 +37,7 @@ def run_sim(args):
 
     for seed in range(1, args.nsim+1):
 
-        POPS, RASTER, POP_ACT = build_populations(NTWK, M, with_raster=True, with_pop_act=True)
+        POPS, RASTER, POP_ACT, VMS = build_populations(NTWK, M, with_raster=True, with_pop_act=True, with_Vm=4)
 
         initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
 
@@ -48,7 +48,7 @@ def run_sim(args):
                                                              pop_for_conductance='A',
                                                              SEED=seed)
         # SYNAPSES = build_up_recurrent_connections(POPS, M, SEED=seed+1)
-        SYNAPSES, VMS= build_up_recurrent_connections(POPS, M, SEED=seed+1, with_Vm=4)
+        SYNAPSES= build_up_recurrent_connections(POPS, M, SEED=seed+1)
 
         # Then single spike addition
         # spikes targetting randomly one neuron in the network
