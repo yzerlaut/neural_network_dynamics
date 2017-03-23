@@ -9,7 +9,6 @@ sys.path.append('../')
 from cells.cell_library import get_neuron_params
 from cells.cell_construct import get_membrane_equation
 
-
 def build_up_recurrent_connections(Pops, M, SEED=1):
     """
     Construct the synapses from the connectivity matrix
@@ -36,6 +35,7 @@ def build_populations(NTWK, M, with_raster=False, with_pop_act=False, with_Vm=0,
     POPS = []
     for ntwk, ii in zip(NTWK, range(len(NTWK))):
         if 'params' in ntwk.keys():
+            # to have a population with custom params !
             neuron_params = ntwk['params']
         else:
             neuron_params = get_neuron_params(ntwk['type'], number=ntwk['N'], verbose=verbose)
@@ -61,6 +61,8 @@ def build_populations(NTWK, M, with_raster=False, with_pop_act=False, with_Vm=0,
         return POPS, RASTER, POP_ACT
     elif with_pop_act and with_Vm:
         return POPS, POP_ACT, VMS
+    elif with_raster and with_Vm:
+        return POPS, RASTER, VMS
     elif with_raster:
         return POPS, RASTER
     elif with_pop_act:
@@ -70,7 +72,7 @@ def build_populations(NTWK, M, with_raster=False, with_pop_act=False, with_Vm=0,
     else:
         return POPS
 
-def initialize_to_rest(POPS, NTWK):
+def initialize_to_rest(POPS, NTWK, M=None):
     """
     REST BY DEFAULT !
 
@@ -78,10 +80,18 @@ def initialize_to_rest(POPS, NTWK):
     while conductances are relative to leak conductance of the neuron !
     /!\ one population has the same conditions on all its targets !! /!\
     """
-    for ii, l in zip(range(len(POPS)), string.ascii_uppercase[:len(POPS)]):
-        POPS[ii].V = NTWK[ii]['params']['El']*brian2.mV
-        for t in string.ascii_uppercase[:len(POPS)]:
-            exec("POPS[ii].G"+t+l+" = 0.*brian2.nS")
+    if M is None:
+        for ii, l in zip(range(len(POPS)), string.ascii_uppercase[:len(POPS)]):
+            POPS[ii].V = NTWK[ii]['params']['El']*brian2.mV
+            for t in string.ascii_uppercase[:len(POPS)]:
+                exec("POPS[ii].G"+t+l+" = 0.*brian2.nS")
+    else:
+        for ii in range(len(POPS)):
+            POPS[ii].V = NTWK[ii]['params']['El']*brian2.mV
+            for syn in M[ii,:]:
+                exec("POPS[ii].G"+syn['name']+" = 0.*brian2.nS")
+                
+                
 
 # def initialize_to_random(POPS, NTWK, Gmean_MATRIX, Gstd_MATRIX, Vmean, Vstd):
 #     """

@@ -58,6 +58,42 @@ def construct_feedforward_input(POPS, AFFERENCE_ARRAY,\
 
     return SPKS, SYNAPSES
 
+def construct_feedforward_input_simple(target_pop,
+                                       afferent_pop,\
+                                       time_array, rate_array,\
+                                       conductanceID='AA',\
+                                       target_conductances = None,
+                                       with_presynaptic_spikes=False,
+                                       SEED=1):
+    """
+    POPS and AFFERENCE_ARRAY should be 1D arrrays as their is only one 
+    source population
+
+    'pop_for_conductance' is the string identifying the source conductance
+    that will be incremented by the afferent input !!
+    """
+
+    # number of synapses per neuron
+    Nsyn = afferent_pop['pconn']*afferent_pop['N']
+    if Nsyn>0:
+        indices, times = set_spikes_from_time_varying_rate(\
+                            time_array, rate_array,\
+                                target_pop.N, Nsyn, SEED=(SEED+2)**2%100)
+        spikes = brian2.SpikeGeneratorGroup(target_pop.N, indices, times)
+        pre_increment = 'G'+conductanceID+' += w'
+        synapse = brian2.Synapses(spikes, target_pop, on_pre=pre_increment,\
+                                        model='w:siemens')
+        synapse.connect('i==j')
+        synapse.w = afferent_pop['Q']*brian2.nS
+    else:
+        print('Nsyn = 0')
+        spikes, synapse = None, None
+
+    if not with_presynaptic_spikes:
+        return spikes, synapse
+    else:
+        return spikes, synapse, indices, times
+
 if __name__=='__main__':
     
     import sys
@@ -86,8 +122,8 @@ if __name__=='__main__':
 
     rate_array = double_gaussian(t_array, 60., 30., 20., 10.)
     AFF_SPKS, AFF_SYNAPSES = construct_feedforward_input(POPS, AFFERENCE_ARRAY,\
-                                                     t_array, rate_array,\
-                                                     pop_for_conductance='A')
+                                                         t_array, rate_array,\
+                                                         pop_for_conductance='A')
 
     SYNAPSES = build_up_recurrent_connections(POPS, M)
     

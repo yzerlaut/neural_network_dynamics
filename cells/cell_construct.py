@@ -63,8 +63,8 @@ if __name__=='__main__':
     from brian2 import *
     from cell_library import get_neuron_params
     import sys
-    sys.path.append('../')
-    from common_libraries.graphs.my_graph import set_plot
+    sys.path.append('../../')
+    from graphs.my_graph import set_plot
 
     import argparse
     parser=argparse.ArgumentParser(description=
