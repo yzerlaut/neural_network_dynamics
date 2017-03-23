@@ -77,7 +77,7 @@ if __name__=='__main__':
     neuron_params = {'N':1,\
                      'Gl':10., 'Cm':150.,'Trefrac':5.,\
                      'El':-65., 'Vthre':-50., 'Vreset':-65.}
-    RATES = [0.,0.,1.,1.]
+    RATES = [1.,1.,1.,1.]
     SYN_POPS = [{'name':'exc1', 'Erev': 0.0, 'N': 1000, 'Q': .3, 'Tsyn': 5., 'pconn': 0.1},
                 {'name':'exc2', 'Erev': 0.0, 'N': 1000, 'Q': .5, 'Tsyn': 5., 'pconn': 0.1},
                 {'name':'inh1', 'Erev': -80.0, 'N': 1000, 'Q': 10., 'Tsyn': 5., 'pconn': 0.1},
