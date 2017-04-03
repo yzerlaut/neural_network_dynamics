@@ -5,7 +5,7 @@ import numpy as np
 import brian2
 
 def get_membrane_equation(neuron_params, synaptic_array,\
-                          return_equations=False):
+                          return_equations=False, with_synaptic_currents=False):
 
     ## pure membrane equation
     if neuron_params['delta_v']==0:
@@ -42,12 +42,33 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         """+'d'+Gsyn+'/dt = -'+Gsyn+'*(1./(%(Tsyn)f*ms)) : siemens' % synapse
     eqs += """
         I0 : amp """
+
+    if with_synaptic_currents:
+        # compute excitatory currents
+        eqs += """
+        Ie = 0*pA """
+        for synapse in synaptic_array:
+            if synapse['Erev']>-20: # if excitatory
+                # loop over each presynaptic element onto this target
+                Gsyn = 'G'+synapse['name']
+                eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
+        eqs += ' : amp'
+        # compute inhibitory currents
+        eqs += """
+        Ii = 0*pA """
+        for synapse in synaptic_array:
+            if synapse['Erev']<-60: # if excitatory
+                # loop over each presynaptic element onto this target
+                Gsyn = 'G'+synapse['name']
+                eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
+        eqs += ' : amp'
+
     # adexp, pratical detection threshold Vthre+5*delta_v
     neurons = brian2.NeuronGroup(neuron_params['N'], model=eqs,
                method='euler', refractory=str(neuron_params['Trefrac'])+'*ms',
                threshold='V>'+str(neuron_params['Vthre']+5.*neuron_params['delta_v'])+'*mV',
                reset='V='+str(neuron_params['Vreset'])+'*mV; w_adapt+='+str(neuron_params['b'])+'*pA')
-                                 
+
     if return_equations:
         return neurons, eqs
     else:

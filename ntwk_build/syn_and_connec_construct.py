@@ -28,7 +28,8 @@ def build_up_recurrent_connections(Pops, M, SEED=1):
             
     return CONN2
 
-def build_populations(NTWK, M, with_raster=False, with_pop_act=False, with_Vm=0, verbose=True):
+def build_populations(NTWK, M, with_raster=False, with_pop_act=False, with_Vm=0,
+                      verbose=True, with_synaptic_currents=False):
     """
     sets up the neuronal populations
     """
@@ -40,7 +41,7 @@ def build_populations(NTWK, M, with_raster=False, with_pop_act=False, with_Vm=0,
         else:
             neuron_params = get_neuron_params(ntwk['type'], number=ntwk['N'], verbose=verbose)
             ntwk['params'] = neuron_params
-        POPS.append(get_membrane_equation(neuron_params, M[:,ii]))
+        POPS.append(get_membrane_equation(neuron_params, M[:,ii], with_synaptic_currents=with_synaptic_currents))
         
     if with_pop_act:
         POP_ACT = []
@@ -54,20 +55,31 @@ def build_populations(NTWK, M, with_raster=False, with_pop_act=False, with_Vm=0,
         VMS = []
         for pop in POPS:
             VMS.append(brian2.StateMonitor(pop, 'V', record=np.arange(with_Vm)))
+    if with_synaptic_currents:
+        ISYNe, ISYNi = [], []
+        for pop in POPS:
+            ISYNe.append(brian2.StateMonitor(pop, 'Ie', record=np.arange(max([1,with_Vm]))))
+            ISYNi.append(brian2.StateMonitor(pop, 'Ii', record=np.arange(max([1,with_Vm]))))
 
-    if with_pop_act and with_raster and with_Vm:
-        return POPS, RASTER, POP_ACT, VMS
+    if with_pop_act and with_raster and with_Vm>0 and with_synaptic_currents:
+        return POPS, RASTER, POP_ACT, VMS, ISYNe, ISYNi
+    if with_pop_act and with_Vm>0 and with_synaptic_currents:
+        return POPS, POP_ACT, VMS, ISYNe, ISYNi
+    elif with_raster and with_Vm>0 and with_synaptic_currents:
+        return POPS, RASTER, VMS, ISYNe, ISYNi
     elif with_pop_act and with_raster:
         return POPS, RASTER, POP_ACT
-    elif with_pop_act and with_Vm:
+    elif with_pop_act and with_Vm>0:
         return POPS, POP_ACT, VMS
-    elif with_raster and with_Vm:
+    elif with_raster and with_Vm>0:
         return POPS, RASTER, VMS
+    elif with_Vm>0 and with_synaptic_currents:
+        return POPS, VMS, ISYNe, ISYNi
     elif with_raster:
         return POPS, RASTER
     elif with_pop_act:
         return POPS, POP_ACT
-    elif with_Vm:
+    elif with_Vm>0:
         return POPS, VMS
     else:
         return POPS

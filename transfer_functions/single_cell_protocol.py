@@ -22,7 +22,8 @@ def add_other_necessary_keys(params):
             params1[k] = d # default value
     return params1
 
-def run_sim(neuron_params, SYN_POPS, RATES, dt=0.1, tstop=100., with_Vm=False, SEED=1):
+def run_sim(neuron_params, SYN_POPS, RATES, dt=0.1, tstop=100., SEED=1,
+            with_Vm=0, with_synaptic_currents=False):
 
     neuron_params = add_other_necessary_keys(neuron_params)
     brian2.defaultclock.dt = dt*brian2.ms
@@ -36,11 +37,15 @@ def run_sim(neuron_params, SYN_POPS, RATES, dt=0.1, tstop=100., with_Vm=False, S
         M.append([{'Q': 0., 'Erev': syn['Erev'], 'Tsyn': syn['Tsyn'], 'name': syn['name']+NTWK[0]['name'], 'pconn': 0.}])
     M = np.array(M)    
 
-    if with_Vm:
+    VMS, ISYNe, ISYNi = [], [], [] # initialize to empty
+    if with_Vm and with_synaptic_currents:
+        POPS, RASTER, VMS, ISYNe, ISYNi = build_populations(NTWK, M,
+                                                            with_Vm=with_Vm, with_raster=True,
+                                                            with_synaptic_currents=with_synaptic_currents)
+    elif with_Vm:
         POPS, RASTER, VMS = build_populations(NTWK, M, with_Vm=with_Vm, with_raster=True)
     else:
         POPS, RASTER = build_populations(NTWK, M, with_raster=True)
-        VMS = []
     initialize_to_rest(POPS, NTWK, M=M) # (fully quiescent State as initial conditions)
 
     SPKS, SYNAPSES, PRESPKS = [], [], []
@@ -61,17 +66,23 @@ def run_sim(neuron_params, SYN_POPS, RATES, dt=0.1, tstop=100., with_Vm=False, S
     # collect objects
     net = brian2.Network(brian2.collect())
     # manually add the generated quantities
-    net.add(POPS, VMS, RASTER, SPKS, SYNAPSES)
+    net.add(POPS, VMS, RASTER, SPKS, SYNAPSES, ISYNe, ISYNi)
     ## RUN THE SIMULATION
     net.run(tstop*brian2.ms)
 
+    output = {'ispikes':np.array(RASTER[0].i), 'tspikes':np.array(RASTER[0].t/brian2.ms), 'dt':str(dt), 'tstop':str(tstop)}
+    
+        
     if with_Vm:
-        return [vv.V/brian2.mV for vv in VMS[0]]
-    else:
-        return [vv.rate/brian2.Hz for vv in POP_ACT[0]]
-    
-    
+        output['i_prespikes'] = np.concatenate([i*np.ones(len(presk)) for i, presk in enumerate(PRESPKS)]).flatten()
+        output['t_prespikes'] = np.concatenate([presk/brian2.ms for presk in PRESPKS]).flatten()
+        output['Vm'] = np.array([vv.V/brian2.mV for vv in VMS[0]])
+    if with_synaptic_currents:
+        output['Ie'] = np.array([vv.Ie/brian2.pA for vv in ISYNe[0]])
+        output['Ii'] = np.array([vv.Ii/brian2.pA for vv in ISYNi[0]])
 
+    return output
+    
 if __name__=='__main__':
 
     neuron_params = {'N':1,\
@@ -83,10 +94,9 @@ if __name__=='__main__':
                 {'name':'inh1', 'Erev': -80.0, 'N': 1000, 'Q': 10., 'Tsyn': 5., 'pconn': 0.1},
                 {'name':'inh2', 'Erev': -80.0, 'N': 1000, 'Q': 4., 'Tsyn': 5., 'pconn': 0.1}]
 
-    DATA = run_sim(neuron_params, SYN_POPS, RATES,
-                tstop=100., with_Vm=True)
-    V = DATA[0]
-    
+    data = run_sim(neuron_params, SYN_POPS, RATES,
+                tstop=10, with_Vm=True)
+
     import matplotlib.pylab as plt
-    plt.plot(V[0])
+    plt.plot(data['Vm'][0])
     plt.show()
