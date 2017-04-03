@@ -6,11 +6,12 @@ within this file
 def change_units_to_SI(params):
     print('/!\ PASSING cell parameters in SI units /!\ ')
     # mV to V, ms to s
-    for key in ['El', 'Vthre', 'Vreset', 'delta_v', 'Ei', 'Ee', 'Te', 'Ti', 'Trefrac', 'tauw']:
+    for key in ['El', 'Vthre', 'Vreset', 'delta_v', 'Ei', 'Ee',
+                'Te', 'Ti', 'Trefrac', 'tauw', 'Ts', 'Tsyn', 'Erev']:
         if key in params:
             params[key] *= 1e-3
     # nS to S
-    for key in ['a', 'Gl', 'Qe', 'Qi']:
+    for key in ['a', 'Gl', 'Qe', 'Qi', 'Q', 'Qs']:
         if key in params:
             params[key] *= 1e-9
     # pF to F and pA to A
