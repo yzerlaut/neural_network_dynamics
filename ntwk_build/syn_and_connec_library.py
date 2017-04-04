@@ -5,6 +5,32 @@ within this file
 import numpy as np
 import itertools, string
 
+def init_syn_and_conn_matrix(NTWK,
+                             Tsyn=5, Q=1, Erev=0, pconn=0.,
+                             SI_units=False, verbose=True,):
+
+    # creating empty arry of objects (future dictionnaries)
+    M = np.empty((len(NTWK), len(NTWK)), dtype=object)
+    # default initialisation
+    for i, j in itertools.product(range(len(NTWK)), range(len(NTWK))):
+        M[i, j] = {'pconn': 0., 'Q':Q, 'Tsyn':Tsyn, 'Erev': 0.,\
+                   'name':NTWK[i]['name']+NTWK[j]['name']}
+        if len(NTWK[i]['name'].split('inh'))>1 or len(NTWK[i]['name'].split('Inh'))>1:
+            # in that case we put the inhibitory reversal potential
+            M[i, j]['Erev'] = -80 
+
+    if SI_units:
+        print('synaptic network parameters in SI units')
+        for m in M.flatten():
+            m['Q'] *= 1e-9
+            m['Erev'] *= 1e-3
+            m['Tsyn'] *= 1e-3
+    else:
+        if verbose:
+            print('synaptic network parameters --NOT-- in SI units')
+
+    return M
+
 def get_connectivity_and_synapses_matrix(NAME, number=2, SI_units=False, verbose=True):
 
 

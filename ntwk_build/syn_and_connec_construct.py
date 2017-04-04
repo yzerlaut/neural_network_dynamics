@@ -4,11 +4,16 @@ This script connects the different synapses to a target neuron
 import brian2
 import numpy as np
 import itertools, string
-import sys
-sys.path.append('../')
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from cells.cell_library import get_neuron_params
 from cells.cell_construct import get_membrane_equation
 
+ms, mV, pA = brian2.ms, brian2.mV, brian2.pA
+
+def collect():
+    return brian2.Network(brian2.collect())
+    
 def build_up_recurrent_connections(Pops, M, SEED=1):
     """
     Construct the synapses from the connectivity matrix
@@ -39,10 +44,13 @@ def build_populations(NTWK, M, with_raster=False, with_pop_act=False, with_Vm=0,
             # to have a population with custom params !
             neuron_params = ntwk['params']
         else:
-            neuron_params = get_neuron_params(ntwk['type'], number=ntwk['N'], verbose=verbose)
+            neuron_params = get_neuron_params(ntwk['type'], number=ntwk['N'],
+                                              name=ntwk['name'],
+                                              verbose=verbose)
             ntwk['params'] = neuron_params
-        POPS.append(get_membrane_equation(neuron_params, M[:,ii], with_synaptic_currents=with_synaptic_currents))
-        
+        POPS.append(get_membrane_equation(neuron_params, M[:,ii],
+                                          with_synaptic_currents=with_synaptic_currents,
+                                          verbose=verbose))
     if with_pop_act:
         POP_ACT = []
         for pop in POPS:
@@ -84,7 +92,7 @@ def build_populations(NTWK, M, with_raster=False, with_pop_act=False, with_Vm=0,
     else:
         return POPS
 
-def initialize_to_rest(POPS, NTWK, M=None):
+def initialize_to_rest(POPS, NTWK, M):
     """
     REST BY DEFAULT !
 
@@ -92,71 +100,27 @@ def initialize_to_rest(POPS, NTWK, M=None):
     while conductances are relative to leak conductance of the neuron !
     /!\ one population has the same conditions on all its targets !! /!\
     """
-    if M is None:
-        for ii, l in zip(range(len(POPS)), string.ascii_uppercase[:len(POPS)]):
-            POPS[ii].V = NTWK[ii]['params']['El']*brian2.mV
-            for t in string.ascii_uppercase[:len(POPS)]:
-                exec("POPS[ii].G"+t+l+" = 0.*brian2.nS")
-    else:
-        for ii in range(len(POPS)):
-            POPS[ii].V = NTWK[ii]['params']['El']*brian2.mV
-            for syn in M[ii,:]:
-                exec("POPS[ii].G"+syn['name']+" = 0.*brian2.nS")
+    for ii in range(len(POPS)):
+        POPS[ii].V = NTWK[ii]['params']['El']*brian2.mV
+        for jj in range(len(POPS)):
+            if M[jj,ii]['pconn']>0: # if connection
+                exec("POPS[ii].G"+M[jj,ii]['name']+" = 0.*brian2.nS")
                 
                 
 
-# def initialize_to_random(POPS, NTWK, Gmean_MATRIX, Gstd_MATRIX, Vmean, Vstd):
-#     """
-#     REST BY DEFAULT !
+def initialize_to_random(POPS, NTWK, M, Gmean=10., Gstd=3.):
+    """
 
-#     membrane potential is an absolute value !
-#     while conductances are relative to leak conductance of the neuron !
-#     /!\ one population has the same conditions on all its targets !! /!\
-#     """
-#     for ii, l in zip(range(len(POPS)), string.ascii_uppercase[:len(POPS)]):
-#         POPS[ii].V = "(Vmean+Vstd*randn())*brian2.mV"
-#         for t, jj in zip(string.ascii_uppercase[:len(POPS)], range(len(POPS))):
-#             exec("POPS[ii].G"+t+l+" = "+str(Gmean_MATRIX[jj, ii])+\
-#                  "+randn()*"str(Gstd_MATRIX[jj, ii]))+")*brian2.nS")
+    membrane potential is an absolute value !
+    while conductances are relative to leak conductance of the neuron !
+    /!\ one population has the same conditions on all its targets !! /!\
+    """
+    for ii in range(len(POPS)):
+        POPS[ii].V = NTWK[ii]['params']['El']*brian2.mV
+        for jj in range(len(POPS)):
+            if M[jj,ii]['pconn']>0: # if connection
+                exec("POPS[ii].G"+M[jj,ii]['name']+" = "+str(Gmean)+"+randn()*"+str(Gstd)+")*brian2.nS")
             
-if __name__=='__main__':
-
-    print(__doc__)
-    
-    from syn_and_connec_library import get_connectivity_and_synapses_matrix
-    import sys, os
-    sys.path.append(os.path.expanduser('~')+os.path.sep+'work')
-    from graphs.ntwk_dyn_plot import RASTER_PLOT
-    
-    # starting from an example
-    NTWK = [\
-            {'name':'exc', 'N':4000, 'type':'LIF'},
-            {'name':'inh1', 'N':500, 'type':'LIF'},
-            {'name':'inh2', 'N':500, 'type':'LIF'}
-    ]
-    
-    M = get_connectivity_and_synapses_matrix('Vogels-Abbott', number=len(NTWK))
-    POPS, RASTER = build_populations(NTWK, M, with_raster=True)
-
-    initialize_to_rest(POPS, NTWK)
-    # custom initialization
-    for P, t in zip(POPS, ['A', 'B', 'C']):
-        P.V = '-60*mV + randn()*5*mV'
-        exec("P.GA"+t+" = '(randn() * 1. + 4) * 10.*nS'")
-        exec("P.GB"+t+" = '(randn() * 6. + 10.) * 10.*nS'")
-        exec("P.GC"+t+" = '(randn() * 6. + 10.) * 10.*nS'")
-
-    SYNAPSES = build_up_recurrent_connections(POPS, M)
-    
-    net = brian2.Network(brian2.collect())
-    net.add(POPS, SYNAPSES, RASTER) # manually add the generated quantities
-
-    net.run(20.*brian2.ms)
-
-    RASTER_PLOT([pop.t/brian2.ms for pop in RASTER], [pop.i for pop in RASTER])
-
-    brian2.show()
-
     
 
     

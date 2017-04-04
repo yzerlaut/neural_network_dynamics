@@ -112,9 +112,10 @@ if __name__=='__main__':
             {'name':'inh', 'N':1000, 'type':'LIF'}]
     
     M = get_connectivity_and_synapses_matrix('Vogels-Abbott', number=len(NTWK))
+    print(M)
     POPS, RASTER = build_populations(NTWK, M, with_raster=True)
 
-    initialize_to_rest(POPS, NTWK) # (fully quiescent State as initial conditions)
+    initialize_to_rest(POPS, NTWK, M) # (fully quiescent State as initial conditions)
     
     AFFERENCE_ARRAY = [{'Q':10., 'N':400, 'pconn':0.02},
                        {'Q':10., 'N':400, 'pconn':0.02}]

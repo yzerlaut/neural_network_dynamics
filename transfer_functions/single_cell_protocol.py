@@ -2,7 +2,6 @@ import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 import brian2
 import numpy as np
-
 from ntwk_build.syn_and_connec_construct import build_populations,\
     build_up_recurrent_connections,\
     initialize_to_rest

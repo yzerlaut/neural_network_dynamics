@@ -5,8 +5,14 @@ import numpy as np
 import brian2
 
 def get_membrane_equation(neuron_params, synaptic_array,\
-                          return_equations=False, with_synaptic_currents=False):
+                          return_equations=False, with_synaptic_currents=False,
+                          verbose=False):
 
+    if verbose:
+        print('------------------------------------------------------------------')
+        print('==> Neuron(s) with parameters')
+        print(neuron_params)
+        print('------------------------------------------------------------------')
     ## pure membrane equation
     if neuron_params['delta_v']==0:
         # if hard threshold : Integrate and Fire
@@ -63,6 +69,9 @@ def get_membrane_equation(neuron_params, synaptic_array,\
                 eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
         eqs += ' : amp'
 
+    if verbose:
+        print(eqs)
+        
     # adexp, pratical detection threshold Vthre+5*delta_v
     neurons = brian2.NeuronGroup(neuron_params['N'], model=eqs,
                method='euler', refractory=str(neuron_params['Trefrac'])+'*ms',
