@@ -9,11 +9,13 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from cells.cell_library import get_neuron_params
 from cells.cell_construct import get_membrane_equation
 
-ms, mV, pA = brian2.ms, brian2.mV, brian2.pA
+def collect_and_run(OBJECT_LIST, tstop=100, dt=0.1):
+    brian2.defaultclock.dt = dt*brian2.ms
+    net = brian2.Network(brian2.collect())
+    net.add(*OBJECT_LIST)
+    net.run(tstop*brian2.ms)
+    return net
 
-def collect():
-    return brian2.Network(brian2.collect())
-    
 def build_up_recurrent_connections(Pops, M, SEED=1):
     """
     Construct the synapses from the connectivity matrix
@@ -34,7 +36,7 @@ def build_up_recurrent_connections(Pops, M, SEED=1):
     return CONN2
 
 def build_populations(NTWK, M, with_raster=False, with_pop_act=False, with_Vm=0,
-                      verbose=True, with_synaptic_currents=False):
+                      verbose=False, with_synaptic_currents=False):
     """
     sets up the neuronal populations
     """
@@ -94,20 +96,15 @@ def build_populations(NTWK, M, with_raster=False, with_pop_act=False, with_Vm=0,
 
 def initialize_to_rest(POPS, NTWK, M):
     """
-    REST BY DEFAULT !
-
-    membrane potential is an absolute value !
-    while conductances are relative to leak conductance of the neuron !
-    /!\ one population has the same conditions on all its targets !! /!\
+    Vm to resting potential and conductances to 0
     """
     for ii in range(len(POPS)):
         POPS[ii].V = NTWK[ii]['params']['El']*brian2.mV
         for jj in range(len(POPS)):
             if M[jj,ii]['pconn']>0: # if connection
                 exec("POPS[ii].G"+M[jj,ii]['name']+" = 0.*brian2.nS")
-                
-                
 
+                
 def initialize_to_random(POPS, NTWK, M, Gmean=10., Gstd=3.):
     """
 
@@ -119,8 +116,9 @@ def initialize_to_random(POPS, NTWK, M, Gmean=10., Gstd=3.):
         POPS[ii].V = NTWK[ii]['params']['El']*brian2.mV
         for jj in range(len(POPS)):
             if M[jj,ii]['pconn']>0: # if connection
-                exec("POPS[ii].G"+M[jj,ii]['name']+" = "+str(Gmean)+"+randn()*"+str(Gstd)+")*brian2.nS")
+                exec("POPS[ii].G"+M[jj,ii]['name']+\
+                     " = ("+str(Gmean)+"+brian2.randn()*"+str(Gstd)+")*brian2.nS")
             
-    
-
+if __name__=='__main__':
+    _=0
     

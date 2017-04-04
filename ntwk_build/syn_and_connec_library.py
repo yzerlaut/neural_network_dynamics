@@ -13,7 +13,7 @@ def init_syn_and_conn_matrix(NTWK,
     M = np.empty((len(NTWK), len(NTWK)), dtype=object)
     # default initialisation
     for i, j in itertools.product(range(len(NTWK)), range(len(NTWK))):
-        M[i, j] = {'pconn': 0., 'Q':Q, 'Tsyn':Tsyn, 'Erev': 0.,\
+        M[i, j] = {'pconn': pconn, 'Q':Q, 'Tsyn':Tsyn, 'Erev': 0.,\
                    'name':NTWK[i]['name']+NTWK[j]['name']}
         if len(NTWK[i]['name'].split('inh'))>1 or len(NTWK[i]['name'].split('Inh'))>1:
             # in that case we put the inhibitory reversal potential
