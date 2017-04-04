@@ -22,6 +22,7 @@ def generate_conductance_shotnoise(freq, t, N, Q, Tsyn, g0=0, seed=0):
     np.random.seed(seed=seed)
     spike_events = np.cumsum(np.random.exponential(1./(N*freq),\
                              upper_number_of_events))
+    spike_events = np.concatenate([spike_events, [t[-1]+1.]]) # adding a final spike for the while loop
     g = np.ones(t.size)*g0 # init to first value
     dt, t = t[1]-t[0], t-t[0] # we need to have t starting at 0
     # stupid implementation of a shotnoise
@@ -65,7 +66,6 @@ def pseq_iAdExp(cell_params):
     return El, Gl, Cm, Vthre, Vreset, vspike, vpeak,\
         Trefrac, delta_v, a, b, tauw, Vi, Ti, Ai
                      
-#@numba.jit()
 def iAdExp_sim(t, G_ARRAY, E_ARRAY, I,
                El, Gl, Cm, Vthre, Vreset, vspike, vpeak,\
                Trefrac, delta_v, a, b, tauw, Vi, Ti, Ai):
@@ -83,8 +83,9 @@ def iAdExp_sim(t, G_ARRAY, E_ARRAY, I,
     vspike=Vthre+5.*delta_v # practical threshold detection
             
     last_spike = -np.inf # time of the last spike, for the refractory period
-    V, spikes = Vreset*np.ones(len(t), dtype=np.float), []
-    theta=Vthre*np.ones(len(t), dtype=np.float) # initial adaptative threshold value
+    V = Vreset*np.ones(len(t), dtype=np.float64)
+    spikes = []
+    theta=Vthre*np.ones(len(t), dtype=np.float64) # initial adaptative threshold value
     dt = t[1]-t[0]
 
     w, i_exp = 0., 0. # w and i_exp are the exponential and adaptation currents
@@ -119,7 +120,61 @@ def iAdExp_sim(t, G_ARRAY, E_ARRAY, I,
             last_spike = t[i+1]
             spikes.append(t[i+1])
 
-    return V, theta, np.array(spikes)
+    return V, theta, spikes
+
+@numba.jit(nopython=True)
+def iAdExp_sim_fast(t, G_ARRAY, E_ARRAY, I,
+                    El, Gl, Cm, Vthre, Vreset, vspike, vpeak,\
+                    Trefrac, delta_v, a, b, tauw, Vi, Ti, Ai):
+    """ functions that solve the membrane equations for the
+    adexp model for 2 time varying excitatory and inhibitory
+    conductances as well as a current input
+    returns : v, spikes
+    """
+
+    if delta_v==0: # i.e. Integrate and Fire
+        one_over_delta_v = 0
+    else:
+        one_over_delta_v = 1./delta_v
+        
+    vspike=Vthre+5.*delta_v # practical threshold detection
+            
+    last_spike = -np.inf # time of the last spike, for the refractory period
+    V1, V0 = Vreset, Vreset
+    nspikes = 0 # just counting spikes
+    theta0, theta1 = Vthre, Vthre
+    dt = t[1]-t[0]
+
+    w, i_exp = 0., 0. # w and i_exp are the exponential and adaptation currents
+
+    for i in range(len(t)-1):
+        V0 = V1
+        # adaptation current
+        w = w + dt/tauw*(a*(V0-El)-w)
+        
+        # spiking no-linearity
+        i_exp = Gl*delta_v*np.exp((V0-Vthre)*one_over_delta_v)
+        
+        # synaptic currents
+        Isyn = 0
+        for g in range(len(E_ARRAY)):
+            Isyn += G_ARRAY[g,i]*(E_ARRAY[g]-V0)
+            
+        ## Vm dynamics calculus
+        if (t[i]-last_spike)>Trefrac: # only when non refractory
+            V1 = V0 + dt/Cm*(I[i] + i_exp - w +\
+                                Gl*(El-V0) + Isyn )
+        # then threshold
+        theta_inf_v = Vthre + Ai*0.5*(1+np.sign(V0-Vi))*(V0-Vi)
+        theta1 = theta0 + dt/Ti*(theta_inf_v - theta0)
+
+        if V1 >= theta1+5.*delta_v:
+            V1 = Vreset
+            w = w + b # then we increase the adaptation current
+            last_spike = t[i+1]
+            nspikes +=1
+
+    return nspikes/t[-1] # return only the firing rate
 
 ####################################################################
 ############ One simulation ########################################
@@ -132,7 +187,7 @@ def single_experiment(params, SYN_POPS, RATES, seed=3,\
     I = 0*t # no current input
     G_ARRAY, E_ARRAY = [], []
     for syn, rate in zip(SYN_POPS, RATES):
-        print(rate)
+
         G_ARRAY.append(generate_conductance_shotnoise(rate, t, syn['N']*syn['pconn'],\
                                                       syn['Q'], syn['Tsyn'], g0=0,
                                                       seed=(seed+3)*(int(rate*1e3%18))))
@@ -140,14 +195,15 @@ def single_experiment(params, SYN_POPS, RATES, seed=3,\
         
     G_ARRAY, E_ARRAY = np.array(G_ARRAY), np.array(E_ARRAY)
     
-    v, theta, spikes = iAdExp_sim(t, G_ARRAY, E_ARRAY, I, *pseq_iAdExp(params))
 
     if firing_rate_only:
-        return len(spikes)/tstop
-    elif return_threshold:
-        return v, theta, spikes
+        return iAdExp_sim_fast(t, G_ARRAY, E_ARRAY, I, *pseq_iAdExp(params))
     else:
-        return t, v, spikes 
+        v, theta, spikes = iAdExp_sim(t, G_ARRAY, E_ARRAY, I, *pseq_iAdExp(params))
+        if return_threshold:
+            return t, v, theta, spikes
+        else:
+            return t, v, spikes 
 
 if __name__=='__main__':
 
