@@ -63,9 +63,10 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         eqs += """
         Ii = 0*pA """
         for synapse in synaptic_array:
-            if synapse['Erev']<-60: # if excitatory
+            if synapse['Erev']<-60: # if inhibitory
                 # loop over each presynaptic element onto this target
                 Gsyn = 'G'+synapse['name']
+                print(Gsyn)
                 eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
         eqs += ' : amp'
 

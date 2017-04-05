@@ -11,7 +11,7 @@ t_array = ntwk.arange(int(tstop/dt))*dt
 ################################################################
 
 NTWK = [{'name':'Exc', 'N':4000, 'type':'LIF2'},
-        {'name':'Inh', 'N':1000, 'type':'LIF2'}]
+        {'name':'Inh', 'N':1000, 'type':'LIF2_Vthre_-55'}]
 
 M = ntwk.init_syn_and_conn_matrix(NTWK, pconn=0.02)
 M[0,0]['Q'], M[0,1]['Q'] = .1, .1 # almost no recurrent excitation
@@ -26,7 +26,7 @@ SYNAPSES = ntwk.build_up_recurrent_connections(POPS, M)
 #######################################
 AFF_SPKS, AFF_SYNAPSES = [], []
 
-RATE_EAff_on_exc = 1.
+RATE_EAff_on_exc = 2.
 EAff_on_exc = {'Q':7., 'N':400, 'pconn':0.1}
 
 EAff_exc_Spikes, EAff_exc_Synapse =\
@@ -53,6 +53,7 @@ network_sim = ntwk.collect_and_run([POPS, SYNAPSES,
 ######################
 ## ----- Plot ----- ##
 ######################
+print([pop.t/ntwk.ms for pop in RASTER], [pop.i for pop in RASTER])
 ntwk.RASTER_PLOT([pop.t/ntwk.ms for pop in RASTER], [pop.i for pop in RASTER])
 ntwk.show()
 
