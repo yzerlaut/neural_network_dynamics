@@ -13,7 +13,9 @@ def collect_and_run(NTWK, tstop=100, dt=0.1):
     brian2.defaultclock.dt = dt*brian2.ms
     net = brian2.Network(brian2.collect())
     OBJECT_LIST = []
-    for key in ['POPS', 'REC_SYNAPSES', 'RASTER', 'POP_ACT', 'VMS', 'ISYNe', 'ISYNi']:
+    for key in ['POPS', 'REC_SYNAPSES', 'RASTER',
+                'POP_ACT', 'VMS', 'ISYNe', 'ISYNi',
+                'PRE_SPIKES', 'PRE_SYNAPSES']:
         if key in NTWK.keys():
             net.add(NTWK[key])
     net.run(tstop*brian2.ms)
@@ -78,6 +80,7 @@ def build_populations(NEURONS, M, with_raster=False, with_pop_act=False, with_Vm
             NTWK['ISYNe'].append(brian2.StateMonitor(pop, 'Ie', record=np.arange(max([1,with_Vm]))))
             NTWK['ISYNi'].append(brian2.StateMonitor(pop, 'Ii', record=np.arange(max([1,with_Vm]))))
 
+    NTWK['PRE_SPIKES'], NTWK['PRE_SYNAPSES'] = [], [] # in case of afferent inputs
     return NTWK
 
 def initialize_to_rest(NTWK):

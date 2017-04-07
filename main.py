@@ -12,6 +12,6 @@ from neural_network_dynamics.ntwk_stim.waveform_library import double_gaussian
 # for saving
 from neural_network_dynamics.recording.load_and_save import write_as_hdf5
 # for plotting
-from neural_network_dynamics.analysis.plot_sim import make_fig
+from neural_network_dynamics.analysis.plot_sim import *
 # from graphs.my_graph import *
 # plt.style.use('ggplot') # a nice plotting style
