@@ -222,7 +222,7 @@ def histograms(data, pop_key='Exc'):
 
 def assemble_quantities(data, filename, tzoom=[800,1200]):
 
-    new_im = Image.new('RGB', (830, 1140))
+    new_im = Image.new('RGBA', (830, 1140), (255,255,255,255))
 
     # title
     fig = plt.figure(figsize=(3,.3))

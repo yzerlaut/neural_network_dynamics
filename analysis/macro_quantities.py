@@ -61,15 +61,15 @@ def get_mean_pop_act(data, pop='Exc', tdiscard=200):
     
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
     cond = t>tdiscard
-    return data['POP_ACT_'+pop].mean()
+    return data['POP_ACT_'+pop][cond].mean()
 
 def get_currents_and_balance(data, pop='Exc', tdiscard=200):
     
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
     cond = t>tdiscard
-    meanIe, meanIi = data['ISYNe_'+pop].mean(), data['ISYNi_'+pop].mean()
-    if meanIi>0:
-        balance = abs(meanIe/meanIi)
+    meanIe, meanIi = data['ISYNe_'+pop][:,cond].mean(), data['ISYNi_'+pop][:,cond].mean()
+    if meanIi<0:
+        balance = -meanIe/meanIi
     else:
         balance = 0
     return meanIe, meanIi, balance
@@ -95,8 +95,8 @@ if __name__=='__main__':
     from params_scan.aff_exc_aff_dsnh_params_space import get_scan
     F_aff, F_dsnh, DATA = get_scan(\
                     '../../params_scan/aff_exc_aff_dsnh_params_space.zip')
-    data = DATA[0]
-    print(get_synchrony_of_spiking(DATA[0]))
+    data = DATA[2]
+    print(get_synchrony_of_spiking(data))
     print(get_CV_spiking(data))
     print(get_mean_pop_act(data))
     print(get_mean_pop_act(data, pop='Inh'))
