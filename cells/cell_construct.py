@@ -58,7 +58,7 @@ def get_membrane_equation(neuron_params, synaptic_array,\
                 # loop over each presynaptic element onto this target
                 Gsyn = 'G'+synapse['name']
                 eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
-        eqs += ' : amp  (unless refractory)' # no synaptic currents when clamped at the spiking level
+        eqs += ' : amp' # no synaptic currents when clamped at the spiking level
         # compute inhibitory currents
         eqs += """
         Ii = 0*pA """
@@ -67,7 +67,7 @@ def get_membrane_equation(neuron_params, synaptic_array,\
                 # loop over each presynaptic element onto this target
                 Gsyn = 'G'+synapse['name']
                 eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
-        eqs += ' : amp  (unless refractory)' # no synaptic currents when clamped at the spiking level
+        eqs += ' : amp' # no synaptic currents when clamped at the spiking level
 
     if verbose:
         print(eqs)
