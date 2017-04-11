@@ -51,8 +51,8 @@ def pop_act(data, tdiscard=200, Tbar=50):
         if mean<0.001:
             mean = 0.001*(1+dmin) # to get a visible value at 0
         lmean = np.log(mean)/np.log(10)
-        std1 = np.log(mean+f[cond].std())/np.log(10)-lmean
-        std2 = lmean-np.log(mean-f[cond].std())/np.log(10)
+        std1 = lmean-np.log(max([1e-2, mean-f[cond].std()]))/np.log(10)
+        std2 = np.log(mean+f[cond].std())/np.log(10)-lmean
         ax.bar([i], [lmean-BOTTOM], yerr=[[std1], [std2]])
     kwargs = dict(transform=ax.transAxes, color='k', clip_on=False)
     ax.plot((-0.09,0), (0.05,0.08), **kwargs)
@@ -119,28 +119,32 @@ def Vm_Isyn_fig(data, pop_key='Exc',
             set_plot(AX[1,i], ['left'], xticks=[], yticks=[-70,-60,-50])
     return fig
 
-def exc_inh_balance(data, pop_key='Exc'):
-    
-    NVm= len(data['VMS_'+str(pop_key)])
-    
-    fig, ax = plt.subplots(1,figsize=(2.5,2))
-    plt.subplots_adjust(left=.5, bottom=.2)
-    
-    # excitation
-    mean = np.mean([data['ISYNe_'+str(pop_key)][i].mean() for i in range(NVm)])
-    std = np.std([data['ISYNe_'+str(pop_key)][i].mean() for i in range(NVm)])
-    ax.bar([0], mean, yerr=std, edgecolor='g', facecolor='w', lw=3,
-           error_kw={'ecolor':'g','linewidth':3}, capsize=3)
+def few_Vm_fig(data, pop_key='Exc',
+               tzoom=[0, np.inf], NVm=3,
+               COLORS=['g', 'r', 'k', 'y'], Nnrn=500, Tbar=50,
+               vpeak=-40, vbottom=-80):
 
-    # inhibition
-    mean = -np.mean([data['ISYNi_'+str(pop_key)][i].mean() for i in range(NVm)])
-    std = np.std([data['ISYNi_'+str(pop_key)][i].mean() for i in range(NVm)])
-    ax.bar([1], mean, yerr=std, edgecolor='r', facecolor='w', lw=3,
-           error_kw={'ecolor':'r','linewidth':3}, capsize=3)
+    NVm= max([NVm, len(data['VMS_'+str(pop_key)])])
     
-    # ax.bar([1], -np.mean([np.mean(ISYNi[0][i].Ii/ntwk.pA) for i in range(4)]), color='r')
-    set_plot(ax, ylabel='mean currents \n (abs. value, pA)',
-             xticks=[0,1], xticks_labels=['exc.', 'inh.'])
+    t = np.arange(int(data['tstop']/data['dt']))*data['dt']
+
+    fig, ax = plt.subplots(figsize=(3,1))
+    # plt.subplots_adjust(left=.15, bottom=.1, right=.99)
+    
+    cond = (t>tzoom[0]) & (t<tzoom[1])
+    for i in range(NVm):
+        ax.plot(t[cond], data['VMS_'+str(pop_key)][i][cond]+10*i, color='k')
+    # adding spikes
+    for i in range(NVm):
+        tspikes = data['tRASTER_'+str(pop_key)][np.argwhere(data['iRASTER_'+str(pop_key)]==i).flatten()]
+        cond = (tspikes>tzoom[0]) & (tspikes<tzoom[1])
+        for ts in tspikes[cond]:
+            ax.plot([ts, ts], 10*i+np.array([-50, vpeak]), 'k--')
+    ax.plot([tzoom[0],tzoom[0]+Tbar], ax.get_ylim()[0]*np.ones(2),
+                 lw=5, color='gray')
+    ax.annotate(str(Tbar)+' ms', (tzoom[0], .9*ax.get_ylim()[0]), fontsize=14)
+    set_plot(ax, [], xticks=[], yticks=[])
+    
     return fig
 
 def exc_inh_balance(data, pop_key='Exc'):
@@ -229,44 +233,56 @@ def assemble_quantities(data, filename, tzoom=[800,1200]):
     fig.text(0., 0.2,
              '$\\nu_{aff}$='+str(data['faff'])+'Hz, $\\nu_{dsnh}$='+\
              str(data['fdsnh'])+'Hz', fontsize=14)
-    fig.savefig('figures/temp.png')
-    im = Image.open('figures/temp.png')
+    fig.savefig('temp.png')
+    im = Image.open('temp.png')
     new_im.paste(im, (100, 0))
     # raster
     fig = raster_fig(data, tzoom=tzoom)
     fig.text(0., .9, '(i)', fontsize=14, weight='bold')
-    fig.savefig('figures/temp.png')
-    im = Image.open('figures/temp.png')
+    fig.savefig('temp.png')
+    im = Image.open('temp.png')
     new_im.paste(im, (10, 40))
     # pop activity
     fig = pop_act(data)
     fig.text(0., .9, '(ii)', fontsize=14, weight='bold')
-    fig.savefig('figures/temp.png')
-    im = Image.open('figures/temp.png')
+    fig.savefig('temp.png')
+    im = Image.open('temp.png')
     new_im.paste(im, (250, 40))
     # exc inh balance
     fig = exc_inh_balance(data, pop_key='Exc')
     fig.text(0.5, .9, '(iii)', fontsize=14, weight='bold')
-    fig.savefig('figures/temp.png')
-    im = Image.open('figures/temp.png')
+    fig.savefig('temp.png')
+    im = Image.open('temp.png')
     new_im.paste(im, (550, 40))
     # Vm traces excitation
     fig = Vm_Isyn_fig(data, pop_key='Exc', tzoom=tzoom)
     fig.text(0.2, .92, '(iv) excitatory cells sample', fontsize=14, weight='bold')
-    fig.savefig('figures/temp.png')
-    im = Image.open('figures/temp.png')
+    fig.savefig('temp.png')
+    im = Image.open('temp.png')
     new_im.paste(im, (20, 250))
     # Vm traces inhibition
     fig = Vm_Isyn_fig(data, pop_key='Inh', tzoom=tzoom)
     fig.text(0.2, .92, '(v) inhibitory cells sample', fontsize=14, weight='bold')
-    fig.savefig('figures/temp.png')
-    im = Image.open('figures/temp.png')
+    fig.savefig('temp.png')
+    im = Image.open('temp.png')
     new_im.paste(im, (20, 560))
     fig = histograms(data)
     fig.text(0.2, .92, '(vi)', fontsize=14, weight='bold')
-    fig.savefig('figures/temp.png')
-    im = Image.open('figures/temp.png')
+    fig.savefig('temp.png')
+    im = Image.open('temp.png')
     new_im.paste(im, (20, 860))
+    # raster much zoomed
+    fig = raster_fig(data, tzoom=[tzoom[0], tzoom[0]+20], Tbar=5)
+    fig.text(0., .9, '(vii)', fontsize=14, weight='bold')
+    fig.savefig('temp.png')
+    im = Image.open('temp.png')
+    new_im.paste(im, (500, 850))
+    # Vm much zoomed
+    fig = few_Vm_fig(data, pop_key='Exc', tzoom=[tzoom[0], tzoom[0]+20], Tbar=5)
+    fig.text(0., .7, '(viii)', fontsize=14, weight='bold')
+    fig.savefig('temp.png')
+    im = Image.open('temp.png')
+    new_im.paste(im, (500, 1050))
     
     # closing everything
     plt.close('all')
@@ -277,8 +293,8 @@ if __name__=='__main__':
     import sys
     sys.path.append('../../')
     from params_scan.aff_exc_aff_dsnh_params_space import get_scan
-    F_aff, F_dsnh, DATA = get_scan(\
-                    '../../params_scan/aff_exc_aff_dsnh_params_space.zip')
-    assemble_quantities(DATA[1], 'data/0.png')
+    args, F_aff, F_dsnh, DATA = get_scan(\
+                    '../../params_scan/scan.zip')
+    assemble_quantities(DATA[-1], 'data/0.png')
 
     
