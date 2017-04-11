@@ -294,7 +294,7 @@ if __name__=='__main__':
     sys.path.append('../../')
     from params_scan.aff_exc_aff_dsnh_params_space import get_scan
     args, F_aff, F_dsnh, DATA = get_scan(\
-                    '../../params_scan/scan.zip')
+                    '../../params_scan/data/scan.zip')
     assemble_quantities(DATA[-1], 'data/0.png')
 
     

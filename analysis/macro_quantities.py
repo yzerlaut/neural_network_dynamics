@@ -93,9 +93,9 @@ if __name__=='__main__':
     import sys
     sys.path.append('../../')
     from params_scan.aff_exc_aff_dsnh_params_space import get_scan
-    F_aff, F_dsnh, DATA = get_scan(\
-                    '../../params_scan/aff_exc_aff_dsnh_params_space.zip')
-    data = DATA[2]
+    args, F_aff, F_dsnh, DATA = get_scan(\
+                    '../../params_scan/data/scan.zip')
+    data = DATA[-1]
     print(get_synchrony_of_spiking(data))
     print(get_CV_spiking(data))
     print(get_mean_pop_act(data))
