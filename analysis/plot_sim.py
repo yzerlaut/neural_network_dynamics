@@ -108,7 +108,6 @@ def Vm_Isyn_fig(data, pop_key='Exc',
     for ax in AX[1,:]:
         ax.plot(tzoom, [vbottom, vpeak], 'w.', alpha=0.01)
         
-        
     for i in range(NVm):
         AX[1,i].set_title('cell '+str(i+1))
         if i==0:
@@ -149,6 +148,45 @@ def few_Vm_fig(data, pop_key='Exc',
     return fig
 
 def exc_inh_balance(data, pop_key='Exc'):
+    
+    NVm= len(data['VMS_'+str(pop_key)])
+    
+    fig, [ax, ax2] = plt.subplots(1,figsize=(4,2))
+    plt.subplots_adjust(left=.5, bottom=.2)
+    
+    # excitation
+    mean = np.mean([data['ISYNe_'+str(pop_key)][i].mean() for i in range(NVm)])
+    std = np.std([data['ISYNe_'+str(pop_key)][i].mean() for i in range(NVm)])
+    ax.bar([0], mean, yerr=std, edgecolor='g', facecolor='w', lw=3,
+           error_kw={'ecolor':'g','linewidth':3}, capsize=3)
+
+    # inhibition
+    mean = -np.mean([data['ISYNi_'+str(pop_key)][i].mean() for i in range(NVm)])
+    std = np.std([data['ISYNi_'+str(pop_key)][i].mean() for i in range(NVm)])
+    ax.bar([1], mean, yerr=std, edgecolor='r', facecolor='w', lw=3,
+           error_kw={'ecolor':'r','linewidth':3}, capsize=3)
+    
+    set_plot(ax, ylabel='mean currents \n (abs. value, pA)',
+             xticks=[0,1], xticks_labels=['exc.', 'inh.'])
+
+    # excitation
+    mean = np.mean([data['Ge_'+str(pop_key)][i].mean() for i in range(NVm)])
+    std = np.std([data['Ge_'+str(pop_key)][i].mean() for i in range(NVm)])
+    ax2.bar([0], mean, yerr=std, edgecolor='g', facecolor='w', lw=3,
+           error_kw={'ecolor':'g','linewidth':3}, capsize=3)
+
+    # inhibition
+    mean = -np.mean([data['Gi_'+str(pop_key)][i].mean() for i in range(NVm)])
+    std = np.std([data['Gi_'+str(pop_key)][i].mean() for i in range(NVm)])
+    ax2.bar([1], mean, yerr=std, edgecolor='r', facecolor='w', lw=3,
+           error_kw={'ecolor':'r','linewidth':3}, capsize=3)
+    
+    set_plot(ax2, ylabel='mean conductance (nS)',
+             xticks=[0,1], xticks_labels=['exc.', 'inh.'])
+    
+    return fig
+
+def exc_inh_conductance(data, pop_key='Exc'):
     
     NVm= len(data['VMS_'+str(pop_key)])
     

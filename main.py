@@ -1,4 +1,7 @@
-# submodule of brian2
+# =====================
+# module for numerical network simulations and analysis
+# relying on *brian2*
+# =====================
 from brian2 import *
 ## custom architecture
 import sys, pathlib
