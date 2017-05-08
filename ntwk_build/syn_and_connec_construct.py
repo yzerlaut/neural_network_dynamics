@@ -41,7 +41,7 @@ def build_up_recurrent_connections(NTWK, SEED=1):
     NTWK['REC_SYNAPSES'] = CONN2
 
 def build_populations(NEURONS, M, with_raster=False, with_pop_act=False, with_Vm=0,
-                      verbose=False, with_synaptic_currents=False):
+                      verbose=False, with_synaptic_currents=False, with_synaptic_conductances=False):
     """
     sets up the neuronal populations
     and  construct a network object containing everything
@@ -61,6 +61,7 @@ def build_populations(NEURONS, M, with_raster=False, with_pop_act=False, with_Vm
             nrn['params'] = neuron_params
         NTWK['POPS'].append(get_membrane_equation(neuron_params, M[:,ii],
                                           with_synaptic_currents=with_synaptic_currents,
+                                          with_synaptic_conductances=with_synaptic_conductances,
                                           verbose=verbose))
     if with_pop_act:
         NTWK['POP_ACT'] = []
@@ -79,6 +80,11 @@ def build_populations(NEURONS, M, with_raster=False, with_pop_act=False, with_Vm
         for pop in NTWK['POPS']:
             NTWK['ISYNe'].append(brian2.StateMonitor(pop, 'Ie', record=np.arange(max([1,with_Vm]))))
             NTWK['ISYNi'].append(brian2.StateMonitor(pop, 'Ii', record=np.arange(max([1,with_Vm]))))
+    if with_synaptic_conductances:
+        NTWK['Ge'], NTWK['Gi'] = [], []
+        for pop in NTWK['POPS']:
+            NTWK['Ge'].append(brian2.StateMonitor(pop, 'Ge', record=np.arange(max([1,with_Vm]))))
+            NTWK['Gi'].append(brian2.StateMonitor(pop, 'Gi', record=np.arange(max([1,with_Vm]))))
 
     NTWK['PRE_SPIKES'], NTWK['PRE_SYNAPSES'] = [], [] # in case of afferent inputs
     return NTWK
