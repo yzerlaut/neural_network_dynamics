@@ -68,8 +68,8 @@ def get_currents_and_balance(data, pop='Exc', tdiscard=200):
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
     cond = t>tdiscard
     meanIe, meanIi = data['ISYNe_'+pop][:,cond].mean(), data['ISYNi_'+pop][:,cond].mean()
-    if meanIi<0:
-        balance = -meanIe/meanIi
+    if meanIe>0:
+        balance = -meanIi/meanIe
     else:
         balance = 0
     return meanIe, meanIi, balance
@@ -78,8 +78,10 @@ def get_currents_and_balance(data, pop='Exc', tdiscard=200):
 def get_all_macro_quant(data):
 
     output = {}
-    output['synchrony'] = get_synchrony_of_spiking(data)
-    output['irregularity'] = get_CV_spiking(data)
+    # weighted sum (by num of neurons) over exc and inhibtion
+    output['synchrony'] = .2*get_synchrony_of_spiking(data, pop='Inh')+\
+                          .8*get_synchrony_of_spiking(data, pop='Exc')
+    output['irregularity'] = .2*get_CV_spiking(data, pop='Inh')+.8*get_CV_spiking(data, pop='Exc')
     output['mean_exc'] = get_mean_pop_act(data, pop='Exc')
     output['mean_inh'] = get_mean_pop_act(data, pop='Inh')
     output['meanIe_Exc'], output['meanIi_Exc'], output['balance_Exc'] = get_currents_and_balance(data, pop='Exc')

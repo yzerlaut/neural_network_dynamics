@@ -48,12 +48,13 @@ def pop_act(data, tdiscard=200, Tbar=50):
     ax.bar([1], np.log(data['fdsnh'])/np.log(10)-BOTTOM)
     for i, f, color in zip(range(2,4), [data['POP_ACT_Exc'], data['POP_ACT_Inh']], [R, G]):
         mean = f[cond].mean()
+        std = 0.434*f[cond].std()/(1e-9+mean) # using taylor expansion of log for error
         if mean<0.001:
             mean = 0.001*(1+dmin) # to get a visible value at 0
         lmean = np.log(mean)/np.log(10)
-        std1 = lmean-np.log(max([1e-2, mean-f[cond].std()]))/np.log(10)
-        std2 = np.log(mean+f[cond].std())/np.log(10)-lmean
-        ax.bar([i], [lmean-BOTTOM], yerr=[[std1], [std2]])
+        # std2 = np.log(mean+f[cond].std())/np.log(10)-lmean
+        # ax.bar([i], [lmean-BOTTOM], yerr=[std])
+        ax.bar([i], [lmean-BOTTOM])
     kwargs = dict(transform=ax.transAxes, color='k', clip_on=False)
     ax.plot((-0.09,0), (0.05,0.08), **kwargs)
     ax.plot((-0.09,0), (0.065,0.095), **kwargs)
