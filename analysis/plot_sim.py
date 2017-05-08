@@ -151,8 +151,8 @@ def exc_inh_balance(data, pop_key='Exc'):
     
     NVm= len(data['VMS_'+str(pop_key)])
     
-    fig, [ax, ax2] = plt.subplots(1, 2, figsize=(4,2))
-    plt.subplots_adjust(left=.5, bottom=.2)
+    fig, [ax, ax2] = plt.subplots(1, 2, figsize=(3.5,2))
+    plt.subplots_adjust(left=.2, bottom=.2, wspace=.3, hspace=.3)
     
     # excitation
     mean = np.mean([data['ISYNe_'+str(pop_key)][i].mean() for i in range(NVm)])
@@ -176,7 +176,7 @@ def exc_inh_balance(data, pop_key='Exc'):
            error_kw={'ecolor':'g','linewidth':3}, capsize=3)
 
     # inhibition
-    mean = -np.mean([data['Gi_'+str(pop_key)][i].mean() for i in range(NVm)])
+    mean = np.mean([data['Gi_'+str(pop_key)][i].mean() for i in range(NVm)])
     std = np.std([data['Gi_'+str(pop_key)][i].mean() for i in range(NVm)])
     ax2.bar([1], mean, yerr=std, edgecolor='r', facecolor='w', lw=3,
            error_kw={'ecolor':'r','linewidth':3}, capsize=3)
@@ -184,29 +184,6 @@ def exc_inh_balance(data, pop_key='Exc'):
     set_plot(ax2, ylabel='mean conductance (nS)',
              xticks=[0,1], xticks_labels=['exc.', 'inh.'])
     
-    return fig
-
-def exc_inh_conductance(data, pop_key='Exc'):
-    
-    NVm= len(data['VMS_'+str(pop_key)])
-    
-    fig, ax = plt.subplots(1,figsize=(2.5,2))
-    plt.subplots_adjust(left=.5, bottom=.2)
-    
-    # excitation
-    mean = np.mean([data['ISYNe_'+str(pop_key)][i].mean() for i in range(NVm)])
-    std = np.std([data['ISYNe_'+str(pop_key)][i].mean() for i in range(NVm)])
-    ax.bar([0], mean, yerr=std, edgecolor='g', facecolor='w', lw=3,
-           error_kw={'ecolor':'g','linewidth':3}, capsize=3)
-
-    # inhibition
-    mean = -np.mean([data['ISYNi_'+str(pop_key)][i].mean() for i in range(NVm)])
-    std = np.std([data['ISYNi_'+str(pop_key)][i].mean() for i in range(NVm)])
-    ax.bar([1], mean, yerr=std, edgecolor='r', facecolor='w', lw=3,
-           error_kw={'ecolor':'r','linewidth':3}, capsize=3)
-    
-    set_plot(ax, ylabel='mean currents \n (abs. value, pA)',
-             xticks=[0,1], xticks_labels=['exc.', 'inh.'])
     return fig
 
 def histograms(data, pop_key='Exc'):
@@ -270,8 +247,8 @@ def assemble_quantities(data, filename, tzoom=[800,1200]):
     # title
     fig = plt.figure(figsize=(3,.3))
     fig.text(0., 0.2,
-             '$\\nu_{aff}$='+str(data['faff'])+'Hz, $\\nu_{dsnh}$='+\
-             str(data['fdsnh'])+'Hz', fontsize=14)
+             '$\\nu_{aff}$='+str(round(data['faff']))+'Hz, $\\nu_{dsnh}$='+\
+             str(round(data['fdsnh']))+'Hz', fontsize=14)
     fig.savefig('temp.png')
     im = Image.open('temp.png')
     new_im.paste(im, (100, 0))
@@ -292,7 +269,7 @@ def assemble_quantities(data, filename, tzoom=[800,1200]):
     fig.text(0.5, .9, '(iii)', fontsize=14, weight='bold')
     fig.savefig('temp.png')
     im = Image.open('temp.png')
-    new_im.paste(im, (550, 40))
+    new_im.paste(im, (500, 40))
     # Vm traces excitation
     fig = Vm_Isyn_fig(data, pop_key='Exc', tzoom=tzoom)
     fig.text(0.2, .92, '(iv) excitatory cells sample', fontsize=14, weight='bold')
