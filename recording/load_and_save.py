@@ -30,7 +30,13 @@ def write_as_hdf5(NTWK, filename='data.h5'):
             
         if 'ISYNi' in NTWK.keys():
             data['ISYNi_'+name] = np.array([vv.Ii/brian2.pA for vv in NTWK['ISYNi'][ii]])
-        
+
+        if 'Ge' in NTWK.keys():
+            data['Ge_'+name] = np.array([vv.Ge/brian2.nS for vv in NTWK['Ge'][ii]])
+            
+        if 'Gi' in NTWK.keys():
+            data['Gi_'+name] = np.array([vv.Gi/brian2.nS for vv in NTWK['Gi'][ii]])
+            
         # if 'iRASTER_PRE' in NTWK.keys():
         #     print(np.array([vv/brian2.ms for vv in NTWK['tRASTER_PRE']]))
         #     # data['iRASTER_PRE'] = np.array(NTWK['iRASTER_PRE'], dtype=np.ndarray)
