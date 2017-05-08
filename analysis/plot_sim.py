@@ -151,7 +151,7 @@ def exc_inh_balance(data, pop_key='Exc'):
     
     NVm= len(data['VMS_'+str(pop_key)])
     
-    fig, [ax, ax2] = plt.subplots(1,figsize=(4,2))
+    fig, [ax, ax2] = plt.subplots(1, 2, figsize=(4,2))
     plt.subplots_adjust(left=.5, bottom=.2)
     
     # excitation
