@@ -78,8 +78,8 @@ def Vm_Isyn_fig(data, pop_key='Exc',
     fig, AX = plt.subplots(2, NVm, figsize=(2*NVm, 3))
     plt.subplots_adjust(left=.15, bottom=.1, right=.99)
     
-    cond = (t>tzoom[0]) & (t<tzoom[1])
     for i in range(NVm):
+        cond = (t>tzoom[0]) & (t<tzoom[1]) & (data['VMS_'+str(pop_key)][i]!=data['0_params']['Vreset'])
         AX[0,i].plot(t[cond], data['ISYNe_'+str(pop_key)][i][cond], color='g')
         AX[0,i].plot(t[cond], data['ISYNi_'+str(pop_key)][i][cond], color='r')
         AX[1,i].plot(t[cond], data['VMS_'+str(pop_key)][i][cond], color='k')
@@ -152,21 +152,26 @@ def exc_inh_balance(data, pop_key='Exc'):
     NVm= len(data['VMS_'+str(pop_key)])
     
     fig, [ax, ax2] = plt.subplots(1, 2, figsize=(3.5,2))
-    plt.subplots_adjust(left=.2, bottom=.2, wspace=.3, hspace=.3)
-    
+    plt.subplots_adjust(left=.4, bottom=.2, hspace=1., wspace=1., right=.99)
+
+    # removings the current points where clamped at reset potential (creates artificially strong exc currents)
+    CONDS =[]
+    for i in range(NVm):
+        CONDS.append(data['VMS_'+str(pop_key)][i]!=data['0_params']['Vreset'])
+        
     # excitation
-    mean = np.mean([data['ISYNe_'+str(pop_key)][i].mean() for i in range(NVm)])
-    std = np.std([data['ISYNe_'+str(pop_key)][i].mean() for i in range(NVm)])
+    mean = np.mean([data['ISYNe_'+str(pop_key)][i][CONDS[i]].mean() for i in range(NVm)])
+    std = np.std([data['ISYNe_'+str(pop_key)][i][CONDS[i]].mean() for i in range(NVm)])
     ax.bar([0], mean, yerr=std, edgecolor='g', facecolor='w', lw=3,
            error_kw={'ecolor':'g','linewidth':3}, capsize=3)
 
     # inhibition
-    mean = -np.mean([data['ISYNi_'+str(pop_key)][i].mean() for i in range(NVm)])
-    std = np.std([data['ISYNi_'+str(pop_key)][i].mean() for i in range(NVm)])
+    mean = -np.mean([data['ISYNi_'+str(pop_key)][i][CONDS[i]].mean() for i in range(NVm)])
+    std = np.std([data['ISYNi_'+str(pop_key)][i][CONDS[i]].mean() for i in range(NVm)])
     ax.bar([1], mean, yerr=std, edgecolor='r', facecolor='w', lw=3,
            error_kw={'ecolor':'r','linewidth':3}, capsize=3)
     
-    set_plot(ax, ylabel='mean currents \n (abs. value, pA)',
+    set_plot(ax, ylabel='currents \n (abs. value, pA)',
              xticks=[0,1], xticks_labels=['exc.', 'inh.'])
 
     # excitation
@@ -181,7 +186,7 @@ def exc_inh_balance(data, pop_key='Exc'):
     ax2.bar([1], mean, yerr=std, edgecolor='r', facecolor='w', lw=3,
            error_kw={'ecolor':'r','linewidth':3}, capsize=3)
     
-    set_plot(ax2, ylabel='mean conductance (nS)',
+    set_plot(ax2, ylabel='conductance (nS)',
              xticks=[0,1], xticks_labels=['exc.', 'inh.'])
     
     return fig
@@ -216,18 +221,20 @@ def histograms(data, pop_key='Exc'):
 
     ######## CURRENTS ########
     # on excitatory population
-    hist, be = np.histogram(np.concatenate(data['ISYNe_Exc']), bins=20, normed=True)
+    cond = np.concatenate(data['VMS_Exc'])!=data['0_params']['Vreset'] # removing clamping at reset
+    hist, be = np.histogram(np.concatenate(data['ISYNe_Exc'])[cond], bins=20, normed=True)
     AX[0, 1].bar(.5*(be[1:]+be[:-1]), hist, edgecolor=G, lw=0,
                  width=be[1]-be[0], facecolor=G, alpha=.3)
-    hist, be = np.histogram(np.concatenate(data['ISYNi_Exc']), bins=20, normed=True)
+    hist, be = np.histogram(np.concatenate(data['ISYNi_Exc'])[cond], bins=20, normed=True)
     AX[0, 1].bar(.5*(be[1:]+be[:-1]), hist, edgecolor=R, lw=0,
                  width=be[1]-be[0], facecolor=R, alpha=.3)
         
-    # on excitatory population
-    hist, be = np.histogram(np.concatenate(data['ISYNe_Inh']), bins=20, normed=True)
+    # on inhibitory population
+    cond = np.concatenate(data['VMS_Inh'])!=data['1_params']['Vreset'] # removing clamping at reset
+    hist, be = np.histogram(np.concatenate(data['ISYNe_Inh'])[cond], bins=20, normed=True)
     AX[1, 1].bar(.5*(be[1:]+be[:-1]), hist, edgecolor=G, lw=0,
                  width=be[1]-be[0], facecolor=G, alpha=.3)
-    hist, be = np.histogram(np.concatenate(data['ISYNi_Inh']), bins=20, normed=True)
+    hist, be = np.histogram(np.concatenate(data['ISYNi_Inh'])[cond], bins=20, normed=True)
     AX[1, 1].bar(.5*(be[1:]+be[:-1]), hist, edgecolor=R, lw=0,
                  width=be[1]-be[0], facecolor=R, alpha=.3)
     imax = np.amax(np.concatenate([AX[0,1].get_xlim(), AX[1,1].get_xlim()]))
@@ -263,13 +270,13 @@ def assemble_quantities(data, filename, tzoom=[800,1200]):
     fig.text(0., .9, '(ii)', fontsize=14, weight='bold')
     fig.savefig('temp.png')
     im = Image.open('temp.png')
-    new_im.paste(im, (250, 40))
+    new_im.paste(im, (200, 40))
     # exc inh balance
     fig = exc_inh_balance(data, pop_key='Exc')
-    fig.text(0.5, .9, '(iii)', fontsize=14, weight='bold')
+    fig.text(0.1, .9, '(iii)', fontsize=14, weight='bold')
     fig.savefig('temp.png')
     im = Image.open('temp.png')
-    new_im.paste(im, (500, 40))
+    new_im.paste(im, (450, 40))
     # Vm traces excitation
     fig = Vm_Isyn_fig(data, pop_key='Exc', tzoom=tzoom)
     fig.text(0.2, .92, '(iv) excitatory cells sample', fontsize=14, weight='bold')

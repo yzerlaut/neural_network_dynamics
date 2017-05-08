@@ -18,5 +18,5 @@ from neural_network_dynamics.recording.load_and_save import write_as_hdf5
 from neural_network_dynamics.analysis.plot_sim import *
 # for analysis of netwok activity
 from neural_network_dynamics.analysis.macro_quantities import *
-# from graphs.my_graph import *
 # plt.style.use('ggplot') # a nice plotting style
+from graphs.my_graph import *

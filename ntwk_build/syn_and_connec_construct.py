@@ -28,13 +28,28 @@ def build_up_recurrent_connections(NTWK, SEED=1):
     CONN = np.empty((len(NTWK['POPS']), len(NTWK['POPS'])), dtype=object)
     CONN2 = []
 
-    brian2.seed(SEED)
+    # brian2.seed(SEED)
+    np.random.seed(SEED)
 
     for ii, jj in itertools.product(range(len(NTWK['POPS'])), range(len(NTWK['POPS']))):
         if (NTWK['M'][ii,jj]['pconn']>0) and (NTWK['M'][ii,jj]['Q']!=0):
             CONN[ii,jj] = brian2.Synapses(NTWK['POPS'][ii], NTWK['POPS'][jj], model='w:siemens',\
                                on_pre='G'+NTWK['M'][ii,jj]['name']+'_post+=w')
-            CONN[ii,jj].connect('i!=j', p=NTWK['M'][ii,jj]['pconn'])
+            # CONN[ii,jj].connect(p=NTWK['M'][ii,jj]['pconn'], condition='i!=j')
+            # N.B. the brian2 settings does weird things (e.g. it creates synchrony)
+            # so we draw manually the connection to fix synaptic numbers
+            N_per_cell = int(NTWK['M'][ii,jj]['pconn']*NTWK['POPS'][ii].N)
+            if ii==jj: # need to take care of no autapse
+                i_rdms = np.concatenate([\
+                                np.random.choice(
+                                    np.delete(np.arange(NTWK['POPS'][ii].N), [iii]), N_per_cell)\
+                                          for iii in range(NTWK['POPS'][jj].N)])
+            else:
+                i_rdms = np.concatenate([\
+                                np.random.choice(np.arange(NTWK['POPS'][ii].N), N_per_cell)\
+                                          for jjj in range(NTWK['POPS'][jj].N)])
+            j_fixed = np.concatenate([np.ones(N_per_cell,dtype=int)*jjj for jjj in range(NTWK['POPS'][jj].N)])
+            CONN[ii,jj].connect(i=i_rdms, j=j_fixed) 
             CONN[ii,jj].w = NTWK['M'][ii,jj]['Q']*brian2.nS
             CONN2.append(CONN[ii,jj])
 

@@ -89,7 +89,7 @@ def get_membrane_equation(neuron_params, synaptic_array,\
                 Gsyn = 'G'+synapse['name']
                 eqs += '+'+Gsyn
         eqs += ' : siemens' 
-        
+
     if verbose:
         print(eqs)
         
