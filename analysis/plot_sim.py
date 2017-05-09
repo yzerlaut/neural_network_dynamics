@@ -7,7 +7,7 @@ from PIL import Image # BITMAP (png, jpg, ...)
 
 G, R = 'g', 'r'
 
-def find_num_of_key(pop_key):
+def find_num_of_key(data,pop_key):
     i0 = np.argwhere(np.array([NTWK['NEURONS'][i]['name'] for i in range(len(NTWK['NEURONS']))])==pop_key)[0][0]
     return i0
     
@@ -83,7 +83,7 @@ def Vm_Isyn_fig(data, pop_key='Exc',
     plt.subplots_adjust(left=.15, bottom=.1, right=.99)
     
     for i in range(NVm):
-        cond = (t>tzoom[0]) & (t<tzoom[1]) & (data['VMS_'+str(pop_key)][i]!=data[str(find_num_of_key(pop_key))+'_params']['Vreset'])
+        cond = (t>tzoom[0]) & (t<tzoom[1]) & (data['VMS_'+str(pop_key)][i]!=data[str(find_num_of_key(data,pop_key))+'_params']['Vreset'])
         AX[0,i].plot(t[cond], data['ISYNe_'+str(pop_key)][i][cond], color='g')
         AX[0,i].plot(t[cond], data['ISYNi_'+str(pop_key)][i][cond], color='r')
         AX[1,i].plot(t[cond], data['VMS_'+str(pop_key)][i][cond], color='k')
@@ -161,7 +161,7 @@ def exc_inh_balance(data, pop_key='Exc'):
     # removings the current points where clamped at reset potential (creates artificially strong exc currents)
     CONDS =[]
     for i in range(NVm):
-        CONDS.append(data['VMS_'+str(pop_key)][i]!=data[str(find_num_of_key(pop_key))+'_params']['Vreset'])
+        CONDS.append(data['VMS_'+str(pop_key)][i]!=data[str(find_num_of_key(data,pop_key))+'_params']['Vreset'])
         
     # excitation
     mean = np.mean([data['ISYNe_'+str(pop_key)][i][CONDS[i]].mean() for i in range(NVm)])
@@ -178,7 +178,7 @@ def exc_inh_balance(data, pop_key='Exc'):
     set_plot(ax, ylabel='currents \n (abs. value, pA)',
              xticks=[0,1], xticks_labels=['exc.', 'inh.'])
 
-    Gl = data[str(find_num_of_key(pop_key))+'_params']['Gl']
+    Gl = data[str(find_num_of_key(data,pop_key))+'_params']['Gl']
     # excitation
     mean = np.mean([data['GSYNe_'+str(pop_key)][i].mean() for i in range(NVm)])/Gl
     std = np.std([data['GSYNe_'+str(pop_key)][i].mean() for i in range(NVm)])/Gl
@@ -226,7 +226,7 @@ def histograms(data, pop_key='Exc'):
 
     ######## CURRENTS ########
     # on excitatory population
-    cond = np.concatenate(data['VMS_Exc'])!=data[str(find_num_of_key('Exc'))+'_params']['Vreset'] # removing clamping at reset
+    cond = np.concatenate(data['VMS_Exc'])!=data[str(find_num_of_key(data,'Exc'))+'_params']['Vreset'] # removing clamping at reset
     hist, be = np.histogram(np.concatenate(data['ISYNe_Exc'])[cond], bins=20, normed=True)
     AX[0, 1].bar(.5*(be[1:]+be[:-1]), hist, edgecolor=G, lw=0,
                  width=be[1]-be[0], facecolor=G, alpha=.3)
@@ -235,7 +235,7 @@ def histograms(data, pop_key='Exc'):
                  width=be[1]-be[0], facecolor=R, alpha=.3)
         
     # on inhibitory population
-    cond = np.concatenate(data['VMS_Inh'])!=data[str(find_num_of_key('Inh'))+'_params']['Vreset'] # removing clamping at reset
+    cond = np.concatenate(data['VMS_Inh'])!=data[str(find_num_of_key(data,'Inh'))+'_params']['Vreset'] # removing clamping at reset
     hist, be = np.histogram(np.concatenate(data['ISYNe_Inh'])[cond], bins=20, normed=True)
     AX[1, 1].bar(.5*(be[1:]+be[:-1]), hist, edgecolor=G, lw=0,
                  width=be[1]-be[0], facecolor=G, alpha=.3)
