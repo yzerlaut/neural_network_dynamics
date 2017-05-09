@@ -8,7 +8,11 @@ from PIL import Image # BITMAP (png, jpg, ...)
 G, R = 'g', 'r'
 
 def find_num_of_key(data,pop_key):
-    i0 = np.argwhere(np.array([NTWK['NEURONS'][i]['name'] for i in range(len(NTWK['NEURONS']))])==pop_key)[0][0]
+    ii, pops = 0, []
+    while str(ii) in data.keys():
+        pops.append(data[str(ii)]['name'])
+        ii+=1
+    i0 = np.argwhere(np.array(pops)==pop_key)[0][0]
     return i0
     
 def raster_fig(data,
