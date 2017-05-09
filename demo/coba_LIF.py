@@ -21,7 +21,10 @@ M[0,0]['Q'], M[0,1]['Q'] = 6, 6
 M[1,0]['Q'], M[1,1]['Q'] = 67, 67
 
 NTWK = ntwk.build_populations(NEURONS, M,
-                              with_raster=True, with_Vm=4)
+                              with_raster=True, with_Vm=4,
+                              # with_synaptic_currents=True,
+                              # with_synaptic_conductances=True,
+                              verbose=True)
 ntwk.build_up_recurrent_connections(NTWK, SEED=10)
 
 ################################################################

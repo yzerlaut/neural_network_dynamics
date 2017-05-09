@@ -15,6 +15,7 @@ def collect_and_run(NTWK, tstop=100, dt=0.1):
     OBJECT_LIST = []
     for key in ['POPS', 'REC_SYNAPSES', 'RASTER',
                 'POP_ACT', 'VMS', 'ISYNe', 'ISYNi',
+                'GSYNe', 'GSYNi',
                 'PRE_SPIKES', 'PRE_SYNAPSES']:
         if key in NTWK.keys():
             net.add(NTWK[key])
@@ -55,6 +56,7 @@ def build_up_recurrent_connections(NTWK, SEED=1):
 
     NTWK['REC_SYNAPSES'] = CONN2
 
+    
 def build_populations(NEURONS, M, with_raster=False, with_pop_act=False, with_Vm=0,
                       verbose=False, with_synaptic_currents=False, with_synaptic_conductances=False):
     """
@@ -96,10 +98,10 @@ def build_populations(NEURONS, M, with_raster=False, with_pop_act=False, with_Vm
             NTWK['ISYNe'].append(brian2.StateMonitor(pop, 'Ie', record=np.arange(max([1,with_Vm]))))
             NTWK['ISYNi'].append(brian2.StateMonitor(pop, 'Ii', record=np.arange(max([1,with_Vm]))))
     if with_synaptic_conductances:
-        NTWK['Ge'], NTWK['Gi'] = [], []
+        NTWK['GSYNe'], NTWK['GSYNi'] = [], []
         for pop in NTWK['POPS']:
-            NTWK['Ge'].append(brian2.StateMonitor(pop, 'Ge', record=np.arange(max([1,with_Vm]))))
-            NTWK['Gi'].append(brian2.StateMonitor(pop, 'Gi', record=np.arange(max([1,with_Vm]))))
+            NTWK['GSYNe'].append(brian2.StateMonitor(pop, 'Ge', record=np.arange(max([1,with_Vm]))))
+            NTWK['GSYNi'].append(brian2.StateMonitor(pop, 'Gi', record=np.arange(max([1,with_Vm]))))
 
     NTWK['PRE_SPIKES'], NTWK['PRE_SYNAPSES'] = [], [] # in case of afferent inputs
     return NTWK
