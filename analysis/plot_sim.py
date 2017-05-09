@@ -7,6 +7,10 @@ from PIL import Image # BITMAP (png, jpg, ...)
 
 G, R = 'g', 'r'
 
+def find_num_of_key(pop_key):
+    i0 = np.argwhere(np.array([NTWK['NEURONS'][i]['name'] for i in range(len(NTWK['NEURONS']))])==pop_key)[0][0]
+    return i0
+    
 def raster_fig(data,
              tzoom=[0, np.inf],
              COLORS=['g', 'r', 'k', 'y'], NVm=3, Nnrn=500, Tbar=50):
@@ -79,7 +83,7 @@ def Vm_Isyn_fig(data, pop_key='Exc',
     plt.subplots_adjust(left=.15, bottom=.1, right=.99)
     
     for i in range(NVm):
-        cond = (t>tzoom[0]) & (t<tzoom[1]) & (data['VMS_'+str(pop_key)][i]!=data['0_params']['Vreset'])
+        cond = (t>tzoom[0]) & (t<tzoom[1]) & (data['VMS_'+str(pop_key)][i]!=data[str(find_num_of_key(pop_key))+'_params']['Vreset'])
         AX[0,i].plot(t[cond], data['ISYNe_'+str(pop_key)][i][cond], color='g')
         AX[0,i].plot(t[cond], data['ISYNi_'+str(pop_key)][i][cond], color='r')
         AX[1,i].plot(t[cond], data['VMS_'+str(pop_key)][i][cond], color='k')
@@ -157,7 +161,7 @@ def exc_inh_balance(data, pop_key='Exc'):
     # removings the current points where clamped at reset potential (creates artificially strong exc currents)
     CONDS =[]
     for i in range(NVm):
-        CONDS.append(data['VMS_'+str(pop_key)][i]!=data['0_params']['Vreset'])
+        CONDS.append(data['VMS_'+str(pop_key)][i]!=data[str(find_num_of_key(pop_key))+'_params']['Vreset'])
         
     # excitation
     mean = np.mean([data['ISYNe_'+str(pop_key)][i][CONDS[i]].mean() for i in range(NVm)])
@@ -174,19 +178,20 @@ def exc_inh_balance(data, pop_key='Exc'):
     set_plot(ax, ylabel='currents \n (abs. value, pA)',
              xticks=[0,1], xticks_labels=['exc.', 'inh.'])
 
+    Gl = data[str(find_num_of_key(pop_key))+'_params']['Gl']
     # excitation
-    mean = np.mean([data['Ge_'+str(pop_key)][i].mean() for i in range(NVm)])
-    std = np.std([data['Ge_'+str(pop_key)][i].mean() for i in range(NVm)])
+    mean = np.mean([data['GSYNe_'+str(pop_key)][i].mean() for i in range(NVm)])/Gl
+    std = np.std([data['GSYNe_'+str(pop_key)][i].mean() for i in range(NVm)])/Gl
     ax2.bar([0], mean, yerr=std, edgecolor='g', facecolor='w', lw=3,
            error_kw={'ecolor':'g','linewidth':3}, capsize=3)
 
     # inhibition
-    mean = np.mean([data['Gi_'+str(pop_key)][i].mean() for i in range(NVm)])
-    std = np.std([data['Gi_'+str(pop_key)][i].mean() for i in range(NVm)])
+    mean = np.mean([data['GSYNi_'+str(pop_key)][i].mean() for i in range(NVm)])/Gl
+    std = np.std([data['GSYNi_'+str(pop_key)][i].mean() for i in range(NVm)])/Gl
     ax2.bar([1], mean, yerr=std, edgecolor='r', facecolor='w', lw=3,
            error_kw={'ecolor':'r','linewidth':3}, capsize=3)
     
-    set_plot(ax2, ylabel='conductance (nS)',
+    set_plot(ax2, ylabel='$G_{syn}$/$g_L$',
              xticks=[0,1], xticks_labels=['exc.', 'inh.'])
     
     return fig
@@ -221,7 +226,7 @@ def histograms(data, pop_key='Exc'):
 
     ######## CURRENTS ########
     # on excitatory population
-    cond = np.concatenate(data['VMS_Exc'])!=data['0_params']['Vreset'] # removing clamping at reset
+    cond = np.concatenate(data['VMS_Exc'])!=data[str(find_num_of_key('Exc'))+'_params']['Vreset'] # removing clamping at reset
     hist, be = np.histogram(np.concatenate(data['ISYNe_Exc'])[cond], bins=20, normed=True)
     AX[0, 1].bar(.5*(be[1:]+be[:-1]), hist, edgecolor=G, lw=0,
                  width=be[1]-be[0], facecolor=G, alpha=.3)
@@ -230,7 +235,7 @@ def histograms(data, pop_key='Exc'):
                  width=be[1]-be[0], facecolor=R, alpha=.3)
         
     # on inhibitory population
-    cond = np.concatenate(data['VMS_Inh'])!=data['1_params']['Vreset'] # removing clamping at reset
+    cond = np.concatenate(data['VMS_Inh'])!=data[str(find_num_of_key('Inh'))+'_params']['Vreset'] # removing clamping at reset
     hist, be = np.histogram(np.concatenate(data['ISYNe_Inh'])[cond], bins=20, normed=True)
     AX[1, 1].bar(.5*(be[1:]+be[:-1]), hist, edgecolor=G, lw=0,
                  width=be[1]-be[0], facecolor=G, alpha=.3)
