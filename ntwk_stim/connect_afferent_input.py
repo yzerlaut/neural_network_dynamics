@@ -72,7 +72,9 @@ def construct_feedforward_input(NTWK, target_pop,
 
 def set_spikes_from_time_varying_rate_synchronous(time_array, rate_array, N, SEED=1):
     """
-
+    here, we don't assume that all inputs are decorrelated, we actually
+    model a population of N neurons and just produce spikes according
+    to the "rate_array" frequency
     """
     np.random.seed(SEED) # setting the seed !
     
@@ -96,6 +98,7 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
                                             t, rate_array,\
                                             conductanceID='AA',\
                                             with_presynaptic_spikes=False,
+                                            with_background={'f0':None, 'seed':0},
                                             SEED=1):
     """
     POPS and AFFERENCE_ARRAY should be 1D arrrays as their is only one 
@@ -107,9 +110,23 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
 
     # number of synapses per neuron
     Nsyn = afferent_pop['pconn']*afferent_pop['N']
+
+        
     indices, times = set_spikes_from_time_varying_rate_synchronous(\
                             t, rate_array,\
                             afferent_pop['N'], SEED=(SEED+2)**2%100)
+
+    if with_background['f0'] is not None:
+        """
+        sets the possibility of a trial-varying background activity on top a a fixed stim !
+        (achieves by changing with_background['seed'] and keeping SEED)
+        """
+        indices_bg, times_bg = set_spikes_from_time_varying_rate_synchronous(\
+                                                    t, 0.*t+with_background['f0'],\
+                                                    afferent_pop['N'], SEED=with_background['seed'])
+        indices = np.concatenate([indices, indices_bg])
+        times = np.concatenate([times, times_bg])
+    
     spikes = brian2.SpikeGeneratorGroup(afferent_pop['N'], indices, times)
     pre_increment = 'G'+conductanceID+' += w'
     synapse = brian2.Synapses(spikes, target_pop, on_pre=pre_increment,\
