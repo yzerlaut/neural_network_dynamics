@@ -34,6 +34,7 @@ faff = 1.
 for i, cond in zip(range(2), ['ExcExc', 'ExcInh']): # both on excitation and inhibition
     ntwk.construct_feedforward_input(NTWK, NTWK['POPS'][i], EAff, t_array, faff+0.*t_array,
                                      conductanceID=cond,
+                                     with_presynaptic_spikes=True,
                                      SEED=int(37*faff+i)%37)
 
 

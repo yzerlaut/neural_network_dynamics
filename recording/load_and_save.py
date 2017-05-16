@@ -36,11 +36,11 @@ def write_as_hdf5(NTWK, filename='data.h5'):
             
         if 'GSYNi' in NTWK.keys():
             data['GSYNi_'+name] = np.array([vv.Gi/brian2.nS for vv in NTWK['GSYNi'][ii]])
-            
-        # if 'iRASTER_PRE' in NTWK.keys():
-        #     print(np.array([vv/brian2.ms for vv in NTWK['tRASTER_PRE']]))
-        #     # data['iRASTER_PRE'] = np.array(NTWK['iRASTER_PRE'], dtype=np.ndarray)
-        #     # data['tRASTER_PRE'] = np.array([vv/brian2.ms for vv in NTWK['tRASTER_PRE']])
+
+    if 'iRASTER_PRE' in NTWK.keys():
+        for jj in range(len(NTWK['iRASTER_PRE'])):
+            data['iRASTER_PRE'+str(jj)] = np.array(NTWK['iRASTER_PRE'][jj], dtype=np.int)
+            data['tRASTER_PRE'+str(jj)] = np.array(NTWK['tRASTER_PRE'][jj]/brian2.ms, dtype=np.float)
             
     save_dict_to_hdf5(data, filename)
     
