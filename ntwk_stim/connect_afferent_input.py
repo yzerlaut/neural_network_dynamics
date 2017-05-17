@@ -48,6 +48,7 @@ def construct_feedforward_input(NTWK, target_pop,
         indices, times = set_spikes_from_time_varying_rate(\
                             t, rate_array,\
                             target_pop.N, Nsyn, SEED=(SEED+2)**2%100)
+        print(len(indices), len(times))
         spikes = brian2.SpikeGeneratorGroup(target_pop.N, indices, times)
         pre_increment = 'G'+conductanceID+' += w'
         synapse = brian2.Synapses(spikes, target_pop, on_pre=pre_increment,\
@@ -80,9 +81,13 @@ def deal_with_multiple_spikes_within_one_bin(indices, times, DT):
                 for j, index in enumerate(i1):
                     times[index] += DT*(-1)**j*int(j/2+.5)
                     n+=1
-    print('n=',n, 'spikes were shifted by dt to insure no overlapping presynaptic spikes (Brian2 constraint)')
-    return indices, times
-    
+                n-=1 # remove the spike unchanged
+    if n==0:
+        return indices, times, True
+    else:
+        print('n=', n, 'spikes were shifted by dt to insure no overlapping presynaptic spikes (Brian2 constraint)')
+        return indices, times, False
+
 def set_spikes_from_time_varying_rate_correlated(time_array, rate_array, AFF_TO_POP_MATRIX, SEED=1):
     """
     here, we don't assume that all inputs are decorrelated, we actually
@@ -94,7 +99,6 @@ def set_spikes_from_time_varying_rate_correlated(time_array, rate_array, AFF_TO_
 
     Npop_pre = AFF_TO_POP_MATRIX.shape[0] # 
     
-    indices, times = np.empty(0, dtype=np.int), np.empty(0, dtype=np.float)
     true_indices, true_times = [], []
     DT = (time_array[1]-time_array[0])
     
@@ -104,19 +108,24 @@ def set_spikes_from_time_varying_rate_correlated(time_array, rate_array, AFF_TO_
         for ii in np.arange(Npop_pre)[rdm_num<DT*rate_array[it]*1e-3]:
             true_indices.append(ii)
             true_times.append(time_array[it])
-            indices = np.concatenate([indices, np.array(AFF_TO_POP_MATRIX[ii,:], dtype=int)]) # all the indices
-            times = np.concatenate([times, np.array([time_array[it] for j in range(len(AFF_TO_POP_MATRIX[ii,:]))])])
 
-    indices, times = deal_with_multiple_spikes_within_one_bin(indices, times, DT)
+    indices, times = np.empty(0, dtype=np.int), np.empty(0, dtype=np.float64)
+    for ii, tt in zip(true_indices, true_times):
+        indices = np.concatenate([indices, np.array(AFF_TO_POP_MATRIX[ii,:], dtype=int)]) # all the indices
+        times = np.concatenate([times, np.array([tt for j in range(len(AFF_TO_POP_MATRIX[ii,:]))])])
+
+    # because brian2 can not handle multiple spikes in one bin, we shift them by dt when concomitant
+    indices, times, success = deal_with_multiple_spikes_within_one_bin(indices, times, DT)
+    if not success:
+        indices, times, success = deal_with_multiple_spikes_within_one_bin(indices, times, DT)
+                    
     return indices, times*brian2.ms, np.array(true_indices), np.array(true_times)*brian2.ms
-
 
 def construct_feedforward_input_correlated(NTWK, target_pop,
                                            afferent_pop,\
                                            t, rate_array,\
                                            conductanceID='AA',\
                                            with_presynaptic_spikes=False,
-                                           with_background={'f0':None, 'seed':0},
                                            AFF_TO_POP_MATRIX=None,
                                            SEED=1):
     """
@@ -131,8 +140,9 @@ def construct_feedforward_input_correlated(NTWK, target_pop,
 
     if AFF_TO_POP_MATRIX is None:
         AFF_TO_POP_MATRIX = np.array([\
-                np.random.choice(np.arange(target_pop.N), int(afferent_pop['pconn']*afferent_pop['N']))\
+                np.random.choice(np.arange(target_pop.N), int(afferent_pop['pconn']*target_pop.N), replace=False)\
                 for k in range(afferent_pop['N'])])
+
     indices, times, true_indices, true_times = set_spikes_from_time_varying_rate_correlated(\
                                                                   t, rate_array, AFF_TO_POP_MATRIX,\
                                                                   SEED=(SEED+2)**2%100)

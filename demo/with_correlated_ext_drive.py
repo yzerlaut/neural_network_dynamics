@@ -12,8 +12,8 @@ t_array = ntwk.arange(int(tstop/dt))*dt
 ## ------------- with recurrent connections ----------------- ##
 ################################################################
 
-NEURONS = [{'name':'Exc', 'N':400, 'type':'LIF2'},
-           {'name':'Inh', 'N':100, 'type':'LIF2_Vthre_-55'}]
+NEURONS = [{'name':'Exc', 'N':1000, 'type':'LIF2'},
+           {'name':'Inh', 'N':250, 'type':'LIF2_Vthre_-55'}]
 
 M = ntwk.init_syn_and_conn_matrix(NEURONS, pconn=0.02)
 M[0,0]['Q'], M[0,1]['Q'] = 2, 2
@@ -35,31 +35,19 @@ for i, cond in zip(range(2), ['ExcExc', 'ExcInh']): # both on excitation and inh
     ntwk.construct_feedforward_input_correlated(NTWK, NTWK['POPS'][i], EAff, t_array, faff+0.*t_array,
                                                 conductanceID=cond,
                                                 with_presynaptic_spikes=True,
-                                                SEED=int(37*faff+i)%37)
+                                                SEED=int(35*faff+i)%37)
 
-##############################################
-## --------- Initial Condition ------------ ##
-##############################################
 ntwk.initialize_to_rest(NTWK)
-
-#####################
-## ----- Run ----- ##
-#####################
 network_sim = ntwk.collect_and_run(NTWK, tstop=tstop, dt=dt)
-
-# ######################
-# ## ----- Plot ----- ##
-# ######################
 for i in range(4):
     plt.plot(NTWK['VMS'][0][i].t/ntwk.ms, NTWK['VMS'][0][i].V/ntwk.mV)
 ntwk.show()
-
-# ii=0
-# for pop in NTWK['RASTER']:
-#     plt.plot(pop.t/ntwk.ms, ii+pop.i, 'o')
-#     ii+=np.array(pop.i).max()
-# ntwk.set_plot(plt.gca(), ['bottom'], xlabel='time (ms)', yticks=[])
-# ntwk.show()
+ii=0
+for pop in NTWK['RASTER']:
+    plt.plot(pop.t/ntwk.ms, ii+pop.i, 'o')
+    ii+=np.array(pop.i).max()
+ntwk.set_plot(plt.gca(), ['bottom'], xlabel='time (ms)', yticks=[])
+ntwk.show()
 
 
 
