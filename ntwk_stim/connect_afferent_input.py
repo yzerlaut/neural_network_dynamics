@@ -48,7 +48,6 @@ def construct_feedforward_input(NTWK, target_pop,
         indices, times = set_spikes_from_time_varying_rate(\
                             t, rate_array,\
                             target_pop.N, Nsyn, SEED=(SEED+2)**2%100)
-        print(len(indices), len(times))
         spikes = brian2.SpikeGeneratorGroup(target_pop.N, indices, times)
         pre_increment = 'G'+conductanceID+' += w'
         synapse = brian2.Synapses(spikes, target_pop, on_pre=pre_increment,\
@@ -158,11 +157,115 @@ def construct_feedforward_input_correlated(NTWK, target_pop,
     
     if with_presynaptic_spikes:
         if 'iRASTER_PRE' in NTWK.keys():
-            NTWK['iRASTER_PRE'].append(true_indices)
-            NTWK['tRASTER_PRE'].append(true_times)
+            NTWK['iRASTER_PRE'].append(indices)
+            NTWK['tRASTER_PRE'].append(times)
         else: # we create the key
-            NTWK['iRASTER_PRE'] = [true_indices]
-            NTWK['tRASTER_PRE'] = [true_times]
+            NTWK['iRASTER_PRE'] = [indices]
+            NTWK['tRASTER_PRE'] = [times]
+
+        if 'iRASTER_PRE' in NTWK.keys():
+            NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'].append(true_indices)
+            NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'].append(true_times)
+        else: # we create the key
+            NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'] = [true_indices]
+            NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'] = [true_times]
+            
+    return AFF_TO_POP_MATRIX
+
+def set_spikes_from_time_varying_rate_synchronous(time_array, rate_array,
+                                                  DUPLICATION_MATRIX, AFF_TO_POP_MATRIX, SEED=1):
+    """
+    here, we don't assume that all inputs are decorrelated, we actually
+    model a population of N neurons and just produce spikes according
+    to the "rate_array" frequency
+    """
+    ## time_array in ms !!
+    # so multplying rate array
+
+    np.random.seed(SEED+18) # setting the seed !
+    N_independent = DUPLICATION_MATRIX.shape[0] # 
+    
+    true_indices, true_times = [], []
+    DT = (time_array[1]-time_array[0])
+    
+    # trivial way to generate inhomogeneous poisson events
+    for it in range(len(time_array)):
+        rdm_num = np.random.random(N_independent)
+        for ii in np.arange(N_independent)[rdm_num<DT*rate_array[it]*1e-3/N_independent]: # need to divide by duplicated events
+            for jj in DUPLICATION_MATRIX[ii, :]:
+                true_indices.append(jj)
+                true_times.append(time_array[it])
+            
+    indices, times = np.empty(0, dtype=np.int), np.empty(0, dtype=np.float64)
+    for ii, tt in zip(true_indices, true_times):
+        indices = np.concatenate([indices, np.array(AFF_TO_POP_MATRIX[ii,:], dtype=int)]) # all the indices
+        times = np.concatenate([times, np.array([tt for j in range(len(AFF_TO_POP_MATRIX[ii,:]))])])
+
+    # because brian2 can not handle multiple spikes in one bin, we shift them by dt when concomitant
+    indices, times, success = deal_with_multiple_spikes_within_one_bin(indices, times, DT)
+    if not success:
+        indices, times, success = deal_with_multiple_spikes_within_one_bin(indices, times, DT)
+                    
+    return indices, times*brian2.ms, np.array(true_indices), np.array(true_times)
+
+def construct_feedforward_input_synchronous(NTWK, target_pop,
+                                            afferent_pop,\
+                                            N_source, N_target, N_duplicate,
+                                            t, rate_array,\
+                                            conductanceID='AA',\
+                                            with_presynaptic_spikes=False,
+                                            AFF_TO_POP_MATRIX=None,
+                                            SEED=1):
+    """
+    POPS and AFFERENCE_ARRAY should be 1D arrrays as their is only one 
+    source population
+
+    'pop_for_conductance' is the string identifying the source conductance
+    that will be incremented by the afferent input !!
+    """
+
+    np.random.seed(SEED) # setting the seed !
+
+    N_independent = int(N_source/N_duplicate)
+    N_source = N_independent*N_duplicate # N_source needs to be a multiple of N_duplicate
+
+    DUPLICATION_MATRIX = np.array([\
+                                  np.random.choice(np.arange(N_source), N_duplicate, replace=False)\
+                                  for k in range(N_independent)])
+    
+    AFF_TO_POP_MATRIX = np.array([\
+                                  np.random.choice(np.arange(N_target), int(afferent_pop['pconn']*N_target), replace=False)\
+                                  for k in range(N_source)])
+    
+    indices, times, true_indices, true_times = set_spikes_from_time_varying_rate_synchronous(\
+                                                        t, rate_array,\
+                                                        DUPLICATION_MATRIX, AFF_TO_POP_MATRIX,\
+                                                        SEED=(SEED+2)**2%100)
+
+    spikes = brian2.SpikeGeneratorGroup(target_pop.N, indices, times, sorted=False)
+    synapse = brian2.Synapses(spikes, target_pop, on_pre='G'+conductanceID+' += w',\
+                              model='w:siemens')
+    synapse.connect('i==j')
+    synapse.w = afferent_pop['Q']*brian2.nS
+    
+    NTWK['PRE_SPIKES'].append(spikes)
+    NTWK['PRE_SYNAPSES'].append(synapse)
+    
+    if with_presynaptic_spikes:
+        if 'iRASTER_PRE' in NTWK.keys():
+            NTWK['iRASTER_PRE'].append(indices)
+            NTWK['tRASTER_PRE'].append(times)
+        else: # we create the key
+            NTWK['iRASTER_PRE'] = [indices]
+            NTWK['tRASTER_PRE'] = [times]
+
+        if 'iRASTER_PRE_in_terms_of_Pre_Pop' in NTWK.keys():
+            NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'].append(true_indices)
+            NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'].append(true_times)
+        else: # we create the key
+            print('creating the key')
+            NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'] = [true_indices]
+            NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'] = [true_times]
             
     return AFF_TO_POP_MATRIX
 

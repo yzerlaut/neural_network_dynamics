@@ -37,6 +37,10 @@ def write_as_hdf5(NTWK, filename='data.h5'):
         if 'GSYNi' in NTWK.keys():
             data['GSYNi_'+name] = np.array([vv.Gi/brian2.nS for vv in NTWK['GSYNi'][ii]])
 
+    if 'iRASTER_PRE_in_terms_of_Pre_Pop' in NTWK.keys():
+        data['iRASTER_PRE_in_terms_of_Pre_Pop'] = np.array(NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'])
+        data['tRASTER_PRE_in_terms_of_Pre_Pop'] = np.array(NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'])
+
     if 'iRASTER_PRE' in NTWK.keys():
         for jj in range(len(NTWK['iRASTER_PRE'])):
             data['iRASTER_PRE'+str(jj)] = np.array(NTWK['iRASTER_PRE'][jj], dtype=np.int)
