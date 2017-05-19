@@ -263,7 +263,6 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
             NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'].append(true_indices)
             NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'].append(true_times)
         else: # we create the key
-            print('creating the key')
             NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'] = [true_indices]
             NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'] = [true_times]
             

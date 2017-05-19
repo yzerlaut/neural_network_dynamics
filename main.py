@@ -27,9 +27,10 @@ from graphs.my_graph import *
 
 def quick_look_at_Vm(NTWK):
     fig, AX = plt.subplots(1, len(NTWK['VMS']), figsize=(3*len(NTWK['VMS']),2.5))
-    for i in range(len(NTWK['VMS'])):
-        for j in range(NTWK['VMS'][i]):
-            AX[i].plot(NTWK['VMS'][i][j].t/ms, NTWK['VMS'][i][j].V/mV)
+    for i, pop_recording in enumerate(NTWK['VMS']):
+        for j in pop_recording.record:
+            AX[i].plot(pop_recording[j].t/ms, pop_recording[j].V/mV)
+        set_plot(AX[i], xlabel='time (ms)', ylabel='Vm (mV)')
     show()
     
 
