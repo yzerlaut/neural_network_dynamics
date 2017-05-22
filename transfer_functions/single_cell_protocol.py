@@ -126,7 +126,7 @@ def get_spiking_within_interval(cell_params, SYN_POPS, RATES,
                                 key_to_vary='RecExc',
                                 scale='log',
                                 SEED=3, n_SEED=3, dt=0.1, tstop=200,
-                                verbose=False, inf_loop_security=500000):
+                                verbose=False):
 
     """
     This functions calculates the firing rate response when the frequency of a given key increases (e.g. RecExc, the recurrent excitation)
@@ -166,13 +166,13 @@ def get_spiking_within_interval(cell_params, SYN_POPS, RATES,
         if verbose: print('we need to lower the maximum amplitude')
         Finput_max = find_right_input_value(cell_params, SYN_POPS, RATES,
                                             INPUT, OUTPUT_MEAN, Fout_max,
-                                            key_to_vary=key_to_vary):
+                                            key_to_vary=key_to_vary)
         redo_scan = True
     elif (OUTPUT_MEAN[0]<Fout_min):
         if verbose: print('we need toto increase the minimum amplitude')
         Finput_min = find_right_input_value(cell_params, SYN_POPS, RATES,
                                             INPUT, OUTPUT_MEAN, Fout_min,
-                                            key_to_vary=key_to_vary):
+                                            key_to_vary=key_to_vary)
         redo_scan = True
     else:
         if verbose: print('case not taken into account, we return the default scan')
@@ -192,76 +192,29 @@ def get_spiking_within_interval(cell_params, SYN_POPS, RATES,
             OUTPUT_MEAN[i], OUTPUT_STD[i] = run_multiple_sim(cell_params, SYN_POPS, RATES,
                                                              tstop=tstop, dt=dt, SEED=SEED)
         
-    # ### ==================================================
-    # ### response at the min level we look at :
-    # ### ==================================================
-    # if verbose:
-    #     print('firing rate at the baseline level:', OUTPUT_MEAN[0], '+/-', OUTPUT_STD[0], 'Hz')
-
-    # ### ==================================================
-    # ### response at the max level we look at :
-    # ### ==================================================
-    # RATES['F_'+key_to_vary] = INPUT[-1] # we set the input according to its current values
-    # OUTPUT_MEAN[-1], OUTPUT_STD[-1] = run_multiple_sim(cell_params, SYN_POPS, RATES,
-    #                                                  tstop=tstop, dt=dt, SEED=SEED)
-    # if verbose:
-    #     print('firing rate at the max level:', OUTPUT_MEAN[-1], '+/-', OUTPUT_STD[-1], 'Hz')
-
-    # # we adjust the values to have it above this baseline level
-    # Fout_values = np.cumsum(np.concatenate([[FINAL_OUTPUT_MEAN[0]+Fout_values[0]], np.diff(Fout_values)]))
-
-    # i_input = 1
-    # ntot = 0
-    # while (i_input<len(Fout_values)) and ntot<inf_loop_security:
-    #     vec = np.zeros(n_SEED)
-    #     RATES['F_'+key_to_vary] = FINAL_INPUT[i_input+1] # we set the input according to its current values
-    #     vec[0]= run_sim(cell_params, SYN_POPS, RATES,
-    #                             tstop=tstop, dt=dt, SEED=SEED,
-    #                             firing_rate_only=True)
-    #     if (vec[0]>=Fout_values[i_input]): # if we make a too big jump
-    #         # we redo it until the jump is ok (so by a small rescaling of fe)
-    #         # we divide the step by 2
-    #         FINAL_INPUT[i_input+1] = FINAL_INPUT[i_input]+(FINAL_INPUT[i_input+1]-FINAL_INPUT[i_input])/2.
-    #         if verbose:
-    #             print("we rescale the fe vector [...], to ", FINAL_INPUT[i_input+1],
-    #                   '(because fout=', str(vec[0]), 'higher than ', Fout_values[i_input],')')
-    #     else: # we can run the rest
-    #         if verbose:
-    #             print("== the excitation level :", i_input," over ",Finput.size)
-    #         for seed in range(1,n_SEED):
-    #             vec[seed]= run_sim(cell_params, SYN_POPS, RATES,
-    #                                tstop=tstop, dt=dt,SEED=SEED+seed,
-    #                                firing_rate_only=True)
-    #             if verbose:
-    #                 print("== ---- _____________ seed :",seed)
-    #         FINAL_OUTPUT_MEAN[i_input+1] = vec.mean()
-    #         FINAL_OUTPUT_STD[i_input+1] = vec.std()
-    #         if verbose:
-    #             print("== ---- ===> Fout :", FINAL_OUTPUT_MEAN[i_input+1])
-    #         if i_input<FINAL_INPUT.size-2: # we set the next value to the next one...
-    #             FINAL_INPUT[i_input+2] = FINAL_INPUT[i_input+1]+(Finput[i_input+1]-Finput[i_input])
-    #         i_input += 1 # and we progress in the loop
-            
-    #     ntot+=1 # security for infinite loops...
     return INPUT, OUTPUT_MEAN, OUTPUT_STD
     
 ### generate a transfer function's data
 
 def generate_transfer_function(cell_params, SYN_POPS,\
-                               Fout_max = 40.,
-                               F_exc_max = 20.,
-                               F_exc_min = 1e-2,
+                               Fout_min = 1e-2,
+                               Fout_max = 40,
+                               Finput_max = 20.,
+                               Finput_min = 1e-2,
                                Finh = np.logspace(-2, 1.7, 4),
                                Faff = np.logspace(0.6, 1.3, 4),
                                Fdsnh = None,
-                               SEED=3, n_SEED=4,\
-                               verbose=False,
+                               N_input=3,
+                               key_to_vary='RecExc',
+                               scale='log',
+                               SEED=3, n_SEED=3,
+                               dt=0.1, tstop=1000,
                                filename='data/example_data.npy',
-                               dt=0.1, tstop=1000):
+                               verbose=False):
     """ Generate the data for the transfer function  """
 
     if Fdsnh is not None:
-        Fe, Fi, Fa, Fd = np.meshgrid(np.concatenate([[0],Fexc]), Finh, Faff, Fdsnh, indexing='ij')
+        Fe, Fi, Fa, Fd = np.meshgrid(np.zeros(N_input), Finh, Faff, Fdsnh, indexing='ij')
         Fout_mean, Fout_std = 0*Fe, 0*Fe
         for i, fi in enumerate(Finh):
             for a, fa in enumerate(Faff):
@@ -270,15 +223,20 @@ def generate_transfer_function(cell_params, SYN_POPS,\
                     Fe[:,i,a,d],\
                         Fout_mean[:,i,a,d],\
                         Fout_std[:,i,a,d] = get_spiking_within_interval(cell_params, SYN_POPS, RATES,
-                                                                        Fout_values = Fout_values,
-                                                                        Finput = Fexc,
-                                                                        SEED=SEED, n_SEED=n_SEED,
-                                                                        dt=dt, tstop=tstop,
-                                                                        verbose=verbose)
-        np.save(filename, [Fe, Fi, Fa, Fd, Fout_mean, Fout_std, cell_params, SYN_POPS, RATES])
-        return Fe, Fi, Fa, Fd, Fout_mean, Fout_std
+                                                                    Fout_min = Fout_min,
+                                                                    Fout_max = Fout_max,
+                                                                    Finput_max = Finput_max,
+                                                                    Finput_min = Finput_min,
+                                                                    N_input=N_input,
+                                                                    key_to_vary=key_to_vary,
+                                                                    scale=scale,
+                                                                    SEED=SEED, n_SEED=n_SEED, dt=dt, tstop=tstop,
+                                                                    verbose=verbose)
+        data = {'Fe':Fe, 'Fi':Fi,
+                'Fout_mean':Fout_mean, 'Fout_std':Fout_std,
+                'cell_params':cell_params,'SYN_POPS':SYN_POPS}
     else:
-        Fe, Fi, Fa = np.meshgrid(np.concatenate([[0],Fexc]), Finh, Faff, indexing='ij')
+        Fe, Fi, Fa = np.meshgrid(np.zeros(N_input), Finh, Faff, indexing='ij')
         Fout_mean, Fout_std = 0*Fe, 0*Fe
         for i, fi in enumerate(Finh):
             for a, fa in enumerate(Faff):
@@ -286,13 +244,20 @@ def generate_transfer_function(cell_params, SYN_POPS,\
                 Fe[:,i,a],\
                     Fout_mean[:,i,a],\
                     Fout_std[:,i,a] = get_spiking_within_interval(cell_params, SYN_POPS, RATES,
-                                                                    Fout_values = Fout_values,
-                                                                    Finput = Fexc,
-                                                                    SEED=SEED, n_SEED=n_SEED,
-                                                                    dt=dt, tstop=tstop,
+                                                                    Fout_min = Fout_min,
+                                                                    Fout_max = Fout_max,
+                                                                    Finput_max = Finput_max,
+                                                                    Finput_min = Finput_min,
+                                                                    N_input=N_input,
+                                                                    key_to_vary=key_to_vary,
+                                                                    scale=scale,
+                                                                    SEED=SEED, n_SEED=n_SEED, dt=dt, tstop=tstop,
                                                                     verbose=verbose)
-        np.save(filename, [Fe, Fi, Fa, Fout_mean, Fout_std, cell_params, SYN_POPS, RATES])
-        return Fe, Fi, Fa, Fout_mean, Fout_std
+        data = {'Fe':Fe, 'Fi':Fi, 'Fa':Fa,
+                'Fout_mean':Fout_mean, 'Fout_std':Fout_std,
+                'cell_params':cell_params,'SYN_POPS':SYN_POPS}
+    np.save(filename, data)
+    return data
     
 if __name__=='__main__':
 
@@ -308,20 +273,23 @@ if __name__=='__main__':
 
     RATES = {'F_RecExc':1.,'F_AffExc':6., 'F_RecInh':1.}
 
+    ### TO TEST A SINGLE NEURON SIMULATION
     # data = run_sim(neuron_params, SYN_POPS, RATES,
     #             tstop=1000, with_Vm=True)
     # plt.plot(data['Vm'][0])
     # plt.show()
 
-    # generate_transfer_function(neuron_params, SYN_POPS,
+    ### TO TEST THE RELATION TO EXCITATION
     # a,b,c = get_spiking_within_interval(neuron_params, SYN_POPS, RATES,
-    #                             Fout_max = 40.,
-    #                             Finput_min = 1e-2,
-    #                             Finput_max = 20.,
-    #                             N_input=3,
-    #                             SEED=3, n_SEED=2,
-    #                             tstop=1000, dt=0.5,
-    #                             verbose=True)
+                                # Fout_max = 40.,
+                                # Finput_min = 1e-2,
+                                # Finput_max = 30.,
+                                # N_input=3,
+                                # SEED=3, n_SEED=2,
+                                # tstop=1000, dt=0.5,
+                                # verbose=True)
+    # print(a,b,c)
+                                
 
     ### TO TEST THE POLYNOM APPROX TO FIND THE RIGHT DOMAIN
     # Finput_previous, Fout_desired = np.array([0.1,0.2,0.5,1,5,10]), 1.2
@@ -329,5 +297,16 @@ if __name__=='__main__':
     # find_right_input_value(neuron_params, SYN_POPS, RATES,
     #                        Finput_previous, Fout_previous, Fout_desired, with_plot=True)
 
-    
-    # print(a,b,c)
+    ### TO TEST THE TRANSFER FUNCTION GENERATION
+    generate_transfer_function(neuron_params, SYN_POPS,
+                               Fout_max = 40.,
+                               Finput_min = 1e-2,
+                               Finput_max = 30.,
+                               Finh = np.logspace(-2, 1.7, 6),
+                               Faff = np.logspace(0.6, 1.3, 6),
+                               Fdsnh = None,
+                               N_input=8,
+                               SEED=3, n_SEED=2,
+                               tstop=1000, dt=0.5,
+                               filename='test.npy',
+                               verbose=True)
