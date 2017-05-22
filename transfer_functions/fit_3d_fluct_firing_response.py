@@ -95,12 +95,12 @@ def print_reduce_parameters(P, with_return=True, correction=default_correction):
     else:
         print(final_string)
     
-#######################################################
 
 
 
 #######################################################
 ####### FITTING PROCEDURE
+#######################################################
 
 def linear_fitting_of_threshold_with_firing_weight(\
             Fout, muV, sV, TvN, muGn, Gl, Cm, El,\
