@@ -220,13 +220,10 @@ def generate_transfer_function(Model,\
                                scale='log'):
     """ Generate the data for the transfer function  """
 
-    neuron_params, SYN_POPS, RATES = from_model_to_numerical_params(Model)
-    
     N_input=Model['N_input']
 
     data = {'F_RecExc':[], 'F_RecInh':[], 'F_AffExc':[], 'F_DsInh':[],
-            'Fout_mean':[], 'Fout_std':[],
-            'neuron_params':neuron_params, 'SYN_POPS':SYN_POPS}
+            'Fout_mean':[], 'Fout_std':[], 'Model':Model}
 
     print('============================================')
     print('             Starting Scan')
