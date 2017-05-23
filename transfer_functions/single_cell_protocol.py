@@ -254,7 +254,7 @@ def generate_transfer_function(Model,\
                 
         data = {'Fe':Fe, 'Fi':Fi, 'Fa':Fa,
                 'Fout_mean':Fout_mean, 'Fout_std':Fout_std,
-                'cell_params':cell_params,'SYN_POPS':SYN_POPS, 'Model', Model}
+                'cell_params':cell_params,'SYN_POPS':SYN_POPS, 'Model': Model}
     print('============================================')
     print('             Scan finished')
     np.save(Model['filename'], data)
