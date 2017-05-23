@@ -33,11 +33,12 @@ def from_model_to_numerical_params(Model):
     RATES = {}
     if 'RATES' in Model.keys():
         RATES = Model['RATES']
-    # elif (not Model['TF']) and (not 'RATES' in Model.keys()):
     else:
-        for i, k in enumerate(Model['POP_STIM']):
-            RATES['F_'+k] = Model['POP_RATES'][i]
-
+        if not Model['TF']: # if not TF protocol
+            for i, k in enumerate(Model['POP_STIM']):
+                RATES['F_'+k] = Model['POP_RATES'][i]
+        # else, we leave it it empty
+        
     neuron_params = built_up_neuron_params(Model)
 
     return neuron_params, SYN_POPS, RATES
