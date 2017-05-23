@@ -214,47 +214,33 @@ def get_spiking_within_interval(Model,
     return INPUT, OUTPUT_MEAN, OUTPUT_STD
     
 ### generate a transfer function's data
-
+import itertools
 def generate_transfer_function(Model,\
                                scale='log'):
     """ Generate the data for the transfer function  """
 
     N_input=Model['N_input']
-    Finh, Faff, Fdsnh = Model['Finh_array'], Model['Faff_array'], Model['Fdsnh_array']
+    Finh, Faff, Fdsnh = Model['F_RecInh_array'], Model['F_AffExc_array'], Model['F_DsInh_array']
+
+    data = {'F_RecExc':[], 'F_RecInh':[], 'F_AffExc':[], 'F_DsInh':[],
+            'Fout_mean':[], 'Fout_std':[],
+            'cell_params':cell_params,'SYN_POPS':Model['SYN_POPS']}
+    
     print('============================================')
     print('             Starting Scan')
     print('============================================')
-    if len(Fdsnh)>0:
-        Fe, Fi, Fa, Fd = np.meshgrid(np.zeros(N_input), Finh, Faff, Fdsnh, indexing='ij')
-        Fout_mean, Fout_std = 0*Fe, 0*Fe
-        for i, fi in enumerate(Finh):
-            print('--> inhibitory level', i, ' over ', len(Finh))
-            for a, fa in enumerate(Faff):
-                print('--> afferent level', a, ' over ', len(Faff))
-                for d, fd in enumerate(Fdsnh):
-                    print('--> dsnh level', d, ' over ', len(Fdsnh))
-                    Model['RATES'] = {'F_RecExc':0.,'F_AffExc':fa, 'F_RecInh':fi, 'F_DsInh':fd}
-                    Fe[:,i,a,d],\
-                        Fout_mean[:,i,a,d],\
-                        Fout_std[:,i,a,d] = get_spiking_within_interval(Model)
-        data = {'Fe':Fe, 'Fi':Fi,
-                'Fout_mean':Fout_mean, 'Fout_std':Fout_std,
-                'cell_params':cell_params,'SYN_POPS':SYN_POPS}
-    else:
-        Fe, Fi, Fa = np.meshgrid(np.zeros(N_input), Finh, Faff, indexing='ij')
-        Fout_mean, Fout_std = 0*Fe, 0*Fe
-        for i, fi in enumerate(Finh):
-            print('--> inhibitory level', i, ' over ', len(Finh))
-            for a, fa in enumerate(Faff):
-                print('--> afferent level', a, ' over ', len(Faff))
-                Model['RATES'] = {'F_RecExc':0.,'F_AffExc':fa, 'F_RecInh':fi}
-                Fe[:,i,a],\
-                    Fout_mean[:,i,a],\
-                    Fout_std[:,i,a] = get_spiking_within_interval(Model)
-                
-        data = {'Fe':Fe, 'Fi':Fi, 'Fa':Fa,
-                'Fout_mean':Fout_mean, 'Fout_std':Fout_std,
-                'cell_params':cell_params,'SYN_POPS':SYN_POPS, 'Model': Model}
+    for fi, fa, fd in itertools.product(np.arange(3), np.arange(2), [0]):
+        print('--> inhibitory level:', fi, ' afferent level', fa, ' dsnh level', fd)
+        Model['RATES'] = {'F_RecExc':0.,'F_AffExc':fa, 'F_RecInh':fi, 'F_DsInh':fd}
+        Fe, Fout_mean, Fout_std = get_spiking_within_interval(Model)
+        # adding the data
+        for f, key in zip([fi, fa, fd], ['F_RecInh', 'F_AffExc', 'F_DsInh']):
+            data[key].append(np.ones(len(Fe))*f)
+        for F, key in zip([Fe, Fout_mean, Fout_std], ['F_RecExc', 'Fout_mean', 'Fout_std']):
+            data[key].append(F)
+    # translating to 1d numpy array
+    for key in ['F_RecInh', 'F_AffExc', 'F_DsInh', 'F_RecExc', 'Fout_mean', 'Fout_std']:
+        data[key] = np.array(data[key]).flatten()
     print('============================================')
     print('             Scan finished')
     np.save(Model['filename'], data)
@@ -286,9 +272,9 @@ if __name__=='__main__':
     parser.add_argument('--Finput_min', help='min input firing rate (of varied population)', type=float, default=1e-2)    
     parser.add_argument('--Finput_max', help='max input firing rate (of varied population)', type=float, default=30.)
     # now range for inputs
-    parser.add_argument('--Finh_array', nargs='+', help='Inhibitory firing rates', type=float, default=my_logspace(1e-2, 10, 3))    
-    parser.add_argument('--Faff_array', nargs='+', help='Afferent firing rates', type=float, default=my_logspace(4, 20, 3))    
-    parser.add_argument('--Fdsnh_array', nargs='+', help='DisInhibitory firing rates', type=float, default=[])    
+    parser.add_argument('--F_RecInh_array', nargs='+', help='Inhibitory firing rates', type=float, default=my_logspace(1e-2, 10, 3))    
+    parser.add_argument('--F_AffExc_array', nargs='+', help='Afferent firing rates', type=float, default=my_logspace(4, 20, 3))    
+    parser.add_argument('--F_DsInh_array', nargs='+', help='DisInhibitory firing rates', type=float, default=[0])    
     
     # additional stuff
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
