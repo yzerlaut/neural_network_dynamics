@@ -219,16 +219,18 @@ def generate_transfer_function(Model,\
                                scale='log'):
     """ Generate the data for the transfer function  """
 
+    neuron_params, SYN_POPS, RATES = from_model_to_numerical_params(Model)
+    
     N_input=Model['N_input']
-    Finh, Faff, Fdsnh = Model['F_RecInh_array'], Model['F_AffExc_array'], Model['F_DsInh_array']
 
     data = {'F_RecExc':[], 'F_RecInh':[], 'F_AffExc':[], 'F_DsInh':[],
-            'Fout_mean':[], 'Fout_std':[]}
-    
+            'Fout_mean':[], 'Fout_std':[],
+            'neuron_params':neuron_params, 'SYN_POPS':SYN_POPS}
+
     print('============================================')
     print('             Starting Scan')
     print('============================================')
-    for fi, fa, fd in itertools.product(np.arange(3), np.arange(2), [0]):
+    for fi, fa, fd in itertools.product(Model['F_RecInh_array'], Model['F_AffExc_array'], Model['F_DsInh_array']):
         print('--> inhibitory level:', fi, ' afferent level', fa, ' dsnh level', fd)
         Model['RATES'] = {'F_RecExc':0.,'F_AffExc':fa, 'F_RecInh':fi, 'F_DsInh':fd}
         Fe, Fout_mean, Fout_std = get_spiking_within_interval(Model)
@@ -240,9 +242,6 @@ def generate_transfer_function(Model,\
     # translating to 1d numpy array
     for key in ['F_RecInh', 'F_AffExc', 'F_DsInh', 'F_RecExc', 'Fout_mean', 'Fout_std']:
         data[key] = np.array(data[key]).flatten()
-    # adding metadata for theory
-    data['neuron_params'] = built_up_neuron_params(Model)
-    data['SYN_POPS'] = Model['SYN_POPS']
     print('============================================')
     print('             Scan finished')
     np.save(Model['filename'], data)

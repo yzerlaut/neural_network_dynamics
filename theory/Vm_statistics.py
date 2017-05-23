@@ -17,7 +17,7 @@ def getting_statistical_properties(params, SYN_POPS, RATES, already_SI=False):
         else:
             SYN_PARAMS.append({'E_j': 1e-3*syn['Erev'], 'C_m':1e-12*params['Cm'],
                                'Q_j':syn['Q']*1e-9, 'tau_j':1e-3*syn['Tsyn']})
-        RATES2.append(RATES[i]*syn['N']*syn['pconn'])
+        RATES2.append(RATES['F_'+syn['name']]*syn['N']*syn['pconn'])
 
     # A zero array to handle both float and array cases (for addition/multiplication)
     Zero = 0.*RATES2[0] + 0.*SYN_POPS[0]['Q']
