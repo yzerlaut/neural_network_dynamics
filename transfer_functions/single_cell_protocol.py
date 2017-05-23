@@ -223,8 +223,7 @@ def generate_transfer_function(Model,\
     Finh, Faff, Fdsnh = Model['F_RecInh_array'], Model['F_AffExc_array'], Model['F_DsInh_array']
 
     data = {'F_RecExc':[], 'F_RecInh':[], 'F_AffExc':[], 'F_DsInh':[],
-            'Fout_mean':[], 'Fout_std':[],
-            'cell_params':cell_params,'SYN_POPS':Model['SYN_POPS']}
+            'Fout_mean':[], 'Fout_std':[]}
     
     print('============================================')
     print('             Starting Scan')
@@ -241,6 +240,9 @@ def generate_transfer_function(Model,\
     # translating to 1d numpy array
     for key in ['F_RecInh', 'F_AffExc', 'F_DsInh', 'F_RecExc', 'Fout_mean', 'Fout_std']:
         data[key] = np.array(data[key]).flatten()
+    # adding metadata for theory
+    data['neuron_params'] = built_up_neuron_params(Model)
+    data['SYN_POPS'] = Model['SYN_POPS']
     print('============================================')
     print('             Scan finished')
     np.save(Model['filename'], data)
