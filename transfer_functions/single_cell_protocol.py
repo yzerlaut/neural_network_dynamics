@@ -228,6 +228,7 @@ def generate_transfer_function(Model,\
     print('============================================')
     print('             Starting Scan')
     print('============================================')
+    
     for fi, fa, fd in itertools.product(Model['F_RecInh_array'], Model['F_AffExc_array'], Model['F_DsInh_array']):
         print('--> inhibitory level:', fi, ' afferent level', fa, ' dsnh level', fd)
         Model['RATES'] = {'F_RecExc':0.,'F_AffExc':fa, 'F_RecInh':fi, 'F_DsInh':fd}
@@ -237,6 +238,7 @@ def generate_transfer_function(Model,\
             data[key].append(np.ones(len(Fe))*f)
         for F, key in zip([Fe, Fout_mean, Fout_std], ['F_RecExc', 'Fout_mean', 'Fout_std']):
             data[key].append(F)
+            
     # translating to 1d numpy array
     for key in ['F_RecInh', 'F_AffExc', 'F_DsInh', 'F_RecExc', 'Fout_mean', 'Fout_std']:
         data[key] = np.array(data[key]).flatten()
