@@ -45,22 +45,24 @@ def get_all_normalized_terms(muV, sV, gV, Tv, Proba, order=2):
     #
     return TERMS
 
-def firing_rate(muV, sV, gV, Tv, Proba, COEFFS, order=2, with_VTHRE_EFF=False):
+def firing_rate(muV, sV, gV, Tv, Proba, COEFFS, with_VTHRE_EFF=False):
     # terms 
     X = muV, sV, gV, Tv, Proba
     # we start with the 0 order term
     VTHRE_EFF = COEFFS[0]+0.*muV
     # then first order
     k=1
-    if order>=1:
+    if len(COEFFS)>0: # first order terms
         for i in range(len(X)):
             VTHRE_EFF += COEFFS[k]*NORM[i](X[i])
             k+=1
     # # then second order terms
-    if order>=2:
+    if len(COEFFS)>6:
         for i,j in product(range(len(X)), range(len(X))):
             VTHRE_EFF += COEFFS[k]*NORM[i](X[i])*NORM[j](X[j])
             k+=1
+    if len(COEFFS)>30:
+        print('third order not implemented')
 
     Fout = .5/Tv*sp_spec.erfc((VTHRE_EFF-muV)/np.sqrt(2)/sV)
 
@@ -69,3 +71,4 @@ def firing_rate(muV, sV, gV, Tv, Proba, COEFFS, order=2, with_VTHRE_EFF=False):
     else:
         return Fout
 
+    
