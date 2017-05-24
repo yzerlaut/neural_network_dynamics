@@ -1,0 +1,92 @@
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+from theory.Vm_statistics import getting_statistical_properties
+from theory.probability import Proba_g_P
+from theory.spiking_function import firing_rate
+from transfer_functions.single_cell_protocol import from_model_to_numerical_params
+import numpy as np
+from matplotlib import cm
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
+def TF(RATES, Model):
+
+    neuron_params, SYN_POPS, _ = from_model_to_numerical_params(Model)
+    ### OUTPUT OF ANALYTICAL CALCULUS IN SI UNITS !! -> from here SI, be careful...
+    muV, sV, gV, Tv = getting_statistical_properties(neuron_params,
+                                                     SYN_POPS, RATES,
+                                                     already_SI=False)
+    Proba = Proba_g_P(muV, sV, gV, 1e-3*neuron_params['Vthre'])
+    
+    Fout_th = firing_rate(muV, sV, gV, Tv, Proba, Model['COEFFS'])
+
+    return Fout_th
+
+
+def make_tf_plot(data,
+                 xkey='F_RecExc', ckey='F_RecInh', output_key='Fout',
+                 ckey_label='$\\nu_{i}$ (Hz)',
+                 col_key = 'F_AffExc', col_key_label = '$\\nu_a$', col_key_unit = 'Hz',
+                 row_key = 'F_DsInh', row_key_label = '$\\nu_d$', row_key_unit = 'Hz',
+                 ylim=[1e-2, 100], yticks=[0.01, 0.1, 1, 10], yticks_labels=['<0.01', '0.1', '1', '10'], ylabel='$\\nu_{out}$ (Hz)',
+                 xticks=[0.1, 1, 10], xticks_labels=['0.1', '1', '10'], xlabel='$\\nu_{e}$ (Hz)',
+                 logscale=True, cmap=cm.copper,
+                 with_theory=False):
+    
+    sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+    from graphs.my_graph import set_plot, build_bar_legend
+    import matplotlib.pylab as plt
+
+    # limiting the data within the range
+    Fout_mean, Fout_std = data[output_key+'_mean'], data[output_key+'_std']
+    Fout_mean[Fout_mean<=ylim[0]], Fout_std[Fout_mean<=ylim[0]] = ylim[0], 0
+
+    def make_row_fig(cond, AX, with_top_label=False, fd=0):
+        F1, Fe, Fi = data[col_key][cond], data[xkey][cond], data[ckey][cond]
+        mFout, sFout = Fout_mean[cond], Fout_std[cond]
+        for i, f1 in enumerate(np.unique(F1)):
+            i0 = np.argwhere(F1==f1).flatten()
+            for j, fi in enumerate(np.unique(Fi[i0])):
+                i1 = np.argwhere((Fi[i0]==fi) & (mFout[i0]<ylim[1])).flatten()
+                AX[i].errorbar(Fe[i0][i1],
+                               Fout_mean[i0][i1],
+                               yerr=Fout_std[i0][i1],
+                               fmt='o', ms=3,
+                               color=cmap(j/len(np.unique(Fi[i0]))))
+                # # now analytical estimate
+                if with_theory:
+                    RATES = {xkey:np.concatenate([np.linspace(f1, f2, 10, endpoint=False)\
+                                                       for f1, f2 in zip(Fe[i0][i1][:-1], Fe[i0][i1][1:])])}
+                    for pop, f in zip([col_key, ckey, row_key],[f1, fi, fd]) :
+                        RATES[pop] = f*np.ones(len(RATES[xkey]))
+                    Fout_th = TF(RATES, data['Model'])
+                    Fout_th[(Fout_th<ylim[0])] = ylim[0]
+                    th_cond = (Fout_th<ylim[1])
+                    AX[i].plot(RATES[xkey][th_cond],
+                               Fout_th[th_cond], '-',
+                               color=cmap(j/len(np.unique(Fi[i0]))))
+            if with_top_label:
+                AX[i].set_title(col_key_label+'='+str(round(f1,1))+col_key_unit)
+            if logscale:
+                AX[i].set_yscale('log')
+                AX[i].set_xscale('log')
+            ylabel2, yticks_labels2 = '', []
+            if i==0: # if first column
+                ylabel2, yticks_labels2 = ylabel, yticks_labels
+            set_plot(AX[i], ylim=[.9*ylim[0], ylim[1]],
+                     yticks=yticks, xticks=xticks, ylabel=ylabel2, xlabel=xlabel,
+                     yticks_labels=yticks_labels2, xticks_labels=xticks_labels)
+        Fi = Fi
+        Fi_log = np.log(Fi)/np.log(10)
+        cax = inset_axes(AX[-1], width="20%", height="90%", loc=3)
+        cb = build_bar_legend(np.unique(Fi_log), cax , cmap,
+                          ticks_labels=[str(round(fi,1)) for fi in np.unique(Fi)],
+                              label=ckey_label)
+        AX[-1].axis('off')
+
+    fig, AX = plt.subplots(1, len(np.unique(data[col_key]))+1,
+                           figsize=(2.5*len(np.unique(data[col_key]))+2,2))
+    for l in np.unique(data[row_key]):
+        make_row_fig(data[row_key]==l, AX, with_top_label=True, fd=l)
+        
+    return fig
+
