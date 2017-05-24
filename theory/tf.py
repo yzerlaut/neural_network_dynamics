@@ -8,9 +8,9 @@ import numpy as np
 from matplotlib import cm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-def TF(RATES, Model):
+def TF(RATES, Model, NRN_KEY=None):
 
-    neuron_params, SYN_POPS, _ = from_model_to_numerical_params(Model)
+    neuron_params, SYN_POPS, _ = from_model_to_numerical_params(Model, NRN_KEY=NRN_KEY)
     ### OUTPUT OF ANALYTICAL CALCULUS IN SI UNITS !! -> from here SI, be careful...
     muV, sV, gV, Tv = getting_statistical_properties(neuron_params,
                                                      SYN_POPS, RATES,
@@ -25,12 +25,12 @@ def TF(RATES, Model):
 def make_tf_plot(data,
                  xkey='F_RecExc', ckey='F_RecInh', output_key='Fout',
                  ckey_label='$\\nu_{i}$ (Hz)',
-                 col_key = 'F_AffExc', col_key_label = '$\\nu_a$', col_key_unit = 'Hz',
-                 row_key = 'F_DsInh', row_key_label = '$\\nu_d$', row_key_unit = 'Hz',
+                 col_key = 'F_AffExc', col_key_label = '$\\nu_a$', col_key_unit = 'Hz', col_subsmpl=None,
+                 row_key = 'F_DsInh', row_key_label = '$\\nu_d$', row_key_unit = 'Hz', row_subsmpl=None,
                  ylim=[1e-2, 100], yticks=[0.01, 0.1, 1, 10], yticks_labels=['<0.01', '0.1', '1', '10'], ylabel='$\\nu_{out}$ (Hz)',
                  xticks=[0.1, 1, 10], xticks_labels=['0.1', '1', '10'], xlabel='$\\nu_{e}$ (Hz)',
                  logscale=True, cmap=cm.copper,
-                 with_theory=False):
+                 with_theory=False, th_discret=20):
     
     sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
     from graphs.my_graph import set_plot, build_bar_legend
@@ -38,32 +38,34 @@ def make_tf_plot(data,
 
     # limiting the data within the range
     Fout_mean, Fout_std = data[output_key+'_mean'], data[output_key+'_std']
-    Fout_mean[Fout_mean<=ylim[0]], Fout_std[Fout_mean<=ylim[0]] = ylim[0], 0
 
+    if col_subsmpl is None:
+        col_subsmpl = np.arange(len(data[col_key]))
+        
     def make_row_fig(cond, AX, with_top_label=False, fd=0):
         F1, Fe, Fi = data[col_key][cond], data[xkey][cond], data[ckey][cond]
         mFout, sFout = Fout_mean[cond], Fout_std[cond]
-        for i, f1 in enumerate(np.unique(F1)):
+        for i, f1 in enumerate(np.unique(F1)[col_subsmpl]):
             i0 = np.argwhere(F1==f1).flatten()
             for j, fi in enumerate(np.unique(Fi[i0])):
-                i1 = np.argwhere((Fi[i0]==fi) & (mFout[i0]<ylim[1])).flatten()
-                AX[i].errorbar(Fe[i0][i1],
-                               Fout_mean[i0][i1],
-                               yerr=Fout_std[i0][i1],
-                               fmt='o', ms=3,
+                i1 = np.argwhere((Fi[i0]==fi)).flatten()
+                cond2 =  (mFout[i0][i1]>=ylim[0]) & (mFout[i0][i1]<ylim[1])
+                AX[i].errorbar(Fe[i0][i1][cond2],
+                               Fout_mean[i0][i1][cond2],
+                               yerr=Fout_std[i0][i1][cond2],
+                               fmt='o', ms=4,
                                color=cmap(j/len(np.unique(Fi[i0]))))
                 # # now analytical estimate
                 if with_theory:
-                    RATES = {xkey:np.concatenate([np.linspace(f1, f2, 10, endpoint=False)\
+                    RATES = {xkey:np.concatenate([np.linspace(f1, f2, th_discret, endpoint=False)\
                                                        for f1, f2 in zip(Fe[i0][i1][:-1], Fe[i0][i1][1:])])}
                     for pop, f in zip([col_key, ckey, row_key],[f1, fi, fd]) :
                         RATES[pop] = f*np.ones(len(RATES[xkey]))
                     Fout_th = TF(RATES, data['Model'])
-                    Fout_th[(Fout_th<ylim[0])] = ylim[0]
-                    th_cond = (Fout_th<ylim[1])
+                    th_cond = (Fout_th>ylim[0]) & (Fout_th<ylim[1])
                     AX[i].plot(RATES[xkey][th_cond],
                                Fout_th[th_cond], '-',
-                               color=cmap(j/len(np.unique(Fi[i0]))))
+                               color=cmap(j/len(np.unique(Fi[i0]))), lw=3, alpha=.8)
             if with_top_label:
                 AX[i].set_title(col_key_label+'='+str(round(f1,1))+col_key_unit)
             if logscale:
@@ -83,9 +85,13 @@ def make_tf_plot(data,
                               label=ckey_label)
         AX[-1].axis('off')
 
-    fig, AX = plt.subplots(1, len(np.unique(data[col_key]))+1,
-                           figsize=(2.5*len(np.unique(data[col_key]))+2,2))
-    for l in np.unique(data[row_key]):
+    if row_subsmpl is None:
+        row_subsmpl = np.arange(len(np.unique(data[row_key])))
+        
+    fig, AX = plt.subplots(len(row_subsmpl), len(col_subsmpl)+1,
+                           figsize=(2.5*len(col_subsmpl)+2, 2*len(row_subsmpl)))
+
+    for l in np.unique(data[row_key][row_subsmpl]):
         make_row_fig(data[row_key]==l, AX, with_top_label=True, fd=l)
         
     return fig

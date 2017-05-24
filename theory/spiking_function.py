@@ -61,7 +61,7 @@ def firing_rate(muV, sV, gV, Tv, Proba, COEFFS, with_VTHRE_EFF=False):
         for i,j in product(range(len(X)), range(len(X))):
             VTHRE_EFF += COEFFS[k]*NORM[i](X[i])*NORM[j](X[j])
             k+=1
-    if len(COEFFS)>30:
+    if len(COEFFS)>31:
         print('third order not implemented')
 
     Fout = .5/Tv*sp_spec.erfc((VTHRE_EFF-muV)/np.sqrt(2)/sV)

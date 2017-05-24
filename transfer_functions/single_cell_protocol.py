@@ -6,16 +6,18 @@ import numpy as np
 def my_logspace(x1, x2, n):
     return np.logspace(np.log(x1)/np.log(10), np.log(x2)/np.log(10), n)
 
-def built_up_neuron_params(Model):
+def built_up_neuron_params(Model, NRN_KEY=None):
 
-    params = {'name':Model['NRN_KEY'], 'N':1}
+    if NRN_KEY is None:
+        NRN_KEY = Model['NRN_KEY']
+    params = {'name':NRN_KEY, 'N':1}
     keys = ['Gl', 'Cm','Trefrac', 'El', 'Vthre', 'Vreset',\
             'delta_v', 'a', 'b', 'tauw']
     for k in keys:
-        params[k] = Model[Model['NRN_KEY']+'_'+k]
+        params[k] = Model[NRN_KEY+'_'+k]
     return params
 
-def from_model_to_numerical_params(Model):
+def from_model_to_numerical_params(Model, NRN_KEY=None):
 
     if 'SYN_POPS' in Model.keys(): 
         SYN_POPS = Model['SYN_POPS'] # forced 
@@ -39,7 +41,7 @@ def from_model_to_numerical_params(Model):
                 RATES['F_'+k] = Model['POP_RATES'][i]
         # else, we leave it it empty
         
-    neuron_params = built_up_neuron_params(Model)
+    neuron_params = built_up_neuron_params(Model, NRN_KEY=NRN_KEY)
 
     return neuron_params, SYN_POPS, RATES
 
