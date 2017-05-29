@@ -3,7 +3,8 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 import numpy as np
 from theory.psp_integrals import F_iPSP, F_iiPSP, F_iiiPSP, F_numTv, F_denomTv
 
-def getting_statistical_properties(params, SYN_POPS, RATES, already_SI=False):
+def getting_statistical_properties(params, SYN_POPS, RATES,
+                                   already_SI=False, with_Isyn=False):
     """ 
     We first translate those parameters into SI units for a safe calculus
     then we apply the results of the Shotnoise analysis (see above)
@@ -27,7 +28,7 @@ def getting_statistical_properties(params, SYN_POPS, RATES, already_SI=False):
         Gtot, muV = params['Gl']+Zero, params['Gl']*params['El']+Zero
     else:
         Gtot, muV = params['Gl']*1e-9+Zero, params['Gl']*params['El']*1e-12+Zero
-        
+
     for i, syn in enumerate(SYN_PARAMS):
         Gsyn = RATES2[i]*syn['tau_j']*syn['Q_j']
         Gtot += Gsyn
@@ -53,8 +54,15 @@ def getting_statistical_properties(params, SYN_POPS, RATES, already_SI=False):
     gV = gV/sV**3
     # kV = kV/sV**4
     Tv = 1./2.*(nTv/dTv)**(-1)
-    # return muV, sV, gV, kV, Tv # with the kurtosis
-    return muV, sV, gV, Tv
+    
+    if with_Isyn:
+        # in case we also want synaptic currents
+        Isyn = {}
+        for i, syn in enumerate(SYN_PARAMS):
+            Isyn[syn] = RATES2[i]*syn['tau_j']*syn['Q_j']*(syn['E_j']-muV)
+        return muV, sV, gV, Tv, Isyn
+    else:
+        return muV, sV, gV, Tv
 
 def distribution(vv, muV, sV, gV, kV=0, with_edgeworth=True):
     """
