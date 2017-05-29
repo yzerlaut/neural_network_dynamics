@@ -17,19 +17,22 @@ def built_up_neuron_params(Model, NRN_KEY=None):
         params[k] = Model[NRN_KEY+'_'+k]
     return params
 
-def from_model_to_numerical_params(Model, NRN_KEY=None):
+def from_model_to_numerical_params(Model, NRN_KEY=None, POP_STIM=None):
 
+    if POP_STIM is None:
+        POP_STIM = Model['POP_STIM']
+        
     if 'SYN_POPS' in Model.keys(): 
         SYN_POPS = Model['SYN_POPS'] # forced 
     else:
         SYN_POPS = []
-        if 'RecExc' in Model['POP_STIM']:
+        if 'RecExc' in POP_STIM:
             SYN_POPS.append({'name':'RecExc', 'Erev': Model['Ee'], 'N': Model['Ne'], 'Q': Model['Qee'], 'Tsyn': Model['Tse'], 'pconn': Model['pconn']})
-        if 'AffExc' in Model['POP_STIM']:
+        if 'AffExc' in POP_STIM:
             SYN_POPS.append({'name':'AffExc', 'Erev': Model['Ee'], 'N': Model['Na'], 'Q': Model['Qa'], 'Tsyn': Model['Tse'], 'pconn': Model['pconn_aff']})
-        if 'RecInh' in Model['POP_STIM']:
+        if 'RecInh' in POP_STIM:
             SYN_POPS.append({'name':'RecInh', 'Erev': Model['Ei'], 'N': Model['Ni'], 'Q': Model['Qie'], 'Tsyn':Model['Tsi'], 'pconn': Model['pconn']})
-        if 'DsInh' in Model['POP_STIM']:
+        if 'DsInh' in POP_STIM:
             SYN_POPS.append({'name':'DsInh', 'Erev': Model['Ei'], 'N': Model['Nd'], 'Q': Model['Qd'], 'Tsyn':Model['Tsi'], 'pconn': Model['pconn_dsnh']})
 
     RATES = {}
@@ -37,7 +40,7 @@ def from_model_to_numerical_params(Model, NRN_KEY=None):
         RATES = Model['RATES']
     else:
         if not Model['TF']: # if not TF protocol
-            for i, k in enumerate(Model['POP_STIM']):
+            for i, k in enumerate(POP_STIM):
                 RATES['F_'+k] = Model['POP_RATES'][i]
         # else, we leave it it empty
         

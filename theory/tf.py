@@ -27,7 +27,7 @@ def make_tf_plot(data,
                  ckey_label='$\\nu_{i}$ (Hz)',
                  col_key = 'F_AffExc', col_key_label = '$\\nu_a$', col_key_unit = 'Hz', col_subsmpl=None,
                  row_key = 'F_DsInh', row_key_label = '$\\nu_d$', row_key_unit = 'Hz', row_subsmpl=None,
-                 ylim=[1e-2, 100], yticks=[0.01, 0.1, 1, 10], yticks_labels=['<0.01', '0.1', '1', '10'], ylabel='$\\nu_{out}$ (Hz)',
+                 ylim=[1e-2, 100], yticks=[0.01, 0.1, 1, 10], yticks_labels=['0.01', '0.1', '1', '10'], ylabel='$\\nu_{out}$ (Hz)',
                  xticks=[0.1, 1, 10], xticks_labels=['0.1', '1', '10'], xlabel='$\\nu_{e}$ (Hz)',
                  logscale=True, cmap=cm.copper,
                  with_theory=False, th_discret=20):
@@ -40,7 +40,9 @@ def make_tf_plot(data,
     Fout_mean, Fout_std = data[output_key+'_mean'], data[output_key+'_std']
 
     if col_subsmpl is None:
-        col_subsmpl = np.arange(len(data[col_key]))
+        col_subsmpl = np.arange(len(np.unique(data[col_key])))
+    if row_subsmpl is None:
+        row_subsmpl = np.arange(len(np.unique(data[row_key])))
         
     def make_row_fig(cond, AX, with_top_label=False, fd=0):
         F1, Fe, Fi = data[col_key][cond], data[xkey][cond], data[ckey][cond]
@@ -85,14 +87,12 @@ def make_tf_plot(data,
                               label=ckey_label)
         AX[-1].axis('off')
 
-    if row_subsmpl is None:
-        row_subsmpl = np.arange(len(np.unique(data[row_key])))
-        
     fig, AX = plt.subplots(len(row_subsmpl), len(col_subsmpl)+1,
                            figsize=(2.5*len(col_subsmpl)+2, 2*len(row_subsmpl)))
+    AX = AX.reshape((len(row_subsmpl), len(col_subsmpl)+1))
 
-    for l in np.unique(data[row_key][row_subsmpl]):
-        make_row_fig(data[row_key]==l, AX, with_top_label=True, fd=l)
+    for j, l in enumerate(np.unique(data[row_key])[row_subsmpl]):
+        make_row_fig(data[row_key]==l, AX[j,:], with_top_label=(j==0), fd=l)
         
     return fig
 
