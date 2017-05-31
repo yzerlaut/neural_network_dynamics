@@ -3,7 +3,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from theory.Vm_statistics import getting_statistical_properties
 from theory.probability import Proba_g_P
 from theory.spiking_function import effective_Vthre, get_all_normalized_terms
-from transfer_functions.single_cell_protocol import from_model_to_numerical_params
+from transfer_functions.single_cell_protocol import build_up_afferent_synaptic_input, built_up_neuron_params
 from sklearn import linear_model
 import numpy as np
 
@@ -12,7 +12,9 @@ def fit_data(data, order=2, Fout_high=50., fit_filename=None):
     mFout, sFout = data['Fout_mean'], data['Fout_std']
     Model = data['Model']
     
-    neuron_params, SYN_POPS, RATES = from_model_to_numerical_params(Model)
+    neuron_params = built_up_neuron_params(Model, data['NRN_KEY'])
+    SYN_POPS = build_up_afferent_synaptic_input(Model, data['POP_STIM'])
+    
     for syn in SYN_POPS:
         RATES['F_'+syn['name']] = data['F_'+syn['name']]
 

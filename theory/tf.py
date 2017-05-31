@@ -3,14 +3,15 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from theory.Vm_statistics import getting_statistical_properties
 from theory.probability import Proba_g_P
 from theory.spiking_function import firing_rate
-from transfer_functions.single_cell_protocol import from_model_to_numerical_params
+from transfer_functions.single_cell_protocol import build_up_afferent_synaptic_input, built_up_neuron_params
 import numpy as np
 from matplotlib import cm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 def TF(RATES, Model, NRN_KEY=None):
 
-    neuron_params, SYN_POPS, _ = from_model_to_numerical_params(Model, NRN_KEY=NRN_KEY)
+    neuron_params = built_up_neuron_params(Model, NRN_KEY)
+    SYN_POPS = build_up_afferent_synaptic_input(Model, data['POP_STIM'])
     ### OUTPUT OF ANALYTICAL CALCULUS IN SI UNITS !! -> from here SI, be careful...
     muV, sV, gV, Tv = getting_statistical_properties(neuron_params,
                                                      SYN_POPS, RATES,

@@ -9,23 +9,20 @@ import numpy as np
 import matplotlib.pylab as plt
 from graphs.my_graph import set_plot
 
-def input_output(neuron_params, SYN_POPS, RATES, COEFFS, with_subthreshold=False):
+def input_output(neuron_params, SYN_POPS, RATES, COEFFS):
     muV, sV, gV, Tv = getting_statistical_properties(neuron_params,
                                                      SYN_POPS, RATES,
                                                      already_SI=False)
     Proba = Proba_g_P(muV, sV, gV, 1e-3*neuron_params['Vthre'])
     Fout = firing_rate(muV, sV, gV, Tv, Proba, COEFFS)
-    if with_subthreshold:
-        return Fout, muV, sV, gV, Tv
-    else:
-        return Fout
+    return Fout
 
 def find_fp(Model,
             KEY1='RecExc', KEY2='RecInh',
-            F1 = np.logspace(-2., 2.1, 200),
-            F2 = np.logspace(-2., 2.2, 1000),
+            F1 = np.logspace(-2., 2.1, 100),
+            F2 = np.logspace(-2., 2.2, 400),
             KEY_RATES1 = ['AffExc'], VAL_RATES1=[4.],
-            KEY_RATES2 = ['AffExc', 'DsInh'], VAL_RATES2=[4., 1.],
+            KEY_RATES2 = ['AffExc', 'DsInh'], VAL_RATES2=[4., .5],
             plot=False):
 
     Model['RATES'] = {}
@@ -72,9 +69,12 @@ def find_fp(Model,
             F2_nullcline[kk] = F2[i0[0]-1]
 
     # find the fixed point: crossing of the two nullclines !
-    i0 = np.argwhere((F2_nullcline[:-1]>F1_nullcline[:-1]) &\
-                     (F1_nullcline[1:]>F2_nullcline[1:]) &\
-                     (F2_nullcline[:-1]>0) & (F1_nullcline[:-1]>0)).flatten()
+    # i0 = np.argwhere((F2_nullcline[:-1]>F1_nullcline[:-1]) &\
+    #                  (F1_nullcline[1:]>F2_nullcline[1:]) &\
+    #                  (F2_nullcline[:-1]>0) & (F1_nullcline[:-1]>0)).flatten()
+    i0 = np.argwhere((F1_nullcline[:-1]>F2_nullcline[:-1]) &\
+                     (F2_nullcline[1:]>F1_nullcline[1:]) &\
+                     (F1_nullcline[:-1]>0) & (F2_nullcline[:-1]>0)).flatten()
     if len(i0)>0:
         f1_fp, f2_fp = F1[i0[0]], F2_nullcline[i0[0]]
         print(f1_fp, f2_fp)
@@ -99,7 +99,6 @@ def find_fp(Model,
     else:
         return f1_fp, f2_fp
 
-
 if __name__=='__main__':
 
     # import the model defined in root directory
@@ -109,7 +108,8 @@ if __name__=='__main__':
     from neural_network_dynamics.theory.fitting_tf import fit_data
     exc_data = np.load('../../params_scan/data_exc1.npy').item()
     Model['COEFFS_RecExc'] = fit_data(exc_data, order=2)
-    inh_data = np.load('../../params_scan/data_inh1.npy').item()
-    Model['COEFFS_RecInh'] = fit_data(inh_data, order=2)
-    find_fp(Model, plot=True)
+    inh_data = np.load('../../params_scan/data_inh0.npy').item()
+    Model['COEFFS_RecInh'] = fit_data(inh_data, order=1)
+    fig1, _, _ = find_fp(Model, plot=True)
+    # fig1.savefig('/Users/yzerlaut/Desktop/temp.svg')
     plt.show()

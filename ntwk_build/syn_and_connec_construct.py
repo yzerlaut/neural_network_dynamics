@@ -7,8 +7,12 @@ import itertools, string, sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from cells.cell_library import get_neuron_params
 from cells.cell_construct import get_membrane_equation
+from transfer_functions.single_cell_protocol import built_up_neuron_params
 
 def collect_and_run(NTWK, tstop=100, dt=0.1):
+    """
+    /!\ When you add a new object, THINK ABOUT ADDING IT TO THE COLLECTION !  /!\
+    """
     NTWK['dt'], NTWK['tstop'] = dt, tstop
     brian2.defaultclock.dt = dt*brian2.ms
     net = brian2.Network(brian2.collect())
@@ -75,6 +79,7 @@ def build_populations(NEURONS, M, with_raster=False, with_pop_act=False, with_Vm
             neuron_params = get_neuron_params(nrn['type'], number=nrn['N'],
                                               name=nrn['name'],
                                               verbose=verbose)
+            print(neuron_params)
             nrn['params'] = neuron_params
         NTWK['POPS'].append(get_membrane_equation(neuron_params, M[:,ii],
                                           with_synaptic_currents=with_synaptic_currents,

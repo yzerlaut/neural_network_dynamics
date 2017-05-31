@@ -6,10 +6,8 @@ import numpy as np
 def my_logspace(x1, x2, n):
     return np.logspace(np.log(x1)/np.log(10), np.log(x2)/np.log(10), n)
 
-def built_up_neuron_params(Model, NRN_KEY=None):
+def built_up_neuron_params(Model, NRN_KEY):
 
-    if NRN_KEY is None:
-        NRN_KEY = Model['NRN_KEY']
     params = {'name':NRN_KEY, 'N':1}
     keys = ['Gl', 'Cm','Trefrac', 'El', 'Vthre', 'Vreset',\
             'delta_v', 'a', 'b', 'tauw']
@@ -17,42 +15,38 @@ def built_up_neuron_params(Model, NRN_KEY=None):
         params[k] = Model[NRN_KEY+'_'+k]
     return params
 
-def from_model_to_numerical_params(Model, NRN_KEY=None, POP_STIM=None):
+def build_up_afferent_synaptic_input(Model, POP_STIM):
 
-    if POP_STIM is None:
-        POP_STIM = Model['POP_STIM']
-        
-    if 'SYN_POPS' in Model.keys(): 
-        SYN_POPS = Model['SYN_POPS'] # forced 
-    else:
-        SYN_POPS = []
-        if 'RecExc' in POP_STIM:
-            SYN_POPS.append({'name':'RecExc', 'Erev': Model['Ee'], 'N': Model['Ne'], 'Q': Model['Qee'], 'Tsyn': Model['Tse'], 'pconn': Model['pconn']})
-        if 'AffExc' in POP_STIM:
-            SYN_POPS.append({'name':'AffExc', 'Erev': Model['Ee'], 'N': Model['Na'], 'Q': Model['Qa'], 'Tsyn': Model['Tse'], 'pconn': Model['pconn_aff']})
-        if 'RecInh' in POP_STIM:
-            SYN_POPS.append({'name':'RecInh', 'Erev': Model['Ei'], 'N': Model['Ni'], 'Q': Model['Qie'], 'Tsyn':Model['Tsi'], 'pconn': Model['pconn']})
-        if 'DsInh' in POP_STIM:
-            SYN_POPS.append({'name':'DsInh', 'Erev': Model['Ei'], 'N': Model['Nd'], 'Q': Model['Qd'], 'Tsyn':Model['Tsi'], 'pconn': Model['pconn_dsnh']})
-
-    RATES = {}
-    if 'RATES' in Model.keys():
-        RATES = Model['RATES']
-    else:
-        if not Model['TF']: # if not TF protocol
-            for i, k in enumerate(POP_STIM):
-                RATES['F_'+k] = Model['POP_RATES'][i]
-        # else, we leave it it empty
-        
-    neuron_params = built_up_neuron_params(Model, NRN_KEY=NRN_KEY)
-
-    return neuron_params, SYN_POPS, RATES
+    SYN_POPS = []
+    for source_pop in POP_STIM:
+        if len(source_pop.split('Exc'))>1:
+            Erev, Ts = Model['Ee'], Model['Tse']
+        elif len(source_pop.split('Inh'))>1:
+            Erev, Ts = Model['Ei'], Model['Tsi']
+        else:
+            print(' /!\ AFFERENT POP COULD NOT BE CLASSIFIED AS Exc or Inh /!\ ')
+            print('-----> set to Exc by default')
+            Erev, Ts = Model['Ee'], Model['Tse']
+        SYN_POPS.append({'name':source_pop, 'Erev': Erev, 'N': Model['N_'+source_pop],
+                         'Q': Model['Q_'+source_pop+'_'+Model['NRN_KEY']],
+                         'pconn': Model['p_'+source_pop+'_'+Model['NRN_KEY']],
+                         'Tsyn': Ts})
+    return SYN_POPS
+    
 
 def run_sim(Model,
             with_Vm=0, with_synaptic_currents=False,
             firing_rate_only=False, tdiscard=100):
 
-    neuron_params, SYN_POPS, RATES = from_model_to_numerical_params(Model)
+    neuron_params = built_up_neuron_params(Model, Model['NRN_KEY'])
+    SYN_POPS = build_up_afferent_synaptic_input(Model, Model['POP_STIM'])
+    if 'RATES' in Model.keys():
+        RATES = Model['RATES']
+    else:
+        RATES = {}
+        for pop in Model['POP_STIM']:
+            RATES['F_'+pop] = Model['F_'+pop]
+            
     tstop, dt, SEED = Model['tstop'], Model['dt'], Model['SEED']
 
     if tdiscard>=tstop:
@@ -298,8 +292,6 @@ if __name__=='__main__':
         plot_single_cell_sim(data)
         plt.show()
     
-                                
-
     ### TO TEST THE POLYNOM APPROX TO FIND THE RIGHT DOMAIN
     # Finput_previous, Fout_desired = np.array([0.1,0.2,0.5,1,5,10]), 1.2
     # Fout_previous = np.exp(Finput_previous/10)
