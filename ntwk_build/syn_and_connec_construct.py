@@ -9,12 +9,11 @@ from cells.cell_library import get_neuron_params
 from cells.cell_construct import get_membrane_equation
 from transfer_functions.single_cell_protocol import built_up_neuron_params
 
-def collect_and_run(NTWK, tstop=100, dt=0.1):
+def collect_and_run(NTWK, verbose=False):
     """
     /!\ When you add a new object, THINK ABOUT ADDING IT TO THE COLLECTION !  /!\
     """
-    NTWK['dt'], NTWK['tstop'] = dt, tstop
-    brian2.defaultclock.dt = dt*brian2.ms
+    brian2.defaultclock.dt = NTWK['Model']['dt']*brian2.ms
     net = brian2.Network(brian2.collect())
     OBJECT_LIST = []
     for key in ['POPS', 'REC_SYNAPSES', 'RASTER',
@@ -23,10 +22,14 @@ def collect_and_run(NTWK, tstop=100, dt=0.1):
                 'PRE_SPIKES', 'PRE_SYNAPSES']:
         if key in NTWK.keys():
             net.add(NTWK[key])
-    net.run(tstop*brian2.ms)
+    if verbose:
+        print('running simulation [...]')
+    net.run(NTWK['Model']['tstop']*brian2.ms)
+    if verbose:
+        print('     -> done !')
     return net
 
-def build_up_recurrent_connections(NTWK, SEED=1):
+def build_up_recurrent_connections(NTWK, SEED=1, verbose=False):
     """
     Construct the synapses from the connectivity matrix
     """
@@ -36,6 +39,9 @@ def build_up_recurrent_connections(NTWK, SEED=1):
     # brian2.seed(SEED)
     np.random.seed(SEED)
 
+    if verbose:
+        print('drawing random connections [...]')
+        
     for ii, jj in itertools.product(range(len(NTWK['POPS'])), range(len(NTWK['POPS']))):
         if (NTWK['M'][ii,jj]['pconn']>0) and (NTWK['M'][ii,jj]['Q']!=0):
             CONN[ii,jj] = brian2.Synapses(NTWK['POPS'][ii], NTWK['POPS'][jj], model='w:siemens',\
@@ -57,34 +63,78 @@ def build_up_recurrent_connections(NTWK, SEED=1):
             CONN[ii,jj].connect(i=i_rdms, j=j_fixed) 
             CONN[ii,jj].w = NTWK['M'][ii,jj]['Q']*brian2.nS
             CONN2.append(CONN[ii,jj])
+    if verbose:
+        print('     -> done !')
 
     NTWK['REC_SYNAPSES'] = CONN2
 
+
+def get_syn_and_conn_matrix(Model, POPULATIONS,
+                            SI_units=False, verbose=False):
+
+    N = len(POPULATIONS)
+    # creating empty arry of objects (future dictionnaries)
+    M = np.empty((N,N), dtype=object)
+    # default initialisation
+    for i, j in itertools.product(range(N), range(N)):
+        source_pop, target_pop = POPULATIONS[i], POPULATIONS[j]
+        if len(source_pop.split('Exc'))>1:
+            Erev, Ts = Model['Ee'], Model['Tse']
+        elif len(source_pop.split('Inh'))>1:
+            Erev, Ts = Model['Ei'], Model['Tsi']
+        else:
+            print(' /!\ AFFERENT POP COULD NOT BE CLASSIFIED AS Exc or Inh /!\ ')
+            print('-----> set to Exc by default')
+            Erev, Ts = Model['Ee'], Model['Tse']
+        
+        M[i, j] = {'pconn': Model['p_'+source_pop+'_'+target_pop],
+                   'Q':Model['Q_'+source_pop+'_'+target_pop],
+                   'Erev': Erev, 'Tsyn': Ts,
+                   'name':source_pop+target_pop}
+
+    if SI_units:
+        print('synaptic network parameters in SI units')
+        for m in M.flatten():
+            m['Q'] *= 1e-9
+            m['Erev'] *= 1e-3
+            m['Tsyn'] *= 1e-3
+    else:
+        if verbose:
+            print('synaptic network parameters --NOT-- in SI units')
+
+    return M
     
-def build_populations(NEURONS, M, with_raster=False, with_pop_act=False, with_Vm=0,
-                      verbose=False, with_synaptic_currents=False, with_synaptic_conductances=False):
+def build_populations(Model, POPULATIONS,
+                      with_raster=False, with_pop_act=False,
+                      with_Vm=0, with_synaptic_currents=False, with_synaptic_conductances=False,
+                      verbose=False):
     """
     sets up the neuronal populations
     and  construct a network object containing everything
     """
+
+    ## NEURONS AND CONNECTIVITY MATRIX
+    NEURONS = []
+    for pop in POPULATIONS:
+        NEURONS.append({'name':pop, 'N':Model['N_'+pop]})
+
+    ########################################################################
+    ####    TO BE WRITTEN 
+    ########################################################################
+
     
-    NTWK = {'NEURONS':NEURONS, 'M':M}
+    NTWK = {'NEURONS':NEURONS, 'Model':Model,
+            'M':get_syn_and_conn_matrix(Model, POPULATIONS)}
     
     NTWK['POPS'] = []
-    for nrn, ii in zip(NEURONS, range(len(NTWK))):
-        if 'params' in nrn.keys():
-            # to have a population with custom params !
-            neuron_params = nrn['params']
-        else:
-            neuron_params = get_neuron_params(nrn['type'], number=nrn['N'],
-                                              name=nrn['name'],
-                                              verbose=verbose)
-            print(neuron_params)
-            nrn['params'] = neuron_params
-        NTWK['POPS'].append(get_membrane_equation(neuron_params, M[:,ii],
-                                          with_synaptic_currents=with_synaptic_currents,
-                                          with_synaptic_conductances=with_synaptic_conductances,
-                                          verbose=verbose))
+    for ii, nrn in enumerate(NEURONS):
+        neuron_params = built_up_neuron_params(Model, nrn['name'], N=nrn['N'])
+        NTWK['POPS'].append(get_membrane_equation(neuron_params, NTWK['M'][:,ii],
+                                                  with_synaptic_currents=with_synaptic_currents,
+                                                  with_synaptic_conductances=with_synaptic_conductances,
+                                                  verbose=verbose))
+        nrn['params'] = neuron_params
+
     if with_pop_act:
         NTWK['POP_ACT'] = []
         for pop in NTWK['POPS']:
@@ -109,6 +159,7 @@ def build_populations(NEURONS, M, with_raster=False, with_pop_act=False, with_Vm
             NTWK['GSYNi'].append(brian2.StateMonitor(pop, 'Gi', record=np.arange(max([1,with_Vm]))))
 
     NTWK['PRE_SPIKES'], NTWK['PRE_SYNAPSES'] = [], [] # in case of afferent inputs
+    
     return NTWK
 
 def initialize_to_rest(NTWK):

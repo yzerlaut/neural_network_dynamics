@@ -24,7 +24,7 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         dV/dt = (%(Gl)f*nS*(%(El)f*mV - V) + %(Gl)f*nS*%(delta_v)f*mV*exp(-(%(Vthre)f*mV-V)/(%(delta_v)f*mV)) + I - w_adapt)/(%(Cm)f*pF) : volt (unless refractory) """ % neuron_params
 
     ## Adaptation current
-    if neuron_params['tauw']>0: # adaptation current or not ?
+    if (neuron_params['a']!=0) and (neuron_params['b']!=0): # adaptation current or not ?
         eqs += """
         dw_adapt/dt = ( -%(a)f*nS*( %(El)f*mV - V) - w_adapt )/(%(tauw)f*ms) : amp  """ % neuron_params
     else:

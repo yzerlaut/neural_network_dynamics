@@ -6,9 +6,9 @@ import numpy as np
 def my_logspace(x1, x2, n):
     return np.logspace(np.log(x1)/np.log(10), np.log(x2)/np.log(10), n)
 
-def built_up_neuron_params(Model, NRN_KEY):
+def built_up_neuron_params(Model, NRN_KEY, N=1):
 
-    params = {'name':NRN_KEY, 'N':1}
+    params = {'name':NRN_KEY, 'N':N}
     keys = ['Gl', 'Cm','Trefrac', 'El', 'Vthre', 'Vreset',\
             'delta_v', 'a', 'b', 'tauw']
     for k in keys:
