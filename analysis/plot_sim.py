@@ -5,7 +5,9 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 from graphs.my_graph import *
 from PIL import Image # BITMAP (png, jpg, ...)
 
-G, R = 'g', 'r'
+B, O, G, R, Purple, Brown, Pink, Grey,\
+    Kaki, Cyan = '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',\
+    '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
 
 def find_num_of_key(data,pop_key):
     ii, pops = 0, []
@@ -16,19 +18,21 @@ def find_num_of_key(data,pop_key):
     return i0
     
 def raster_fig(data,
-             tzoom=[0, np.inf],
-             COLORS=['g', 'r', 'k', 'y'], NVm=3, Nnrn=500, Tbar=50):
+               exc_pop_key='RecExc',
+               inh_pop_key='RecInh',
+               tzoom=[0, np.inf],
+               COLORS=['g', 'r', 'k', 'y'], NVm=3, Nnrn=500, Tbar=50):
     
     fig, ax = plt.subplots(1, figsize=(2.3,2))
     plt.subplots_adjust(left=.05, bottom=.2)
     # raster activity
     nn = 0
     try:
-        cond = (data['tRASTER_Exc']>tzoom[0]) & (data['tRASTER_Exc']<tzoom[1])
-        plt.plot(data['tRASTER_Exc'][cond], data['iRASTER_Exc'][cond], '.', color=G, ms=1)
-        nn+= data['iRASTER_Exc'].max()
-        cond = (data['tRASTER_Inh']>tzoom[0]) & (data['tRASTER_Inh']<tzoom[1])
-        plt.plot(data['tRASTER_Inh'][cond], nn+data['iRASTER_Inh'][cond], '.', color=R, ms=1)
+        cond = (data['tRASTER_'+exc_pop_key]>tzoom[0]) & (data['tRASTER_'+exc_pop_key]<tzoom[1])
+        plt.plot(data['tRASTER_'+exc_pop_key][cond], data['iRASTER_'+exc_pop_key][cond], '.', color=G, ms=1)
+        nn+= data['iRASTER_'+exc_pop_key].max()
+        cond = (data['tRASTER_'+inh_pop_key]>tzoom[0]) & (data['tRASTER_'+inh_pop_key]<tzoom[1])
+        plt.plot(data['tRASTER_'+inh_pop_key][cond], nn+data['iRASTER_'+inh_pop_key][cond], '.', color=R, ms=1)
     except ValueError:
         pass
     plt.plot(tzoom[0]*np.ones(2), [0, Nnrn], lw=5, color='gray')
@@ -52,9 +56,9 @@ def pop_act(data, tdiscard=200, Tbar=50):
     plt.subplots_adjust(left=.33, bottom=.2)
 
     BOTTOM, dmin = -3, 0.5 # 0.01 taken as the lower value for bar plot
-    ax.bar([0], np.log(data['faff'])/np.log(10)-BOTTOM)
-    ax.bar([1], np.log(data['fdsnh'])/np.log(10)-BOTTOM)
-    for i, f, color in zip(range(2,4), [data['POP_ACT_Exc'], data['POP_ACT_Inh']], [R, G]):
+    ax.bar([0], np.log(data['F_AffExc'])/np.log(10)-BOTTOM)
+    ax.bar([1], np.log(data['F_DsInh'])/np.log(10)-BOTTOM)
+    for i, f, color in zip(range(2,4), [data['POP_ACT_'+exc_pop_key], data['POP_ACT_'+inh_pop_key]], [R, G]):
         mean = f[cond].mean()
         std = 0.434*f[cond].std()/(1e-9+mean) # using taylor expansion of log for error
         if mean<0.001:
@@ -210,9 +214,9 @@ def histograms(data, pop_key='Exc'):
     ######## VM ########
     # excitation
     for i in range(NVm):
-        hist, be = np.histogram(data['VMS_Exc'][i], bins=20, normed=True)
+        hist, be = np.histogram(data['VMS_'+exc_pop_key][i], bins=20, normed=True)
         AX[0, 0].plot(.5*(be[1:]+be[:-1]), hist, color=G, lw=.5)
-    hist, be = np.histogram(np.concatenate(data['VMS_Exc']), bins=20, normed=True)
+    hist, be = np.histogram(np.concatenate(data['VMS_'+exc_pop_key]), bins=20, normed=True)
     AX[0, 0].bar(.5*(be[1:]+be[:-1]), hist, edgecolor=G, lw=0,
                  width=be[1]-be[0], facecolor=G, alpha=.3)
     set_plot(AX[0, 0], ['bottom'], yticks=[],
@@ -220,9 +224,9 @@ def histograms(data, pop_key='Exc'):
     
     # inhibition
     for i in range(NVm):
-        hist, be = np.histogram(data['VMS_Inh'][i], bins=20, normed=True)
+        hist, be = np.histogram(data['VMS_'+inh_pop_key][i], bins=20, normed=True)
         AX[1, 0].plot(.5*(be[1:]+be[:-1]), hist, color=R, lw=.5)
-    hist, be = np.histogram(np.concatenate(data['VMS_Inh']), bins=20, normed=True)
+    hist, be = np.histogram(np.concatenate(data['VMS_'+inh_pop_key]), bins=20, normed=True)
     AX[1, 0].bar(.5*(be[1:]+be[:-1]), hist, edgecolor=R, lw=0,
                  width=be[1]-be[0], facecolor=R, alpha=.3)
     set_plot(AX[1, 0], ['bottom'], xlabel='$V_m$ (mV)', yticks=[],
@@ -230,20 +234,20 @@ def histograms(data, pop_key='Exc'):
 
     ######## CURRENTS ########
     # on excitatory population
-    cond = np.concatenate(data['VMS_Exc'])!=data[str(find_num_of_key(data,'Exc'))+'_params']['Vreset'] # removing clamping at reset
-    hist, be = np.histogram(np.concatenate(data['ISYNe_Exc'])[cond], bins=20, normed=True)
+    cond = np.concatenate(data['VMS_'+exc_pop_key])!=data[str(find_num_of_key(data,'Exc'))+'_params']['Vreset'] # removing clamping at reset
+    hist, be = np.histogram(np.concatenate(data['ISYNe_'+exc_pop_key])[cond], bins=20, normed=True)
     AX[0, 1].bar(.5*(be[1:]+be[:-1]), hist, edgecolor=G, lw=0,
                  width=be[1]-be[0], facecolor=G, alpha=.3)
-    hist, be = np.histogram(np.concatenate(data['ISYNi_Exc'])[cond], bins=20, normed=True)
+    hist, be = np.histogram(np.concatenate(data['ISYNi_'+exc_pop_key])[cond], bins=20, normed=True)
     AX[0, 1].bar(.5*(be[1:]+be[:-1]), hist, edgecolor=R, lw=0,
                  width=be[1]-be[0], facecolor=R, alpha=.3)
         
     # on inhibitory population
-    cond = np.concatenate(data['VMS_Inh'])!=data[str(find_num_of_key(data,'Inh'))+'_params']['Vreset'] # removing clamping at reset
-    hist, be = np.histogram(np.concatenate(data['ISYNe_Inh'])[cond], bins=20, normed=True)
+    cond = np.concatenate(data['VMS_'+inh_pop_key])!=data[str(find_num_of_key(data,'Inh'))+'_params']['Vreset'] # removing clamping at reset
+    hist, be = np.histogram(np.concatenate(data['ISYNe_'+inh_pop_key])[cond], bins=20, normed=True)
     AX[1, 1].bar(.5*(be[1:]+be[:-1]), hist, edgecolor=G, lw=0,
                  width=be[1]-be[0], facecolor=G, alpha=.3)
-    hist, be = np.histogram(np.concatenate(data['ISYNi_Inh'])[cond], bins=20, normed=True)
+    hist, be = np.histogram(np.concatenate(data['ISYNi_'+inh_pop_key])[cond], bins=20, normed=True)
     AX[1, 1].bar(.5*(be[1:]+be[:-1]), hist, edgecolor=R, lw=0,
                  width=be[1]-be[0], facecolor=R, alpha=.3)
     imax = np.amax(np.concatenate([AX[0,1].get_xlim(), AX[1,1].get_xlim()]))
@@ -256,15 +260,18 @@ def histograms(data, pop_key='Exc'):
     return fig
 
 
-def assemble_quantities(data, filename, tzoom=[800,1200]):
+def assemble_quantities(data, filename,
+                        exc_pop_key='Exc',
+                        inh_pop_key='Inh',
+                        tzoom=[800,1200]):
 
     new_im = Image.new('RGBA', (830, 1140), (255,255,255,255))
 
     # title
     fig = plt.figure(figsize=(3,.3))
     fig.text(0., 0.2,
-             '$\\nu_{aff}$='+str(round(data['faff']))+'Hz, $\\nu_{dsnh}$='+\
-             str(round(data['fdsnh']))+'Hz', fontsize=14)
+             '$\\nu_{aff}$='+str(round(data['F_AffExc'][0]))+'Hz, $\\nu_{dsnh}$='+\
+             str(round(data['F_DsInh'][0]))+'Hz', fontsize=14)
     fig.savefig('temp.png')
     im = Image.open('temp.png')
     new_im.paste(im, (100, 0))
@@ -281,19 +288,19 @@ def assemble_quantities(data, filename, tzoom=[800,1200]):
     im = Image.open('temp.png')
     new_im.paste(im, (200, 40))
     # exc inh balance
-    fig = exc_inh_balance(data, pop_key='Exc')
+    fig = exc_inh_balance(data, pop_key=exc_pop_key)
     fig.text(0.1, .9, '(iii)', fontsize=14, weight='bold')
     fig.savefig('temp.png')
     im = Image.open('temp.png')
     new_im.paste(im, (450, 40))
     # Vm traces excitation
-    fig = Vm_Isyn_fig(data, pop_key='Exc', tzoom=tzoom)
+    fig = Vm_Isyn_fig(data, pop_key=exc_pop_key, tzoom=tzoom)
     fig.text(0.2, .92, '(iv) excitatory cells sample', fontsize=14, weight='bold')
     fig.savefig('temp.png')
     im = Image.open('temp.png')
     new_im.paste(im, (20, 250))
     # Vm traces inhibition
-    fig = Vm_Isyn_fig(data, pop_key='Inh', tzoom=tzoom)
+    fig = Vm_Isyn_fig(data, pop_key=inh_pop_key, tzoom=tzoom)
     fig.text(0.2, .92, '(v) inhibitory cells sample', fontsize=14, weight='bold')
     fig.savefig('temp.png')
     im = Image.open('temp.png')
@@ -310,7 +317,7 @@ def assemble_quantities(data, filename, tzoom=[800,1200]):
     im = Image.open('temp.png')
     new_im.paste(im, (500, 850))
     # Vm much zoomed
-    fig = few_Vm_fig(data, pop_key='Exc', tzoom=[tzoom[0], tzoom[0]+20], Tbar=5)
+    fig = few_Vm_fig(data, pop_key=exc_pop_key, tzoom=[tzoom[0], tzoom[0]+20], Tbar=5)
     fig.text(0., .7, '(viii)', fontsize=14, weight='bold')
     fig.savefig('temp.png')
     im = Image.open('temp.png')
@@ -324,9 +331,13 @@ def assemble_quantities(data, filename, tzoom=[800,1200]):
 if __name__=='__main__':
     import sys
     sys.path.append('../../')
+    
     from params_scan.aff_exc_aff_dsnh_params_space import get_scan
     args, F_aff, F_dsnh, DATA = get_scan(\
                     '../../params_scan/data/scan.zip')
-    assemble_quantities(DATA[-1], 'data/0.png')
+    assemble_quantities(DATA[-1],
+                        'data/0.png',
+                        exc_pop_key='RecExc',
+                        inh_pop_key='RecInh')
 
     

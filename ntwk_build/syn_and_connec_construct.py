@@ -13,7 +13,8 @@ def collect_and_run(NTWK, verbose=False):
     """
     /!\ When you add a new object, THINK ABOUT ADDING IT TO THE COLLECTION !  /!\
     """
-    brian2.defaultclock.dt = NTWK['Model']['dt']*brian2.ms
+    NTWK['dt'], NTWK['tstop'] = NTWK['Model']['dt'], NTWK['Model']['tstop'] 
+    brian2.defaultclock.dt = NTWK['dt']*brian2.ms
     net = brian2.Network(brian2.collect())
     OBJECT_LIST = []
     for key in ['POPS', 'REC_SYNAPSES', 'RASTER',
@@ -24,7 +25,9 @@ def collect_and_run(NTWK, verbose=False):
             net.add(NTWK[key])
     if verbose:
         print('running simulation [...]')
-    net.run(NTWK['Model']['tstop']*brian2.ms)
+    net.run(NTWK['tstop']*brian2.ms)
+    if verbose:
+        print('-> done !')
     return net
 
 def build_up_recurrent_connections(NTWK, SEED=1, verbose=False):

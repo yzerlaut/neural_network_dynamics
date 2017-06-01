@@ -7,7 +7,11 @@ from data_analysis.IO.hdf5 import save_dict_to_hdf5, make_writable_dict
 def write_as_hdf5(NTWK, filename='data.h5'):
 
     data = {'dt':NTWK['dt']*np.ones(1), 'tstop':NTWK['tstop']*np.ones(1)}
-    
+
+    for key, val in NTWK['Model'].items():
+        if (type(val)==int) or (type(val)==float):
+            data[key] = np.ones(1)*val
+            
     # we write it per population
     for ii in range(len(NTWK['NEURONS'])):
         nrn = NTWK['NEURONS'][ii]
