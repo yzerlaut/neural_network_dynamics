@@ -26,11 +26,10 @@ def set_spikes_from_time_varying_rate(time_array, rate_array, N, Nsyn, SEED=1):
     return np.array(indices), np.array(times)*brian2.ms
 
 
-def construct_feedforward_input(NTWK, target_pop,
-                                afferent_pop,\
+def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
                                 t, rate_array,\
-                                conductanceID='AA',\
                                 with_presynaptic_spikes=False,
+                                verbose=False,
                                 SEED=1):
     """
     This generates an input asynchronous from post synaptic neurons to post-synaptic neurons
@@ -42,18 +41,27 @@ def construct_feedforward_input(NTWK, target_pop,
     that will be incremented by the afferent input !!
     """
 
-    # number of synapses per neuron
-    Nsyn = afferent_pop['pconn']*afferent_pop['N']
+    Model = NTWK['Model']
+    
+    # extract parameters of the afferent input
+    Nsyn = Model['p_'+afferent_pop+'_'+target_pop]*Model['N_'+afferent_pop]
+    Qsyn = Model['Q_'+afferent_pop+'_'+target_pop]
+
+    #finding the target pop in the brian2 objects
+    ipop = np.argwhere(NTWK['POPULATIONS']==target_pop).flatten()[0]
+    
     if Nsyn>0:
+        if verbose:
+            print('drawing Poisson process for afferent input [...]')
         indices, times = set_spikes_from_time_varying_rate(\
                             t, rate_array,\
-                            target_pop.N, Nsyn, SEED=(SEED+2)**2%100)
-        spikes = brian2.SpikeGeneratorGroup(target_pop.N, indices, times)
-        pre_increment = 'G'+conductanceID+' += w'
-        synapse = brian2.Synapses(spikes, target_pop, on_pre=pre_increment,\
+                            NTWK['POPS'][ipop].N, Nsyn, SEED=(SEED+2)**2%100)
+        spikes = brian2.SpikeGeneratorGroup(NTWK['POPS'][ipop].N, indices, times)
+        pre_increment = 'G'+afferent_pop+target_pop+' += w'
+        synapse = brian2.Synapses(spikes, NTWK['POPS'][ipop], on_pre=pre_increment,\
                                         model='w:siemens')
         synapse.connect('i==j')
-        synapse.w = afferent_pop['Q']*brian2.nS
+        synapse.w = Qsyn*brian2.nS
     else:
         print('Nsyn = 0')
         spikes, synapse = None, None
@@ -123,9 +131,9 @@ def set_spikes_from_time_varying_rate_correlated(time_array, rate_array, AFF_TO_
 def construct_feedforward_input_correlated(NTWK, target_pop,
                                            afferent_pop,\
                                            t, rate_array,\
-                                           conductanceID='AA',\
                                            with_presynaptic_spikes=False,
                                            AFF_TO_POP_MATRIX=None,
+                                           verbose=False,
                                            SEED=1):
     """
     POPS and AFFERENCE_ARRAY should be 1D arrrays as their is only one 
@@ -137,20 +145,32 @@ def construct_feedforward_input_correlated(NTWK, target_pop,
 
     np.random.seed(SEED) # setting the seed !
 
+    Model = NTWK['Model']
+    # extract parameters of the afferent input
+    pconn = Model['p_'+afferent_pop+'_'+target_pop]
+    Qsyn = Model['Q_'+afferent_pop+'_'+target_pop]
+
+    #finding the target pop in the brian2 objects
+    ipop = np.argwhere(NTWK['POPULATIONS']==target_pop).flatten()[0]
+    
+    if verbose:
+        print('drawing Poisson process for afferent spikes [...]')
     if AFF_TO_POP_MATRIX is None:
         AFF_TO_POP_MATRIX = np.array([\
-                np.random.choice(np.arange(target_pop.N), int(afferent_pop['pconn']*target_pop.N), replace=False)\
-                for k in range(afferent_pop['N'])])
+                np.random.choice(np.arange(NTWK['POPS'][ipop].N), int(pconn*NTWK['POPS'][ipop].N), replace=False)\
+                for k in range(Model['N_'+afferent_pop])])
 
     indices, times, true_indices, true_times = set_spikes_from_time_varying_rate_correlated(\
                                                                   t, rate_array, AFF_TO_POP_MATRIX,\
                                                                   SEED=(SEED+2)**2%100)
 
-    spikes = brian2.SpikeGeneratorGroup(target_pop.N, indices, times, sorted=False)
-    synapse = brian2.Synapses(spikes, target_pop, on_pre='G'+conductanceID+' += w',\
+    pre_increment = 'G'+afferent_pop+target_pop+' += w'
+    spikes = brian2.SpikeGeneratorGroup(NTWK['POPS'][ipop].N, indices, times, sorted=False)
+    synapse = brian2.Synapses(spikes, NTWK['POPS'][ipop], on_pre=pre_increment,\
                               model='w:siemens')
+    
     synapse.connect('i==j')
-    synapse.w = afferent_pop['Q']*brian2.nS
+    synapse.w = Qsyn*brian2.nS
     
     NTWK['PRE_SPIKES'].append(spikes)
     NTWK['PRE_SYNAPSES'].append(synapse)
@@ -163,7 +183,7 @@ def construct_feedforward_input_correlated(NTWK, target_pop,
             NTWK['iRASTER_PRE'] = [indices]
             NTWK['tRASTER_PRE'] = [times]
 
-        if 'iRASTER_PRE' in NTWK.keys():
+        if 'iRASTER_PRE_in_terms_of_Pre_Pop' in NTWK.keys():
             NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'].append(true_indices)
             NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'].append(true_times)
         else: # we create the key
@@ -242,8 +262,8 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
                                                         DUPLICATION_MATRIX, AFF_TO_POP_MATRIX,\
                                                         SEED=(SEED+2)**2%100)
 
-    spikes = brian2.SpikeGeneratorGroup(target_pop.N, indices, times, sorted=False)
-    synapse = brian2.Synapses(spikes, target_pop, on_pre='G'+conductanceID+' += w',\
+    spikes = brian2.SpikeGeneratorGroup(NTWK['POPS'][ipop].N, indices, times, sorted=False)
+    synapse = brian2.Synapses(spikes, NTWK['POPS'][ipop], on_pre='G'+conductanceID+' += w',\
                               model='w:siemens')
     synapse.connect('i==j')
     synapse.w = afferent_pop['Q']*brian2.nS

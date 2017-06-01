@@ -25,8 +25,6 @@ def collect_and_run(NTWK, verbose=False):
     if verbose:
         print('running simulation [...]')
     net.run(NTWK['Model']['tstop']*brian2.ms)
-    if verbose:
-        print('     -> done !')
     return net
 
 def build_up_recurrent_connections(NTWK, SEED=1, verbose=False):
@@ -63,21 +61,23 @@ def build_up_recurrent_connections(NTWK, SEED=1, verbose=False):
             CONN[ii,jj].connect(i=i_rdms, j=j_fixed) 
             CONN[ii,jj].w = NTWK['M'][ii,jj]['Q']*brian2.nS
             CONN2.append(CONN[ii,jj])
-    if verbose:
-        print('     -> done !')
 
     NTWK['REC_SYNAPSES'] = CONN2
 
 
 def get_syn_and_conn_matrix(Model, POPULATIONS,
+                            AFFERENT_POPULATIONS=[],
                             SI_units=False, verbose=False):
 
+    SOURCE_POPULATIONS = POPULATIONS+AFFERENT_POPULATIONS
     N = len(POPULATIONS)
+    Naff = len(SOURCE_POPULATIONS)
+    
     # creating empty arry of objects (future dictionnaries)
-    M = np.empty((N,N), dtype=object)
+    M = np.empty((len(SOURCE_POPULATIONS), len(POPULATIONS)), dtype=object)
     # default initialisation
-    for i, j in itertools.product(range(N), range(N)):
-        source_pop, target_pop = POPULATIONS[i], POPULATIONS[j]
+    for i, j in itertools.product(range(len(SOURCE_POPULATIONS)), range(len(POPULATIONS))):
+        source_pop, target_pop = SOURCE_POPULATIONS[i], POPULATIONS[j]
         if len(source_pop.split('Exc'))>1:
             Erev, Ts = Model['Ee'], Model['Tse']
         elif len(source_pop.split('Inh'))>1:
@@ -86,9 +86,15 @@ def get_syn_and_conn_matrix(Model, POPULATIONS,
             print(' /!\ AFFERENT POP COULD NOT BE CLASSIFIED AS Exc or Inh /!\ ')
             print('-----> set to Exc by default')
             Erev, Ts = Model['Ee'], Model['Tse']
-        
-        M[i, j] = {'pconn': Model['p_'+source_pop+'_'+target_pop],
-                   'Q':Model['Q_'+source_pop+'_'+target_pop],
+
+        if ('p_'+source_pop+'_'+target_pop in Model.keys()) and ('Q_'+source_pop+'_'+target_pop in Model.keys()):
+            pconn, Qsyn = Model['p_'+source_pop+'_'+target_pop], Model['Q_'+source_pop+'_'+target_pop]
+        else:
+            if verbose:
+                print('No connection for:', source_pop,'->', target_pop)
+            pconn, Qsyn = 0., 0.
+                
+        M[i, j] = {'pconn': pconn, 'Q': Qsyn,
                    'Erev': Erev, 'Tsyn': Ts,
                    'name':source_pop+target_pop}
 
@@ -105,6 +111,7 @@ def get_syn_and_conn_matrix(Model, POPULATIONS,
     return M
     
 def build_populations(Model, POPULATIONS,
+                      AFFERENT_POPULATIONS=[],
                       with_raster=False, with_pop_act=False,
                       with_Vm=0, with_synaptic_currents=False, with_synaptic_conductances=False,
                       verbose=False):
@@ -124,7 +131,10 @@ def build_populations(Model, POPULATIONS,
 
     
     NTWK = {'NEURONS':NEURONS, 'Model':Model,
-            'M':get_syn_and_conn_matrix(Model, POPULATIONS)}
+            'POPULATIONS':np.array(POPULATIONS),
+            'M':get_syn_and_conn_matrix(Model, POPULATIONS,
+                                        AFFERENT_POPULATIONS=AFFERENT_POPULATIONS,
+                                        verbose=verbose)}
     
     NTWK['POPS'] = []
     for ii, nrn in enumerate(NEURONS):

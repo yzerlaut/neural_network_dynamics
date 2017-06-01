@@ -1,6 +1,5 @@
 """
 Demo file simulating the Vogels & Abbott 2005 network 
-
 adapted from http://brian2.readthedocs.io/en/2.0b4/examples/COBAHH.html
 """
 
@@ -45,7 +44,6 @@ Model = {
     'Inh_El':-60., 'Inh_Vthre':-50., 'Inh_Vreset':-60., 'Inh_delta_v':0.,
     'Inh_a':0., 'Inh_b': 0., 'Inh_tauw':1e9,
 }
-
 
 
 NTWK = ntwk.build_populations(Model, ['Exc', 'Inh'],

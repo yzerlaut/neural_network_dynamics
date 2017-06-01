@@ -35,18 +35,20 @@ def get_membrane_equation(neuron_params, synaptic_array,\
     eqs += """
         I = I0 """
     for synapse in synaptic_array:
-        # loop over each presynaptic element onto this target
-        Gsyn = 'G'+synapse['name']
-        eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
+        if synapse['pconn']>0:
+            # loop over each presynaptic element onto this target
+            Gsyn = 'G'+synapse['name']
+            eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
     eqs += ' : amp'
 
     ## synaptic currents, 2) constructing the temporal dynamics of the synaptic conductances
     ## N.B. VALID ONLY FOR EXPONENTIAL SYNAPSES UNTIL NOW !!!!
     for synapse in synaptic_array:
         # loop over each presynaptic element onto this target
-        Gsyn = 'G'+synapse['name']
-        eqs += """
-        """+'d'+Gsyn+'/dt = -'+Gsyn+'*(1./(%(Tsyn)f*ms)) : siemens' % synapse
+        if synapse['pconn']>0:
+            Gsyn = 'G'+synapse['name']
+            eqs += """
+            """+'d'+Gsyn+'/dt = -'+Gsyn+'*(1./(%(Tsyn)f*ms)) : siemens' % synapse
     eqs += """
         I0 : amp """
 
@@ -55,7 +57,7 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         eqs += """
         Ie = 0*pA """
         for synapse in synaptic_array:
-            if synapse['Erev']>-20: # if excitatory
+            if (synapse['Erev']>-20) and (synapse['pconn']>0): # if excitatory
                 # loop over each presynaptic element onto this target
                 Gsyn = 'G'+synapse['name']
                 eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
@@ -64,7 +66,7 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         eqs += """
         Ii = 0*pA """
         for synapse in synaptic_array:
-            if synapse['Erev']<-60: # if inhibitory
+            if (synapse['Erev']<-60) and (synapse['pconn']>0): # if inhibitory
                 # loop over each presynaptic element onto this target
                 Gsyn = 'G'+synapse['name']
                 eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
@@ -75,14 +77,14 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         eqs += """
         Ge = 0*nS """ # need an expression of V for update in brian2
         for synapse in synaptic_array:
-            if synapse['Erev']>-20: # if excitatory
+            if (synapse['Erev']>-20) and (synapse['pconn']>0): # if excitatory
                 eqs += '+G'+synapse['name']
         eqs += ' : siemens' 
         # compute inhibitory conductances
         eqs += """
         Gi = 0*nS """
         for synapse in synaptic_array:
-            if synapse['Erev']<-60: # if inhibitory
+            if (synapse['Erev']<-60) and (synapse['pconn']>0): # if inhibitory
                 eqs += '+G'+synapse['name']
         eqs += ' : siemens' 
 
