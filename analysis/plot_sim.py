@@ -282,7 +282,10 @@ def assemble_quantities(data, filename,
     im = Image.open('temp.png')
     new_im.paste(im, (10, 40))
     # pop activity
-    fig = pop_act(data)
+    try:
+        fig = pop_act(data)
+    except KeyError:
+        fig = plt.figure(figsize=(3,.3))
     fig.text(0., .9, '(ii)', fontsize=14, weight='bold')
     fig.savefig('temp.png')
     im = Image.open('temp.png')
