@@ -44,13 +44,14 @@ def get_synchrony_of_spiking(data, pop='Exc', Tbin=2, Nmax_pairs=200):
         i, j = couples[rdm_picks[r]]
         tspikes_i = tspikes[np.argwhere(ispikes==i).flatten()]
         tspikes_j = tspikes[np.argwhere(ispikes==j).flatten()]
+        # only pairs with spikes are contributing !
         if len(tspikes_i)>1 and len(tspikes_j)>1:
             spk_train_i, _ = np.histogram(tspikes_i, bins=new_t)
             spk_train_j, _ = np.histogram(tspikes_j, bins=new_t)
             SYNCH.append(np.corrcoef(spk_train_i, spk_train_j)[0,1])
-        elif len(tspikes_i)==0 and len(tspikes_j)==0:
-            # no spikes is considered as synchronous behavior
-            SYNCH.append(1)
+        # elif len(tspikes_i)==0 and len(tspikes_j)==0:
+        #     # no spikes is considered as synchronous behavior
+        #     SYNCH.append(1)
             
     if len(SYNCH)>1:
         return np.array(SYNCH).mean()
