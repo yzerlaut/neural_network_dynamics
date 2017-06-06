@@ -63,11 +63,19 @@ def get_mean_pop_act(data, pop='Exc', tdiscard=200):
     cond = t>tdiscard
     return data['POP_ACT_'+pop][cond].mean()
 
-def get_currents_and_balance(data, pop='Exc', tdiscard=200):
+def get_currents_and_balance(data, pop='Exc', tdiscard=200, Vreset=-70):
     
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
-    cond = t>tdiscard
-    meanIe, meanIi = data['ISYNe_'+pop][:,cond].mean(), data['ISYNi_'+pop][:,cond].mean()
+    
+    meanIe, meanIi = 0, 0
+    for i in range(len(data['ISYNe_'+pop])):
+        # discarding initial transient as well as refractory period !
+        cond = (t>tdiscard) & (data['VMS_'+pop][i,:]!=Vreset)
+        meanIe += data['ISYNe_'+pop][i,cond].mean()/len(data['ISYNe_'+pop])
+        meanIi += data['ISYNi_'+pop][i,cond].mean()/len(data['ISYNi_'+pop])
+
+    # meanIe, meanIi = data['ISYNe_'+pop][:,cond].mean(), data['ISYNi_'+pop][:,cond].mean()
+    # print(meanIe, meanIi)
     if meanIe>0:
         balance = -meanIi/meanIe
     else:
@@ -95,8 +103,6 @@ def get_all_macro_quant(data, exc_pop_key='Exc', inh_pop_key='Inh'):
 
     return output
 
-    
-
 if __name__=='__main__':
     import sys
     sys.path.append('../../')
@@ -105,10 +111,11 @@ if __name__=='__main__':
                     '../../params_scan/data/scan.zip')
     print(get_synchrony_of_spiking(DATA[2]))
     print(get_synchrony_of_spiking(DATA[-1]))
-    print(get_CV_spiking(data))
-    print(get_mean_pop_act(data))
-    print(get_mean_pop_act(data, pop='Inh'))
-    print(get_currents_and_balance(data, pop='Exc'))
-    print(get_currents_and_balance(data, pop='Inh'))
+    # print(get_CV_spiking(data))
+    # print(get_mean_pop_act(data))
+    # print(get_mean_pop_act(data, pop='Inh'))
+    for data in DATA[8:]:
+        print(get_currents_and_balance(data, pop='Exc'))
+    # print(get_currents_and_balance(DATA[-1], pop='Inh'))
 
 
