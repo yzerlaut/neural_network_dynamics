@@ -19,11 +19,14 @@ def get_CV_spiking(data, pop='Exc'):
     else:
         return 0
 
-def get_synchrony_of_spiking(data, pop='Exc', Tbin=2, Nmax_pairs=200):
+def get_synchrony_of_spiking(data, pop='Exc',
+                             Tbin=2, Nmax_pairs=400, seed=23):
     """see Kumar et al. 2008
 
     we introduce a limiting number of pairs for fast computation"""
 
+    np.random.seed(seed)
+    
     n, Ntot = 0, 0
     while str(n) in data.keys():
         if data[str(n)]['name']==pop:
@@ -33,30 +36,26 @@ def get_synchrony_of_spiking(data, pop='Exc', Tbin=2, Nmax_pairs=200):
         print('key not recognized !!')
         
     ispikes, tspikes = data['iRASTER_'+pop], data['tRASTER_'+pop]
-    SYNCH = []
     ispikes_unique = np.unique(ispikes)
-    new_t = np.arange(int(data['tstop']/Tbin))*Tbin
+    new_t = np.arange(int(tspikes.max()/Tbin)+5)*Tbin
 
-    couples = list(combinations(np.arange(Ntot), r=2))
-    rdm_picks = np.random.choice(range(len(couples)), Nmax_pairs)
+    if len(ispikes_unique)>3:
+        # if there are at least two couples
+        couples = list(combinations(ispikes_unique, r=2))
+        Nmax_pairs = min([len(couples), Nmax_pairs])
+        rdm_picks = np.random.choice(range(len(couples)), Nmax_pairs)
 
-    for r in range(Nmax_pairs):
-        i, j = couples[rdm_picks[r]]
-        tspikes_i = tspikes[np.argwhere(ispikes==i).flatten()]
-        tspikes_j = tspikes[np.argwhere(ispikes==j).flatten()]
-        # only pairs with spikes are contributing !
-        if len(tspikes_i)>1 and len(tspikes_j)>1:
+        SYNCH = []
+        for r in range(Nmax_pairs):
+            i, j = couples[rdm_picks[r]]
+            tspikes_i = tspikes[np.argwhere(ispikes==i).flatten()]
+            tspikes_j = tspikes[np.argwhere(ispikes==j).flatten()]
             spk_train_i, _ = np.histogram(tspikes_i, bins=new_t)
             spk_train_j, _ = np.histogram(tspikes_j, bins=new_t)
             SYNCH.append(np.corrcoef(spk_train_i, spk_train_j)[0,1])
-        # elif len(tspikes_i)==0 and len(tspikes_j)==0:
-        #     # no spikes is considered as synchronous behavior
-        #     SYNCH.append(1)
-            
-    if len(SYNCH)>1:
         return np.array(SYNCH).mean()
     else:
-        return 1
+        return 0
     
 def get_mean_pop_act(data, pop='Exc', tdiscard=200):
     
@@ -104,8 +103,8 @@ if __name__=='__main__':
     from params_scan.aff_exc_aff_dsnh_params_space import get_scan
     args, F_aff, F_dsnh, DATA = get_scan(\
                     '../../params_scan/data/scan.zip')
-    data = DATA[-1]
-    print(get_synchrony_of_spiking(data))
+    print(get_synchrony_of_spiking(DATA[2]))
+    print(get_synchrony_of_spiking(DATA[-1]))
     print(get_CV_spiking(data))
     print(get_mean_pop_act(data))
     print(get_mean_pop_act(data, pop='Inh'))
