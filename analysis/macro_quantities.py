@@ -34,10 +34,10 @@ def get_synchrony_of_spiking(data, pop='Exc',
         n+=1
     if Ntot==0:
         print('key not recognized !!')
-        
+
     ispikes, tspikes = data['iRASTER_'+pop], data['tRASTER_'+pop]
     ispikes_unique = np.unique(ispikes)
-    new_t = np.arange(int(tspikes.max()/Tbin)+5)*Tbin
+    new_t = np.arange(int(data['tstop'][0]/Tbin)+5)*Tbin
 
     if len(ispikes_unique)>3:
         # if there are at least two couples
