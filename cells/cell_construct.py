@@ -102,18 +102,56 @@ def get_membrane_equation(neuron_params, synaptic_array,\
     else:
         return neurons
 
+def current_pulse_sim(args, params=None):
+    
+    import brian2
+    from cells.cell_library import get_neuron_params
+    from graphs.my_graph import set_plot
+
+    if params is None:
+        params = get_neuron_params(args['NRN'])
+        
+    neurons, eqs = get_membrane_equation(params, [],\
+                                         return_equations=True)
+
+    fig, ax = brian2.subplots(figsize=(5,3))
+
+    # V value initialization
+    neurons.V = params['El']*brian2.mV
+    trace = brian2.StateMonitor(neurons, 'V', record=0)
+    spikes = brian2.SpikeMonitor(neurons)
+    brian2.run(100 * brian2.ms)
+    neurons.I0 = args['amp']*brian2.pA
+    brian2.run(args['duration'] * brian2.ms)
+    neurons.I0 = 0*brian2.pA
+    brian2.run(200 * brian2.ms)
+    # We draw nicer spikes
+    V = trace[0].V[:]
+    for t in spikes.t:
+        ax.plot(t/brian2.ms*np.ones(2), [V[int(t/brian2.defaultclock.dt)]/brian2.mV+2,-10], '--',\
+                 color=args['color'])
+    ax.plot(trace.t / brian2.ms, V / brian2.mV, color=args['color'])
+
+    if 'NRN' in args.keys():
+        ax.set_title(args['NRN'])
+
+    ax.annotate(str(int(params['El']))+'mV', (-50,params['El']-5))
+    ax.plot([-20], [params['El']], 'k>')
+    ax.plot([0,50], [-50, -50], 'k-', lw=4)
+    ax.plot([0,0], [-50, -40], 'k-', lw=4)
+    ax.annotate('10mV', (-50,-38))
+    ax.annotate('50ms', (0,-55))
+    set_plot(ax, [], xticks=[], yticks=[])
+    if 'save' in args.keys():
+        fig.savefig(['save'])
+    return fig
+        
         
 if __name__=='__main__':
 
     print(__doc__)
     
     # starting from an example
-
-    from brian2 import *
-    from cell_library import get_neuron_params
-    import sys
-    sys.path.append('../../')
-    from graphs.my_graph import set_plot
 
     import argparse
     parser=argparse.ArgumentParser(description=
@@ -134,42 +172,7 @@ if __name__=='__main__':
     parser.add_argument("--save", help="save the figures with a given string")
     args = parser.parse_args()
 
-    params = get_neuron_params(args.NRN)
-    neurons, eqs = get_membrane_equation(params, [],\
-                                         return_equations=True)
 
-    fig, ax = plt.subplots(figsize=(5,3))
-    
-    # V value initialization
-    neurons.V = params['El']*mV
-    trace = StateMonitor(neurons, 'V', record=0)
-    spikes = SpikeMonitor(neurons)
-    run(100 * ms)
-    neurons.I0 = args.amp*pA
-    run(args.duration * ms)
-    neurons.I0 = 0*pA
-    run(200 * ms)
-    # We draw nicer spikes
-    V = trace[0].V[:]
-    for t in spikes.t:
-        plt.plot(t/ms*np.ones(2), [V[int(t/defaultclock.dt)]/mV+2,-10], '--',\
-                 color=args.color)
-    ax.plot(trace.t / ms, V / mV, color=args.color)
+    current_pulse_sim(vars(args))
+    plt.show()
 
-    ax.set_title(args.NRN)
-
-    ax.annotate(str(int(params['El']))+'mV', (-50,params['El']-5))
-    ax.plot([-20], [params['El']], 'k>')
-    ax.plot([0,50], [-50, -50], 'k-', lw=4)
-    ax.plot([0,0], [-50, -40], 'k-', lw=4)
-    ax.annotate('10mV', (-50,-38))
-    ax.annotate('50ms', (0,-55))
-    set_plot(ax, [], xticks=[], yticks=[])
-    if args.save is None:
-        fig.savefig('fig.png', dpi=100)
-    else:
-        fig.savefig(args.save)
-        
-    
-
-    
