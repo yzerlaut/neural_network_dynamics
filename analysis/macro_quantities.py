@@ -83,7 +83,7 @@ def get_currents_and_balance(data, pop='Exc', tdiscard=200, Vreset=-70):
     return meanIe, meanIi, balance
 
 
-def get_all_macro_quant(data, exc_pop_key='Exc', inh_pop_key='Inh'):
+def get_all_macro_quant(data, exc_pop_key='Exc', inh_pop_key='Inh', other_pops=[]):
 
     output = {}
     # weighted sum (by num of neurons) over exc and inhibtion
@@ -94,13 +94,18 @@ def get_all_macro_quant(data, exc_pop_key='Exc', inh_pop_key='Inh'):
                                                                                                  pop=exc_pop_key)
     output['meanIe_Inh'], output['meanIi_Inh'], output['balance_Inh'] = get_currents_and_balance(data,
                                                                                                  pop=inh_pop_key)
-    try:
         output['mean_exc'] = get_mean_pop_act(data, pop=exc_pop_key)
         output['mean_inh'] = get_mean_pop_act(data, pop=inh_pop_key)
     except KeyError:
         output['mean_exc'] = 0.
         output['mean_inh'] = 0.
-
+        
+    for pop in other_pops:
+        try:
+            output['mean_'+pop] = get_mean_pop_act(data, pop=pop)
+        except KeyError:
+            output['mean_'+pop] = 0.
+            
     return output
 
 if __name__=='__main__':
