@@ -94,6 +94,7 @@ def get_all_macro_quant(data, exc_pop_key='Exc', inh_pop_key='Inh', other_pops=[
                                                                                                  pop=exc_pop_key)
     output['meanIe_Inh'], output['meanIi_Inh'], output['balance_Inh'] = get_currents_and_balance(data,
                                                                                                  pop=inh_pop_key)
+    try:
         output['mean_exc'] = get_mean_pop_act(data, pop=exc_pop_key)
         output['mean_inh'] = get_mean_pop_act(data, pop=inh_pop_key)
     except KeyError:
