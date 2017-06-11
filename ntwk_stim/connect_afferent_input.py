@@ -64,7 +64,7 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         synapse.w = Qsyn*brian2.nS
     else:
         print('Nsyn = 0')
-        spikes, synapse = None, None
+        spikes, synapse, indices = None, None, []
 
     NTWK['PRE_SPIKES'].append(spikes)
     NTWK['PRE_SYNAPSES'].append(synapse)
