@@ -67,7 +67,7 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         NTWK['PRE_SYNAPSES'].append(synapse)
         
     else:
-        print('Nsyn = 0')
+        print('Nsyn = 0 for', afferent_pop+'_'+target_pop)
         spikes, synapse, indices, times = None, None, [], []
 
     
