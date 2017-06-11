@@ -69,7 +69,6 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
     else:
         print('Nsyn = 0 for', afferent_pop+'_'+target_pop)
         spikes, synapse, indices, times = None, None, [], []
-
     
     if with_presynaptic_spikes:
         if 'iRASTER_PRE' in NTWK.keys():
@@ -234,7 +233,6 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
                                             afferent_pop,\
                                             N_source, N_target, N_duplicate,
                                             t, rate_array,\
-                                            conductanceID='AA',\
                                             with_presynaptic_spikes=False,
                                             AFF_TO_POP_MATRIX=None,
                                             SEED=1):
@@ -248,6 +246,8 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
 
     np.random.seed(SEED) # setting the seed !
 
+    Model = NTWK['Model']
+    
     N_independent = int(N_source/N_duplicate)
     N_source = N_independent*N_duplicate # N_source needs to be a multiple of N_duplicate
 
@@ -255,8 +255,9 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
                                   np.random.choice(np.arange(N_source), N_duplicate, replace=False)\
                                   for k in range(N_independent)])
     
+    Nsyn = int(Model['p_'+afferent_pop+'_'+target_pop]*N_target)
     AFF_TO_POP_MATRIX = np.array([\
-                                  np.random.choice(np.arange(N_target), int(afferent_pop['pconn']*N_target), replace=False)\
+                                  np.random.choice(np.arange(N_target), Nsyn, replace=False)\
                                   for k in range(N_source)])
     
     indices, times, true_indices, true_times = set_spikes_from_time_varying_rate_synchronous(\
@@ -264,11 +265,16 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
                                                         DUPLICATION_MATRIX, AFF_TO_POP_MATRIX,\
                                                         SEED=(SEED+2)**2%100)
 
+    #finding the target pop in the brian2 objects
+    ipop = np.argwhere(NTWK['POPULATIONS']==target_pop).flatten()[0]
+    Qsyn = Model['Q_'+afferent_pop+'_'+target_pop]
+    
     spikes = brian2.SpikeGeneratorGroup(NTWK['POPS'][ipop].N, indices, times, sorted=False)
-    synapse = brian2.Synapses(spikes, NTWK['POPS'][ipop], on_pre='G'+conductanceID+' += w',\
-                              model='w:siemens')
+    pre_increment = 'G'+afferent_pop+target_pop+' += w'
+    synapse = brian2.Synapses(spikes, NTWK['POPS'][ipop], on_pre=pre_increment,\
+                                    model='w:siemens')
     synapse.connect('i==j')
-    synapse.w = afferent_pop['Q']*brian2.nS
+    synapse.w = Qsyn*brian2.nS
     
     NTWK['PRE_SPIKES'].append(spikes)
     NTWK['PRE_SYNAPSES'].append(synapse)
