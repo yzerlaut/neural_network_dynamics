@@ -62,12 +62,14 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
                                         model='w:siemens')
         synapse.connect('i==j')
         synapse.w = Qsyn*brian2.nS
+
+        NTWK['PRE_SPIKES'].append(spikes)
+        NTWK['PRE_SYNAPSES'].append(synapse)
+        
     else:
         print('Nsyn = 0')
         spikes, synapse, indices, times = None, None, [], []
 
-    NTWK['PRE_SPIKES'].append(spikes)
-    NTWK['PRE_SYNAPSES'].append(synapse)
     
     if with_presynaptic_spikes:
         if 'iRASTER_PRE' in NTWK.keys():
