@@ -3,11 +3,29 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from theory.Vm_statistics import getting_statistical_properties
 from theory.probability import Proba_g_P
 from theory.spiking_function import firing_rate
-from transfer_functions.single_cell_protocol import build_up_afferent_synaptic_input, built_up_neuron_params
+from cells.cell_construct import built_up_neuron_params
 import numpy as np
 from matplotlib import cm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
+def build_up_afferent_synaptic_input(Model, POP_STIM):
+
+    SYN_POPS = []
+    for source_pop in POP_STIM:
+        if len(source_pop.split('Exc'))>1:
+            Erev, Ts = Model['Ee'], Model['Tse']
+        elif len(source_pop.split('Inh'))>1:
+            Erev, Ts = Model['Ei'], Model['Tsi']
+        else:
+            print(' /!\ AFFERENT POP COULD NOT BE CLASSIFIED AS Exc or Inh /!\ ')
+            print('-----> set to Exc by default')
+            Erev, Ts = Model['Ee'], Model['Tse']
+        SYN_POPS.append({'name':source_pop, 'Erev': Erev, 'N': Model['N_'+source_pop],
+                         'Q': Model['Q_'+source_pop+'_'+Model['NRN_KEY']],
+                         'pconn': Model['p_'+source_pop+'_'+Model['NRN_KEY']],
+                         'Tsyn': Ts})
+    return SYN_POPS
+    
 def TF(RATES, Model, NRN_KEY=None):
 
     neuron_params = built_up_neuron_params(Model, NRN_KEY)

@@ -7,7 +7,7 @@ import itertools, string, sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from cells.cell_library import get_neuron_params
 from cells.cell_construct import get_membrane_equation
-from transfer_functions.single_cell_protocol import built_up_neuron_params
+from cells.cell_construct import built_up_neuron_params
 
 def collect_and_run(NTWK, verbose=False):
     """
@@ -116,7 +116,9 @@ def get_syn_and_conn_matrix(Model, POPULATIONS,
 def build_populations(Model, POPULATIONS,
                       AFFERENT_POPULATIONS=[],
                       with_raster=False, with_pop_act=False,
-                      with_Vm=0, with_synaptic_currents=False, with_synaptic_conductances=False,
+                      with_Vm=0, with_synaptic_currents=False,
+                      with_synaptic_conductances=False,
+                      NEURONS=None,
                       verbose=False):
     """
     sets up the neuronal populations
@@ -124,9 +126,10 @@ def build_populations(Model, POPULATIONS,
     """
 
     ## NEURONS AND CONNECTIVITY MATRIX
-    NEURONS = []
-    for pop in POPULATIONS:
-        NEURONS.append({'name':pop, 'N':Model['N_'+pop]})
+    if NEURONS is None:
+        NEURONS = []
+        for pop in POPULATIONS:
+            NEURONS.append({'name':pop, 'N':Model['N_'+pop]})
 
     ########################################################################
     ####    TO BE WRITTEN 

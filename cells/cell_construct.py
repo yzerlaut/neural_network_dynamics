@@ -146,6 +146,15 @@ def current_pulse_sim(args, params=None):
         fig.savefig(['save'])
     return fig
         
+def built_up_neuron_params(Model, NRN_KEY, N=1):
+
+    params = {'name':NRN_KEY, 'N':N}
+    keys = ['Gl', 'Cm','Trefrac', 'El', 'Vthre', 'Vreset',\
+            'delta_v', 'a', 'b', 'tauw']
+    for k in keys:
+        params[k] = Model[NRN_KEY+'_'+k]
+    return params
+
         
 if __name__=='__main__':
 

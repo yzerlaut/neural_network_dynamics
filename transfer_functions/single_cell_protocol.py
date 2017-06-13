@@ -6,98 +6,68 @@ import numpy as np
 def my_logspace(x1, x2, n):
     return np.logspace(np.log(x1)/np.log(10), np.log(x2)/np.log(10), n)
 
-def built_up_neuron_params(Model, NRN_KEY, N=1):
-
-    params = {'name':NRN_KEY, 'N':N}
-    keys = ['Gl', 'Cm','Trefrac', 'El', 'Vthre', 'Vreset',\
-            'delta_v', 'a', 'b', 'tauw']
-    for k in keys:
-        params[k] = Model[NRN_KEY+'_'+k]
-    return params
-
-def build_up_afferent_synaptic_input(Model, POP_STIM):
-
-    SYN_POPS = []
-    for source_pop in POP_STIM:
-        if len(source_pop.split('Exc'))>1:
-            Erev, Ts = Model['Ee'], Model['Tse']
-        elif len(source_pop.split('Inh'))>1:
-            Erev, Ts = Model['Ei'], Model['Tsi']
-        else:
-            print(' /!\ AFFERENT POP COULD NOT BE CLASSIFIED AS Exc or Inh /!\ ')
-            print('-----> set to Exc by default')
-            Erev, Ts = Model['Ee'], Model['Tse']
-        SYN_POPS.append({'name':source_pop, 'Erev': Erev, 'N': Model['N_'+source_pop],
-                         'Q': Model['Q_'+source_pop+'_'+Model['NRN_KEY']],
-                         'pconn': Model['p_'+source_pop+'_'+Model['NRN_KEY']],
-                         'Tsyn': Ts})
-    return SYN_POPS
-    
-
 def run_sim(Model,
             with_Vm=0, with_synaptic_currents=False,
             firing_rate_only=False, tdiscard=100):
 
-    neuron_params = built_up_neuron_params(Model, Model['NRN_KEY'])
-    SYN_POPS = build_up_afferent_synaptic_input(Model, Model['POP_STIM'])
     if 'RATES' in Model.keys():
         RATES = Model['RATES']
     else:
         RATES = {}
         for pop in Model['POP_STIM']:
             RATES['F_'+pop] = Model['F_'+pop]
-            
-    tstop, dt, SEED = Model['tstop'], Model['dt'], Model['SEED']
 
-    if tdiscard>=tstop:
+    if tdiscard>=Model['tstop']:
         print('discard time higher than simulation time -> set to 0')
         tdiscard = 0
         
-    t_array = np.arange(int(tstop/dt))*dt
-
-    NEURONS = [{'name':'Target', 'N':1, 'type':'', 'params':neuron_params}]
+    t_array = np.arange(int(Model['tstop']/Model['dt']))*Model['dt']
 
     ############################################################################
     # everything is reformatted to have it compatible with the network framework
     ############################################################################
     
-    M = []
-    for syn in SYN_POPS:
-        M.append([{'Q': 0., 'Erev': syn['Erev'], 'Tsyn': syn['Tsyn'],
-                   'name': syn['name']+NEURONS[0]['name'], 'pconn': 0.}])
-    M = np.array(M)    
-
-    VMS, ISYNe, ISYNi = [], [], [] # initialize to empty
-    if with_Vm and with_synaptic_currents:
-        NTWK = ntwk.build_populations(NEURONS, M,
-                                      with_Vm=with_Vm, with_raster=True,
-                                      with_synaptic_currents=with_synaptic_currents)
-    elif with_Vm:
-        NTWK = ntwk.build_populations(NEURONS, M, with_Vm=with_Vm, with_raster=True)
-    else:
-        NTWK = ntwk.build_populations(NEURONS, M, with_raster=True)
+    aff_pops_discard_self = []
+    for p in Model['POP_STIM']:
+        if p!=Model['NRN_KEY']:
+            aff_pops_discard_self.append(p)
+            
+    # note that number of neurons become number of different seeds
+    NTWK = ntwk.build_populations(Model, [Model['NRN_KEY']],
+                                  NEURONS = [{'name':Model['NRN_KEY'], 'N':Model['N_SEED']}],
+                                  AFFERENT_POPULATIONS=aff_pops_discard_self,
+                                  with_Vm=with_Vm, with_raster=True,
+                                  with_synaptic_currents=with_synaptic_currents)
 
     ntwk.initialize_to_rest(NTWK) # (fully quiescent State as initial conditions)
 
     SPKS, SYNAPSES, PRESPKS = [], [], []
 
-    for i, syn in enumerate(SYN_POPS):
-        afferent_pop = {'Q':syn['Q'], 'N':syn['N'], 'pconn':syn['pconn']}
-        rate_array = RATES['F_'+syn['name']]+0.*t_array
-        ntwk.construct_feedforward_input(NTWK, NTWK['POPS'][0],
-                                         afferent_pop, t_array, rate_array,
-                                         conductanceID=syn['name']+NEURONS[0]['name'],
-                                         SEED=i+SEED, with_presynaptic_spikes=True)
+    for i, afferent_pop in enumerate(Model['POP_STIM']):
+        rate_array = RATES['F_'+afferent_pop]+0.*t_array
+        ntwk.construct_feedforward_input(NTWK, Model['NRN_KEY'], afferent_pop,
+                                         t_array, rate_array,
+                                         SEED=i+Model['SEED'], with_presynaptic_spikes=True)
 
-    sim = ntwk.collect_and_run(NTWK, tstop=tstop, dt=dt)
+    sim = ntwk.collect_and_run(NTWK)
 
+    # calculating firing rate
+    vec = np.zeros(Model['N_SEED'])
+    ispikes = np.array(NTWK['RASTER'][0].i)
+    tspikes = np.array(NTWK['RASTER'][0].t/ntwk.ms)
+    for nrn in range(Model['N_SEED']):
+        i0 = np.argwhere(ispikes==nrn).flatten()
+        ts = tspikes[i0]
+        fout = 1e3*len(ts[ts>tdiscard])/(Model['tstop']-tdiscard) # from ms to Hz
+        vec[nrn]= fout
+        
     if firing_rate_only:
-        tspikes = np.array(NTWK['RASTER'][0].t/ntwk.ms)
-        return 1e3*len(tspikes[tspikes>tdiscard])/(tstop-tdiscard) # from ms to Hz
+        return vec.mean(), vec.std()
     else:
-        output = {'ispikes':np.array(NTWK['RASTER'][0].i), 'tspikes':np.array(NTWK['RASTER'][0].t/ntwk.ms),
-                  'dt':str(dt), 'tstop':str(tstop), 'SYN_POPS':SYN_POPS, 'params':neuron_params}
-
+        print(np.array(NTWK['RASTER'][0].i))
+        output = {'ispikes':np.array(NTWK['RASTER'][0].i),
+                  'tspikes':np.array(NTWK['RASTER'][0].t/ntwk.ms),
+                  'Model':Model, 'fout_mean':vec.mean(), 'fout_std':vec.std()}
         if with_Vm:
             output['i_prespikes'] = NTWK['iRASTER_PRE']
             output['t_prespikes'] = [vv/ntwk.ms for vv in NTWK['tRASTER_PRE']]
@@ -106,15 +76,6 @@ def run_sim(Model,
             output['Ie'] = np.array([vv.Ie/ntwk.pA for vv in NTWK['ISYNe'][0]])
             output['Ii'] = np.array([vv.Ii/ntwk.pA for vv in NTWK['ISYNi'][0]])
         return output
-
-def run_multiple_sim(Model, n_SEED=3):
-                                
-    vec = np.zeros(n_SEED)
-    for seed in range(n_SEED):
-        Model['SEED'] = Model['SEED']+seed
-        vec[seed]= run_sim(Model, firing_rate_only=True)
-    return vec.mean(), vec.std()
-
 
 def find_right_input_value(Model,
                            Finput_previous, Fout_previous, Fout_desired,
@@ -172,7 +133,7 @@ def get_spiking_within_interval(Model,
     ### ==================================================
     for i, f in enumerate(INPUT):
         Model['RATES']['F_'+Model['NRN_KEY']] = f # we set the input according to its current values
-        OUTPUT_MEAN[i], OUTPUT_STD[i] = run_multiple_sim(Model)
+        OUTPUT_MEAN[i], OUTPUT_STD[i] = run_sim(Model, firing_rate_only=True)
 
     ### =============================================================================
     ### Now case by case analysis to have the output firing rate in the range we want
@@ -254,28 +215,34 @@ if __name__=='__main__':
     # import the model defined in root directory
     sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
     from model import *
+    
     # common to all protocols
-    parser.add_argument('--POP_STIM', nargs='+', help='Set of desired populations', type=str, default=['RecExc', 'RecInh'])    
+    parser.add_argument('--POP_STIM', nargs='+', help='Set of desired populations', type=str,
+                        default=['RecExc', 'RecInh'])    
     parser.add_argument('--NRN_KEY', help='Neuron to stimulate', type=str, default='RecExc')    
 
     ### ==============================================================
     # type of stimulation
     ### ==============================================================
-    # Single Stimulation by default, just need to set the input rates:
-    parser.add_argument('--POP_RATES', nargs='+', help='Set of rates of the populations', type=float, default=[1, 1])    
+    
     # TRANSFER FUNCTION (params scan)
     parser.add_argument('--TF', help="Run the transfer function", action="store_true") # SET TO TRUE TO RUN TF
     parser.add_argument('--N_input', help='discretization of input', type=int, default=4)    
-    parser.add_argument('--n_SEED', help='number of varied seed', type=int, default=2)    
+    parser.add_argument('--N_SEED', help='number of varied seed', type=int, default=1)    
     parser.add_argument('--Fout_min', help='min output firing rate', type=float, default=1e-2)    
     parser.add_argument('--Fout_max', help='max output firing rate', type=float, default=30.)    
-    parser.add_argument('--Finput_min', help='min input firing rate (of varied population)', type=float, default=1e-2)    
-    parser.add_argument('--Finput_max', help='max input firing rate (of varied population)', type=float, default=30.)
+    parser.add_argument('--Finput_min', help='min input firing rate (of varied population)',
+                        type=float, default=1e-2)    
+    parser.add_argument('--Finput_max',
+                        help='max input firing rate (of varied population)', type=float, default=30.)
     # now range for inputs
-    parser.add_argument('--F_RecInh_array', nargs='+', help='Inhibitory firing rates', type=float, default=my_logspace(1e-2, 10, 3))    
-    parser.add_argument('--F_AffExc_array', nargs='+', help='Afferent firing rates', type=float, default=my_logspace(4, 20, 3))    
-    parser.add_argument('--F_DsInh_array', nargs='+', help='DisInhibitory firing rates', type=float, default=[0])    
-    
+    parser.add_argument('--F_RecInh_array',
+                        nargs='+', help='Inhibitory firing rates',
+                        type=float, default=my_logspace(1e-2, 10, 3))    
+    parser.add_argument('--F_AffExc_array', nargs='+',
+                        help='Afferent firing rates', type=float, default=my_logspace(4, 20, 3))    
+    parser.add_argument('--F_DsInh_array', nargs='+',
+                        help='DisInhibitory firing rates', type=float, default=[0])    
     # additional stuff
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
     parser.add_argument("--filename", '-f', help="filename",type=str, default='data.npy')
@@ -288,9 +255,10 @@ if __name__=='__main__':
         generate_transfer_function(Model)
     else:
         from neural_network_dynamics.transfer_functions.plots import *
-        data = run_sim(Model, with_Vm=1, with_synaptic_currents=True);
-        plot_single_cell_sim(data)
-        plt.show()
+        plt.style.use('ggplot')
+        data = run_sim(Model, with_Vm=Model['N_SEED'], with_synaptic_currents=True)
+        fig = plot_single_cell_sim(data)
+        ntwk.show()
     
     ### TO TEST THE POLYNOM APPROX TO FIND THE RIGHT DOMAIN
     # Finput_previous, Fout_desired = np.array([0.1,0.2,0.5,1,5,10]), 1.2
