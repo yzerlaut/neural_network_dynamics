@@ -170,7 +170,7 @@ def get_spiking_within_interval(Model,
             INPUT = np.linspace(Finput_min, Finput_max, N_input)
         for i, f in enumerate(INPUT):
             Model['RATES']['F_'+Model['NRN_KEY']] = f # we set the input according to its current values
-            OUTPUT_MEAN[i], OUTPUT_STD[i] = run_sim(Model)
+            OUTPUT_MEAN[i], OUTPUT_STD[i] = run_sim(Model, firing_rate_only=True)
         
     return INPUT, OUTPUT_MEAN, OUTPUT_STD
     

@@ -23,7 +23,6 @@ def fit_data(data, order=2, Fout_high=50., fit_filename=None):
     muV, sV, gV, Tv = getting_statistical_properties(neuron_params,
                                                      SYN_POPS, RATES,
                                                      already_SI=False)
-    print('ok')
     Proba = Proba_g_P(muV, sV, gV, 1e-3*neuron_params['Vthre'])
 
     # # only strictly positive firing rates taken into account
