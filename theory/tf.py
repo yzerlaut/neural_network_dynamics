@@ -26,10 +26,10 @@ def build_up_afferent_synaptic_input(Model, POP_STIM):
                          'Tsyn': Ts})
     return SYN_POPS
     
-def TF(RATES, Model, NRN_KEY=None):
+def TF(RATES, Model, NRN_KEY):
 
     neuron_params = built_up_neuron_params(Model, NRN_KEY)
-    SYN_POPS = build_up_afferent_synaptic_input(Model, data['POP_STIM'])
+    SYN_POPS = build_up_afferent_synaptic_input(Model, Model['POP_STIM'])
     ### OUTPUT OF ANALYTICAL CALCULUS IN SI UNITS !! -> from here SI, be careful...
     muV, sV, gV, Tv = getting_statistical_properties(neuron_params,
                                                      SYN_POPS, RATES,
@@ -82,7 +82,7 @@ def make_tf_plot(data,
                                                        for f1, f2 in zip(Fe[i0][i1][:-1], Fe[i0][i1][1:])])}
                     for pop, f in zip([col_key, ckey, row_key],[f1, fi, fd]) :
                         RATES[pop] = f*np.ones(len(RATES[xkey]))
-                    Fout_th = TF(RATES, data['Model'])
+                    Fout_th = TF(RATES, data['Model'], data['Model']['NRN_KEY'])
                     th_cond = (Fout_th>ylim[0]) & (Fout_th<ylim[1])
                     AX[i].plot(RATES[xkey][th_cond],
                                Fout_th[th_cond], '-',

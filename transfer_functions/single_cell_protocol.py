@@ -227,6 +227,7 @@ if __name__=='__main__':
     
     # TRANSFER FUNCTION (params scan)
     parser.add_argument('--TF', help="Run the transfer function", action="store_true") # SET TO TRUE TO RUN TF
+    
     parser.add_argument('--N_input', help='discretization of input', type=int, default=4)    
     parser.add_argument('--N_SEED', help='number of varied seed', type=int, default=1)    
     parser.add_argument('--Fout_min', help='min output firing rate', type=float, default=1e-2)    
