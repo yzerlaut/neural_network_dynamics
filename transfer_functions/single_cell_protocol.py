@@ -151,7 +151,7 @@ def get_spiking_within_interval(Model,
                                             INPUT, OUTPUT_MEAN, Fout_max)
         redo_scan = True
     elif (OUTPUT_MEAN[0]<Fout_min):
-        if verbose: print('we need toto increase the minimum amplitude')
+        if verbose: print('we need to increase the minimum amplitude')
         Finput_min = find_right_input_value(Model,
                                             INPUT, OUTPUT_MEAN, Fout_min)
         redo_scan = True
