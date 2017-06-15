@@ -65,7 +65,7 @@ def make_tf_plot(data,
         col_subsmpl = np.arange(len(np.unique(data[col_key])))
     if row_subsmpl is None:
         row_subsmpl = np.arange(len(np.unique(data[row_key])))
-        print(row_subsmpl)
+
     def make_row_fig(cond, AX, with_top_label=False, fd=0):
         F1, Fe, Fi = data[col_key][cond], data[xkey][cond], data[ckey][cond]
         mFout, sFout = Fout_mean[cond], Fout_std[cond]
@@ -101,11 +101,23 @@ def make_tf_plot(data,
             set_plot(AX[i], ylim=[.9*ylim[0], ylim[1]],
                      yticks=yticks, xticks=xticks, ylabel=ylabel2, xlabel=xlabel,
                      yticks_labels=yticks_labels2, xticks_labels=xticks_labels)
-        Fi = Fi
+
         Fi_log = np.log(Fi)/np.log(10)
         cax = inset_axes(AX[-1], width="20%", height="90%", loc=3)
-        cb = build_bar_legend(np.unique(Fi_log), cax , cmap,
-                          ticks_labels=[str(round(fi,1)) for fi in np.unique(Fi)],
+        Fi_ticks, Fi_ticks_labels = [], []
+        for k in np.arange(-2, 3):
+            for l in range(1, 10):
+                Fi_ticks.append(np.log(l)/np.log(10) +k)
+                if l%10==1:
+                    Fi_ticks_labels.append(str(l*np.exp(k*np.log(10))))
+                else:
+                    Fi_ticks_labels.append('')
+        # Fi_ticks, Fi_ticks_labels = np.arange(-2,2), ['0.01','0.1','1', '10']
+        cb = build_bar_legend(Fi_ticks, cax , cmap,
+                              bounds = [np.log(0.7*Fi.min())/np.log(10),
+                                        np.log(1.1*Fi.max())/np.log(10)],
+                              ticks_labels=Fi_ticks_labels,
+                              color_discretization=len(np.unique(Fi)),
                               label=ckey_label)
         AX[-1].axis('off')
 
