@@ -8,8 +8,11 @@ import numpy as np
 from matplotlib import cm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-def build_up_afferent_synaptic_input(Model, POP_STIM):
+def build_up_afferent_synaptic_input(Model, POP_STIM, NRN_KEY=None):
 
+    if NRN_KEY is None:
+        NRN_KEY = Model['NRN_KEY']
+    
     SYN_POPS = []
     for source_pop in POP_STIM:
         if len(source_pop.split('Exc'))>1:
@@ -21,15 +24,15 @@ def build_up_afferent_synaptic_input(Model, POP_STIM):
             print('-----> set to Exc by default')
             Erev, Ts = Model['Ee'], Model['Tse']
         SYN_POPS.append({'name':source_pop, 'Erev': Erev, 'N': Model['N_'+source_pop],
-                         'Q': Model['Q_'+source_pop+'_'+Model['NRN_KEY']],
-                         'pconn': Model['p_'+source_pop+'_'+Model['NRN_KEY']],
+                         'Q': Model['Q_'+source_pop+'_'+NRN_KEY],
+                         'pconn': Model['p_'+source_pop+'_'+NRN_KEY],
                          'Tsyn': Ts})
     return SYN_POPS
     
 def TF(RATES, Model, NRN_KEY):
 
     neuron_params = built_up_neuron_params(Model, NRN_KEY)
-    SYN_POPS = build_up_afferent_synaptic_input(Model, Model['POP_STIM'])
+    SYN_POPS = build_up_afferent_synaptic_input(Model, Model['POP_STIM'], NRN_KEY)
     ### OUTPUT OF ANALYTICAL CALCULUS IN SI UNITS !! -> from here SI, be careful...
     muV, sV, gV, Tv = getting_statistical_properties(neuron_params,
                                                      SYN_POPS, RATES,
@@ -62,7 +65,7 @@ def make_tf_plot(data,
         col_subsmpl = np.arange(len(np.unique(data[col_key])))
     if row_subsmpl is None:
         row_subsmpl = np.arange(len(np.unique(data[row_key])))
-        
+        print(row_subsmpl)
     def make_row_fig(cond, AX, with_top_label=False, fd=0):
         F1, Fe, Fi = data[col_key][cond], data[xkey][cond], data[ckey][cond]
         mFout, sFout = Fout_mean[cond], Fout_std[cond]

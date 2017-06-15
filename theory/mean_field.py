@@ -3,8 +3,8 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from theory.Vm_statistics import getting_statistical_properties
 from theory.probability import Proba_g_P
 from theory.spiking_function import firing_rate
-from transfer_functions.single_cell_protocol import from_model_to_numerical_params
-
+from cells.cell_construct import built_up_neuron_params
+from theory.tf import build_up_afferent_synaptic_input
 import numpy as np
 import matplotlib.pylab as plt
 from graphs.my_graph import set_plot
@@ -27,12 +27,13 @@ def find_fp(Model,
 
     Model['RATES'] = {}
     POP_STIM1 = [KEY1, KEY2]+KEY_RATES1
-    neuron_params1, SYN_POPS1, _ = from_model_to_numerical_params(Model,
-                                                                  NRN_KEY=KEY1, POP_STIM=POP_STIM1)
     POP_STIM2 = [KEY1, KEY2]+KEY_RATES2
-    neuron_params2, SYN_POPS2, _ = from_model_to_numerical_params(Model,
-                                                                  NRN_KEY=KEY2, POP_STIM=POP_STIM1)
-
+    # neuronal and synaptic params
+    neuron_params1 = built_up_neuron_params(Model, KEY1)
+    SYN_POPS1 = build_up_afferent_synaptic_input(Model, POP_STIM1, KEY1)
+    neuron_params2 = built_up_neuron_params(Model, KEY2)
+    SYN_POPS2 = build_up_afferent_synaptic_input(Model, POP_STIM2, KEY2)
+    
     # initialize rates
     RATES1, RATES2 = {}, {}
     for f, pop in zip(VAL_RATES1, KEY_RATES1):
@@ -77,10 +78,21 @@ def find_fp(Model,
                      (F1_nullcline[:-1]>0) & (F2_nullcline[:-1]>0)).flatten()
     if len(i0)>0:
         f1_fp, f2_fp = F1[i0[0]], F2_nullcline[i0[0]]
-        print(f1_fp, f2_fp)
     else:
         f1_fp, f2_fp = 0., 0.
-
+    RATES1['F_'+KEY1], RATES1['F_'+KEY2] = f1_fp, f2_fp
+    RATES2['F_'+KEY1], RATES2['F_'+KEY2] = f1_fp, f2_fp
+        
+    output = {'F_'+KEY1:f1_fp, 'F_'+KEY2:f2_fp}
+    output['muV_'+KEY1], output['sV_'+KEY1],\
+        output['gV_'+KEY1], output['Tv_'+KEY1],\
+        output['Isyn'+KEY1] = getting_statistical_properties(
+            neuron_params1, SYN_POPS1, RATES1, already_SI=False, with_Isyn=True)
+    output['muV_'+KEY2], output['sV_'+KEY2],\
+        output['gV_'+KEY2], output['Tv_'+KEY2],\
+        output['Isyn_'+KEY2] = getting_statistical_properties(
+            neuron_params2, SYN_POPS2, RATES2, already_SI=False, with_Isyn=True)
+        
     # plot of phase space
     if plot:
         F1_nullcline[F1_nullcline==0], F2_nullcline[F2_nullcline==0] = np.nan, np.nan # masking 0 points for plotting
@@ -95,9 +107,9 @@ def find_fp(Model,
         set_plot(ax1, xlabel='$\\nu_e$ (Hz)', ylabel='$\\nu_i$ (Hz)',
                  yticks=[-1, 0, 1], yticks_labels=['0.1', '1', '10'],
                  xticks=[-1, 0, 1], xticks_labels=['0.1', '1', '10'])
-        return fig1, f1_fp, f2_fp
+        return fig1, output
     else:
-        return f1_fp, f2_fp
+        return output
 
 if __name__=='__main__':
 

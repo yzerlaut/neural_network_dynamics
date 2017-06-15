@@ -11,6 +11,7 @@ def getting_statistical_properties(params, SYN_POPS, RATES,
     and we return the three moments
     """
     SYN_PARAMS, RATES2 = [], []
+
     for i, syn in enumerate(SYN_POPS):
         if already_SI:
             SYN_PARAMS.append({'E_j': syn['Erev'], 'C_m':params['Cm'],
@@ -59,7 +60,7 @@ def getting_statistical_properties(params, SYN_POPS, RATES,
         # in case we also want synaptic currents
         Isyn = {}
         for i, syn in enumerate(SYN_PARAMS):
-            Isyn[syn] = RATES2[i]*syn['tau_j']*syn['Q_j']*(syn['E_j']-muV)
+            Isyn[SYN_POPS[i]['name']] = RATES2[i]*syn['tau_j']*syn['Q_j']*(syn['E_j']-muV)
         return muV, sV, gV, Tv, Isyn
     else:
         return muV, sV, gV, Tv
