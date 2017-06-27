@@ -114,10 +114,10 @@ def make_tf_plot(data,
                     Fi_ticks_labels.append('')
         # Fi_ticks, Fi_ticks_labels = np.arange(-2,2), ['0.01','0.1','1', '10']
         cb = build_bar_legend(Fi_ticks, cax , cmap,
-                              bounds = [np.log(0.7*Fi.min())/np.log(10),
-                                        np.log(1.1*Fi.max())/np.log(10)],
+                              bounds = [np.log(Fi.min())/np.log(10),
+                                        np.log(Fi.max())/np.log(10)],
                               ticks_labels=Fi_ticks_labels,
-                              color_discretization=len(np.unique(Fi)),
+                              color_discretization=100,
                               label=ckey_label)
         AX[-1].axis('off')
 

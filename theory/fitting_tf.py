@@ -51,4 +51,31 @@ def fit_data(data, order=2, Fout_high=50., fit_filename=None):
     return COEFFS
     
 
+def set_equally_sampled_data_on_firing_range(data,
+                                             firing_rate_range = np.logspace(-2,2,4)):
+
+    
+    new_data = {'Model':data['Model']}
+    keys = data.keys()
+    keys.remove('Model')
+    print(keys)
+    
+    Nsamples = []
+    for y1, y2 in zip(firing_rate_range[:-1], firing_rate_range[1:]):
+        cond = (data['Fout_mean']>=y1) & (data['Fout_mean']<y2)
+        Nsamples.append(len(data['Fout_mean'][cond]))
+
+    Nmin = min(Nsamples)
+
+    # for key, val in data.items():
+    #     if key!='Model':
+    #         new_data.
+    # for i, (y1, y2) in enumerate(zip(firing_rate_range[:-1], firing_rate_range[1:])):
+    #     cond = (data['Fout_mean']>=y1) & (data['Fout_mean']<y2)
+    #     choosen_samples = np.random.choice(np.arange(Nsamples), Nmin, replace=False)
+    # ['F_RecInh', 'F_RecExc', 'F_AffExc', 'Model', 'Fout_std', 'Fout_mean', 'F_DsInh']
+
+    
+    return new_data
+
 

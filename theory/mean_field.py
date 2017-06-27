@@ -70,23 +70,28 @@ def find_fp(Model,
             F2_nullcline[kk] = F2[i0[0]-1]
 
     # find the fixed point: crossing of the two nullclines !
-    # i0 = np.argwhere((F2_nullcline[:-1]>F1_nullcline[:-1]) &\
-    #                  (F1_nullcline[1:]>F2_nullcline[1:]) &\
-    #                  (F2_nullcline[:-1]>0) & (F1_nullcline[:-1]>0)).flatten()
-    i0 = np.argwhere((F1_nullcline[:-1]>F2_nullcline[:-1]) &\
-                     (F2_nullcline[1:]>F1_nullcline[1:]) &\
-                     (F1_nullcline[:-1]>0) & (F2_nullcline[:-1]>0)).flatten()
-    if len(i0)>0:
-        f1_fp, f2_fp = F1[i0[0]], F2_nullcline[i0[0]]
+    # i0 = np.argwhere((F1_nullcline[:-1]>F2_nullcline[:-1]) &\
+    #                  (F2_nullcline[1:]>F1_nullcline[1:]) &\
+    #                  (F1_nullcline[:-1]>0) & (F2_nullcline[:-1]>0)).flatten()
+    i0 = np.argwhere((F2_nullcline>F1_nullcline)).flatten()
+    
+    if (len(i0)==0) or (i0[0]==0):
+        # no nullcline crossing, no dynamical system solution of recurrent system, firing is just effect of input
+        RATES1['F_'+KEY1], RATES1['F_'+KEY2] = 0, 0
+        f1_fp = input_output(neuron_params1, SYN_POPS1, RATES1, Model['COEFFS_'+str(KEY1)])
+        RATES2['F_'+KEY1], RATES1['F_'+KEY2] = 0, 0
+        f2_fp = input_output(neuron_params2, SYN_POPS2, RATES2, Model['COEFFS_'+str(KEY2)])
     else:
-        f1_fp, f2_fp = 0., 0.
+        f1_fp, f2_fp = F1[i0[0]], F2_nullcline[i0[0]]
+
+    # then we get the other quantities:
     RATES1['F_'+KEY1], RATES1['F_'+KEY2] = f1_fp, f2_fp
     RATES2['F_'+KEY1], RATES2['F_'+KEY2] = f1_fp, f2_fp
         
     output = {'F_'+KEY1:f1_fp, 'F_'+KEY2:f2_fp}
     output['muV_'+KEY1], output['sV_'+KEY1],\
         output['gV_'+KEY1], output['Tv_'+KEY1],\
-        output['Isyn'+KEY1] = getting_statistical_properties(
+        output['Isyn_'+KEY1] = getting_statistical_properties(
             neuron_params1, SYN_POPS1, RATES1, already_SI=False, with_Isyn=True)
     output['muV_'+KEY2], output['sV_'+KEY2],\
         output['gV_'+KEY2], output['Tv_'+KEY2],\

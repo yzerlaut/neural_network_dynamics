@@ -20,7 +20,7 @@ def get_CV_spiking(data, pop='Exc'):
         return 0
 
 def get_synchrony_of_spiking(data, pop='Exc',
-                             Tbin=2, Nmax_pairs=2000, seed=23):
+                             Tbin=2, Nmax_pairs=4000, seed=23):
     """see Kumar et al. 2008
 
     we introduce a limiting number of pairs for fast computation"""
