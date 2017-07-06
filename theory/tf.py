@@ -89,7 +89,7 @@ def make_tf_plot(data,
                     th_cond = (Fout_th>ylim[0]) & (Fout_th<ylim[1])
                     AX[i].plot(RATES[xkey][th_cond],
                                Fout_th[th_cond], '-',
-                               color=cmap(j/len(np.unique(Fi[i0]))), lw=3, alpha=.8)
+                               color=cmap(j/len(np.unique(Fi[i0]))), lw=5, alpha=.7)
             if with_top_label:
                 AX[i].set_title(col_key_label+'='+str(round(f1,1))+col_key_unit)
             if logscale:
