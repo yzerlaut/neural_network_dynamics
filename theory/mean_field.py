@@ -150,11 +150,11 @@ def show_phase_space(Model,
     output['muV_'+KEY1], output['sV_'+KEY1],\
         output['gV_'+KEY1], output['Tv_'+KEY1],\
         output['Isyn_'+KEY1] = getting_statistical_properties(
-            neuron_params1, SYN_POPS1, RATES1, already_SI=False, with_Isyn=True)
+            neuron_params1, SYN_POPS1, RATES1, already_SI=False, with_Isyn=True, with_current_based=True)
     output['muV_'+KEY2], output['sV_'+KEY2],\
         output['gV_'+KEY2], output['Tv_'+KEY2],\
         output['Isyn_'+KEY2] = getting_statistical_properties(
-            neuron_params2, SYN_POPS2, RATES2, already_SI=False, with_Isyn=True)
+            neuron_params2, SYN_POPS2, RATES2, already_SI=False, with_Isyn=True, with_current_based=True)
         
     # plot of phase space
     fig1, ax1 = plt.subplots(1, figsize=(4,3.3))

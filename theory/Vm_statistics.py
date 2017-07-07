@@ -4,7 +4,7 @@ import numpy as np
 from theory.psp_integrals import F_iPSP, F_iiPSP, F_iiiPSP, F_numTv, F_denomTv
 
 def getting_statistical_properties(params, SYN_POPS, RATES,
-                                   already_SI=False, with_Isyn=False):
+                                   already_SI=False, with_Isyn=False, with_current_based=False):
     """ 
     We first translate those parameters into SI units for a safe calculus
     then we apply the results of the Shotnoise analysis (see above)
@@ -39,8 +39,10 @@ def getting_statistical_properties(params, SYN_POPS, RATES,
     # from this we can get the mean membrane time constant
     if already_SI:
         Tm = params['Cm']/Gtot # 'Cm' from F to pF
+        Tm0 = params['Cm']/params['Gl']
     else:
         Tm = params['Cm']*1e-12/Gtot # 'Cm' from F to pF
+        Tm0 = 1e-3*params['Cm']/params['Gl']
 
     # we now have the mean properties, we can get the higher moments
     sV, gV, kV, nTv, dTv = 0, 0, 0, 0, 0
@@ -55,12 +57,18 @@ def getting_statistical_properties(params, SYN_POPS, RATES,
     gV = gV/sV**3
     # kV = kV/sV**4
     Tv = 1./2.*(nTv/dTv)**(-1)
-    
+
     if with_Isyn:
         # in case we also want synaptic currents
         Isyn = {}
         for i, syn in enumerate(SYN_PARAMS):
             Isyn[SYN_POPS[i]['name']] = RATES2[i]*syn['tau_j']*syn['Q_j']*(syn['E_j']-muV)
+        if with_current_based:
+            sV0 = 0
+            for i, syn in enumerate(SYN_PARAMS):
+                syn['mu_V'], syn['tau_m'] = muV, Tm0
+                sV0 += RATES2[i]*F_iiPSP(**syn)
+            Isyn['sV0'] = np.sqrt(sV0)
         return muV, sV, gV, Tv, Isyn
     else:
         return muV, sV, gV, Tv
