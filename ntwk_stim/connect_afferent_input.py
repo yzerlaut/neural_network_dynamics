@@ -194,7 +194,10 @@ def construct_feedforward_input_correlated(NTWK, target_pop,
     return AFF_TO_POP_MATRIX
 
 def set_spikes_from_time_varying_rate_synchronous(time_array, rate_array,
-                                                  DUPLICATION_MATRIX, AFF_TO_POP_MATRIX, SEED=1):
+                                                  DUPLICATION_MATRIX, AFF_TO_POP_MATRIX,
+                                                  with_time_shift_synchronous_input=False,
+                                                  with_neuron_shift_synchronous_input=False,
+                                                  SEED=1):
     """
     here, we don't assume that all inputs are decorrelated, we actually
     model a population of N neurons and just produce spikes according
