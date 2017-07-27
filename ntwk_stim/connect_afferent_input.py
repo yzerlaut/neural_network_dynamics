@@ -234,6 +234,9 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
                                             N_source, N_target, N_duplicate,
                                             t, rate_array,\
                                             with_presynaptic_spikes=False,
+                                            with_time_shift_synchronous_input=False,
+                                            with_neuron_shift_synchronous_input=False,
+                                            with_neuronpop_shift_synchronous_input=False,
                                             AFF_TO_POP_MATRIX=None,
                                             SEED=1):
     """
@@ -256,13 +259,21 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
                                   for k in range(N_independent)])
     
     Nsyn = int(Model['p_'+afferent_pop+'_'+target_pop]*N_target)
-    AFF_TO_POP_MATRIX = np.array([\
+    if with_neuronpop_shift_synchronous_input:
+        # we shift the stimulus above the N_target neurons
+        AFF_TO_POP_MATRIX = np.array([\
+                                  np.random.choice(np.arange(N_target, 2*N_target), Nsyn, replace=False)\
+                                  for k in range(N_source)])
+    else:
+        AFF_TO_POP_MATRIX = np.array([\
                                   np.random.choice(np.arange(N_target), Nsyn, replace=False)\
                                   for k in range(N_source)])
     
     indices, times, true_indices, true_times = set_spikes_from_time_varying_rate_synchronous(\
                                                         t, rate_array,\
                                                         DUPLICATION_MATRIX, AFF_TO_POP_MATRIX,\
+                                                        with_time_shift_synchronous_input=with_time_shift_synchronous_input,
+                                                        with_neuron_shift_synchronous_input=with_neuron_shift_synchronous_input,
                                                         SEED=(SEED+2)**2%100)
 
     #finding the target pop in the brian2 objects
