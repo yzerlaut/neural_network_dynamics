@@ -196,7 +196,6 @@ def construct_feedforward_input_correlated(NTWK, target_pop,
 def set_spikes_from_time_varying_rate_synchronous(time_array, rate_array,
                                                   DUPLICATION_MATRIX, AFF_TO_POP_MATRIX,
                                                   with_time_shift_synchronous_input=False,
-                                                  with_neuron_shift_synchronous_input=False,
                                                   SEED=1):
     """
     here, we don't assume that all inputs are decorrelated, we actually
@@ -206,7 +205,11 @@ def set_spikes_from_time_varying_rate_synchronous(time_array, rate_array,
     ## time_array in ms !!
     # so multplying rate array
 
-    np.random.seed(SEED+18) # setting the seed !
+    if with_time_shift_synchronous_input:
+        np.random.seed(SEED+17) # setting the seed differently!
+    else:
+        np.random.seed(SEED+18) # setting the seed !
+        
     N_independent = DUPLICATION_MATRIX.shape[0] # 
     
     true_indices, true_times = [], []
@@ -225,6 +228,9 @@ def set_spikes_from_time_varying_rate_synchronous(time_array, rate_array,
         indices = np.concatenate([indices, np.array(AFF_TO_POP_MATRIX[ii,:], dtype=int)]) # all the indices
         times = np.concatenate([times, np.array([tt for j in range(len(AFF_TO_POP_MATRIX[ii,:]))])])
 
+    if with_time_shift_synchronous_input:
+        np.random.seed(SEED+18) # putting the seed back to baseline values
+        
     # because brian2 can not handle multiple spikes in one bin, we shift them by dt when concomitant
     indices, times, success = deal_with_multiple_spikes_within_one_bin(indices, times, DT)
     if not success:
@@ -257,7 +263,14 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
     N_independent = int(N_source/N_duplicate)
     N_source = N_independent*N_duplicate # N_source needs to be a multiple of N_duplicate
 
-    DUPLICATION_MATRIX = np.array([\
+    if with_neuron_shift_synchronous_input:
+        np.random.seed(SEED+1) # shifting the seed for the pattern !
+        DUPLICATION_MATRIX = np.array([\
+                                  np.random.choice(np.arange(N_source), N_duplicate, replace=False)\
+                                  for k in range(N_independent)])
+        np.random.seed(SEED) # putting the seed back to other things equal
+    else:
+        DUPLICATION_MATRIX = np.array([\
                                   np.random.choice(np.arange(N_source), N_duplicate, replace=False)\
                                   for k in range(N_independent)])
     
@@ -276,7 +289,6 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
                                                         t, rate_array,\
                                                         DUPLICATION_MATRIX, AFF_TO_POP_MATRIX,\
                                                         with_time_shift_synchronous_input=with_time_shift_synchronous_input,
-                                                        with_neuron_shift_synchronous_input=with_neuron_shift_synchronous_input,
                                                         SEED=(SEED+2)**2%100)
 
     #finding the target pop in the brian2 objects
