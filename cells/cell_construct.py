@@ -105,8 +105,8 @@ def get_membrane_equation(neuron_params, synaptic_array,\
 def current_pulse_sim(args, params=None):
     
     import brian2
-    from cells.cell_library import get_neuron_params
-    from graphs.my_graph import set_plot
+    from neural_network_dynamics.cells.cell_library import get_neuron_params
+    from graphs.my_graph import set_plot, show
 
     if params is None:
         params = get_neuron_params(args['NRN'])
@@ -143,7 +143,9 @@ def current_pulse_sim(args, params=None):
     ax.annotate('50ms', (0,-55))
     set_plot(ax, [], xticks=[], yticks=[])
     if 'save' in args.keys():
-        fig.savefig(['save'])
+        fig.savefig(args['save'])
+    else:
+        show()
     return fig
         
 def built_up_neuron_params(Model, NRN_KEY, N=1):
@@ -159,7 +161,8 @@ def built_up_neuron_params(Model, NRN_KEY, N=1):
 if __name__=='__main__':
 
     print(__doc__)
-    
+    import sys
+    sys.path.append('../..')
     # starting from an example
 
     import argparse
@@ -178,10 +181,10 @@ if __name__=='__main__':
                         type=float, default=400.)
     parser.add_argument("-c", "--color", help="color of the plot",
                         default='k')
-    parser.add_argument("--save", help="save the figures with a given string")
+    parser.add_argument("--save", help="save the figures with a given string", )
     args = parser.parse_args()
 
 
     current_pulse_sim(vars(args))
-    plt.show()
+
 

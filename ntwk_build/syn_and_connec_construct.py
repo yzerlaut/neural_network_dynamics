@@ -9,7 +9,7 @@ from cells.cell_library import get_neuron_params
 from cells.cell_construct import get_membrane_equation
 from cells.cell_construct import built_up_neuron_params
 
-def collect_and_run(NTWK, verbose=False):
+def collect_and_run(NTWK, verbose=False, INTERMEDIATE_INSTRUCTIONS=[]):
     """
     /!\ When you add a new object, THINK ABOUT ADDING IT TO THE COLLECTION !  /!\
     """
@@ -25,7 +25,16 @@ def collect_and_run(NTWK, verbose=False):
             net.add(NTWK[key])
     if verbose:
         print('running simulation [...]')
-    net.run(NTWK['tstop']*brian2.ms)
+
+    current_t = 0
+    for instrct in INTERMEDIATE_INSTRUCTIONS:
+        # we run the simulation until that instruction
+        tdur = instrct['time']-current_t
+        net.run(tdur*brian2.ms)
+        # execute instruction:
+        instrct['function'](NTWK)
+        current_t = instrct['time']
+    net.run((NTWK['tstop']-current_t)*brian2.ms)
     if verbose:
         print('-> done !')
     return net
