@@ -120,18 +120,27 @@ def current_pulse_sim(args, params=None):
     neurons.V = params['El']*brian2.mV
     trace = brian2.StateMonitor(neurons, 'V', record=0)
     spikes = brian2.SpikeMonitor(neurons)
+    # rest run
     brian2.run(100 * brian2.ms)
-    neurons.I0 = args['amp']*brian2.pA
+    # first pulse
+    # neurons.I0 = args['amp']*brian2.pA
     brian2.run(args['duration'] * brian2.ms)
-    neurons.I0 = 0*brian2.pA
-    brian2.run(200 * brian2.ms)
+    # second pulse
+    neurons.I0 -= 100.*brian2.pA
+    brian2.run(args['duration'] * brian2.ms)
+    # end second pulse
+    neurons.I0 += 100.*brian2.pA
+    brian2.run(args['duration'] * brian2.ms)
+    # end first pulse
+    # neurons.I0 = 0*brian2.pA
+    brian2.run(200 * brian2.ms) #
     # We draw nicer spikes
-    V = trace[0].V[:]
+    Vm = trace[0].V[:]
     for t in spikes.t:
-        ax.plot(t/brian2.ms*np.ones(2), [V[int(t/brian2.defaultclock.dt)]/brian2.mV+2,-10], '--',\
+        ax.plot(t/brian2.ms*np.ones(2), [Vm[int(t/brian2.defaultclock.dt)]/brian2.mV+2,-10], '--',\
                  color=args['color'])
-    ax.plot(trace.t / brian2.ms, V / brian2.mV, color=args['color'])
-
+    ax.plot(trace.t / brian2.ms, Vm / brian2.mV, color=args['color'])
+    
     if 'NRN' in args.keys():
         ax.set_title(args['NRN'])
 
@@ -142,10 +151,9 @@ def current_pulse_sim(args, params=None):
     ax.annotate('10mV', (-50,-38))
     ax.annotate('50ms', (0,-55))
     set_plot(ax, [], xticks=[], yticks=[])
+    show()
     if 'save' in args.keys():
         fig.savefig(args['save'])
-    else:
-        show()
     return fig
         
 def built_up_neuron_params(Model, NRN_KEY, N=1):
