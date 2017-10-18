@@ -96,6 +96,7 @@ def deal_with_multiple_spikes_within_one_bin(indices, times, DT):
         print('n=', n, 'spikes were shifted by dt to insure no overlapping presynaptic spikes (Brian2 constraint)')
         return indices, times, False
 
+    
 def set_spikes_from_time_varying_rate_correlated(time_array, rate_array, AFF_TO_POP_MATRIX, SEED=1):
     """
     here, we don't assume that all inputs are decorrelated, we actually
@@ -273,8 +274,9 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
         DUPLICATION_MATRIX = np.array([\
                                   np.random.choice(np.arange(N_source), N_duplicate, replace=False)\
                                   for k in range(N_independent)])
-    
+
     Nsyn = int(Model['p_'+afferent_pop+'_'+target_pop]*N_target)
+    
     if with_neuronpop_shift_synchronous_input:
         # we shift the stimulus above the N_target neurons
         AFF_TO_POP_MATRIX = np.array([\
@@ -288,9 +290,10 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
     indices, times, true_indices, true_times = set_spikes_from_time_varying_rate_synchronous(\
                                                         t, rate_array,\
                                                         DUPLICATION_MATRIX, AFF_TO_POP_MATRIX,\
-                                                        with_time_shift_synchronous_input=with_time_shift_synchronous_input,
+                                                  with_time_shift_synchronous_input=with_time_shift_synchronous_input,
                                                         SEED=(SEED+2)**2%100)
 
+    
     #finding the target pop in the brian2 objects
     ipop = np.argwhere(NTWK['POPULATIONS']==target_pop).flatten()[0]
     Qsyn = Model['Q_'+afferent_pop+'_'+target_pop]
