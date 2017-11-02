@@ -236,13 +236,14 @@ def set_spikes_from_time_varying_rate_synchronous(time_array, rate_array,
                     
     return indices, times*brian2.ms, np.array(true_indices), np.array(true_times)
 
-def construct_feedforward_input_synchronous(NTWK, target_pop,
-                                            afferent_pop,\
+def construct_feedforward_input_synchronous(NTWK,
+                                            target_pop,
+                                            afferent_pop,
                                             N_source, N_target, N_duplicate,
-                                            t, rate_array,\
+                                            t, rate_array,
                                             with_presynaptic_spikes=False,
                                             with_time_shift_synchronous_input=0.,
-                                            with_neuron_shift_synchronous_input=False,
+                                            with_neuron_shift_synchronous_input=0,
                                             with_neuronpop_shift_synchronous_input=False,
                                             AFF_TO_POP_MATRIX=None,
                                             SEED=1):
@@ -261,17 +262,14 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
     N_independent = int(N_source/N_duplicate)
     N_source = N_independent*N_duplicate # N_source needs to be a multiple of N_duplicate
 
-    if with_neuron_shift_synchronous_input:
-        np.random.seed(SEED+1) # shifting the seed for the pattern !
-        DUPLICATION_MATRIX = np.array([\
-                                  np.random.choice(np.arange(N_source), N_duplicate, replace=False)\
-                                  for k in range(N_independent)])
-        np.random.seed(SEED) # putting the seed back to other things equal
-    else:
-        DUPLICATION_MATRIX = np.array([\
-                                  np.random.choice(np.arange(N_source), N_duplicate, replace=False)\
-                                  for k in range(N_independent)])
-
+    DUPLICATION_MATRIX = np.array([\
+                              np.random.choice(np.arange(N_source), N_duplicate, replace=False)\
+                              for k in range(N_independent)])
+    
+    for ii in range(with_neuron_shift_synchronous_input):
+        for k in range(N_independent):
+            DUPLICATION_MATRIX[k][ii] = np.random.randint(N_source)
+    
     Nsyn = int(Model['p_'+afferent_pop+'_'+target_pop]*N_target)
     
     if with_neuronpop_shift_synchronous_input:
@@ -281,8 +279,8 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
                                   for k in range(N_source)])
     else:
         AFF_TO_POP_MATRIX = np.array([\
-                                  np.random.choice(np.arange(N_target), Nsyn, replace=False)\
-                                  for k in range(N_source)])
+                              np.random.choice(np.arange(N_target), Nsyn, replace=False)\
+                              for k in range(N_source)])
     
     indices, times, true_indices, true_times = set_spikes_from_time_varying_rate_synchronous(\
                                                 t, rate_array,\
