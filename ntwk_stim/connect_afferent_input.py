@@ -84,7 +84,7 @@ def deal_with_multiple_spikes_within_one_bin(indices, times, DT):
     n=0
     for tt in np.unique(times):
         for ii in np.unique(indices):
-            i1 = np.argwhere(((times==tt) & (indices==ii))).flatten()
+            i1 = np.argwhere((np.abs(times-tt)<DT) & (indices==ii)).flatten()
             if len(i1)>1:
                 for j, index in enumerate(i1):
                     times[index] += DT*(-1)**j*int(j/2+.5)
