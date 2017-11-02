@@ -229,9 +229,10 @@ def set_spikes_from_time_varying_rate_synchronous(time_array, rate_array,
 
         
     # because brian2 can not handle multiple spikes in one bin, we shift them by dt when concomitant
-    indices, times, success = deal_with_multiple_spikes_within_one_bin(indices, times, DT)
-    if not success:
+    success, nn = False, 0
+    while (not success) and (nn<4):
         indices, times, success = deal_with_multiple_spikes_within_one_bin(indices, times, DT)
+        nn+=1
                     
     return indices, times*brian2.ms, np.array(true_indices), np.array(true_times)
 
