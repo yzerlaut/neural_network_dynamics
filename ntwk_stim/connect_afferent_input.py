@@ -196,7 +196,7 @@ def construct_feedforward_input_correlated(NTWK, target_pop,
 
 def set_spikes_from_time_varying_rate_synchronous(time_array, rate_array,
                                                   DUPLICATION_MATRIX, AFF_TO_POP_MATRIX,
-                                                  with_time_shift_synchronous_input=False,
+                                                  with_time_shift_synchronous_input=0.,
                                                   SEED=1):
     """
     here, we don't assume that all inputs are decorrelated, we actually
@@ -206,10 +206,7 @@ def set_spikes_from_time_varying_rate_synchronous(time_array, rate_array,
     ## time_array in ms !!
     # so multplying rate array
 
-    if with_time_shift_synchronous_input:
-        np.random.seed(SEED+17) # setting the seed differently!
-    else:
-        np.random.seed(SEED+18) # setting the seed !
+    np.random.seed(SEED+18) # setting the seed !
         
     N_independent = DUPLICATION_MATRIX.shape[0] # 
     
@@ -222,15 +219,14 @@ def set_spikes_from_time_varying_rate_synchronous(time_array, rate_array,
         for ii in np.arange(N_independent)[rdm_num<DT*rate_array[it]*1e-3/N_independent]: # need to divide by duplicated events
             for jj in DUPLICATION_MATRIX[ii, :]:
                 true_indices.append(jj)
-                true_times.append(time_array[it])
+                # true time with a time shift (0 by default)
+                true_times.append(time_array[it]+with_time_shift_synchronous_input*np.random.randn())
             
     indices, times = np.empty(0, dtype=np.int), np.empty(0, dtype=np.float64)
     for ii, tt in zip(true_indices, true_times):
         indices = np.concatenate([indices, np.array(AFF_TO_POP_MATRIX[ii,:], dtype=int)]) # all the indices
         times = np.concatenate([times, np.array([tt for j in range(len(AFF_TO_POP_MATRIX[ii,:]))])])
 
-    if with_time_shift_synchronous_input:
-        np.random.seed(SEED+18) # putting the seed back to baseline values
         
     # because brian2 can not handle multiple spikes in one bin, we shift them by dt when concomitant
     indices, times, success = deal_with_multiple_spikes_within_one_bin(indices, times, DT)
@@ -244,7 +240,7 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
                                             N_source, N_target, N_duplicate,
                                             t, rate_array,\
                                             with_presynaptic_spikes=False,
-                                            with_time_shift_synchronous_input=False,
+                                            with_time_shift_synchronous_input=0.,
                                             with_neuron_shift_synchronous_input=False,
                                             with_neuronpop_shift_synchronous_input=False,
                                             AFF_TO_POP_MATRIX=None,
@@ -288,10 +284,10 @@ def construct_feedforward_input_synchronous(NTWK, target_pop,
                                   for k in range(N_source)])
     
     indices, times, true_indices, true_times = set_spikes_from_time_varying_rate_synchronous(\
-                                                        t, rate_array,\
-                                                        DUPLICATION_MATRIX, AFF_TO_POP_MATRIX,\
-                                                  with_time_shift_synchronous_input=with_time_shift_synchronous_input,
-                                                        SEED=(SEED+2)**2%100)
+                                                t, rate_array,\
+                                                DUPLICATION_MATRIX, AFF_TO_POP_MATRIX,\
+                                                with_time_shift_synchronous_input=with_time_shift_synchronous_input,
+                                                SEED=(SEED+2)**2%100)
 
     
     #finding the target pop in the brian2 objects
