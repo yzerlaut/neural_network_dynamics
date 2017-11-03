@@ -268,7 +268,7 @@ def construct_feedforward_input_synchronous(NTWK,
     
     for ii in range(with_neuron_shift_synchronous_input):
         for k in range(N_independent):
-            DUPLICATION_MATRIX[k][ii] = (DUPLICATION_MATRIX[k][ii]+30)%N_source # not random to keep the seed acting equally
+            DUPLICATION_MATRIX[k][ii] = np.random.randint(N_source)
     
     Nsyn = int(Model['p_'+afferent_pop+'_'+target_pop]*N_target)
     
