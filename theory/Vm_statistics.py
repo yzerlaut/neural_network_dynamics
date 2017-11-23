@@ -3,7 +3,8 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 import numpy as np
 from theory.psp_integrals import F_iPSP, F_iiPSP, F_iiiPSP, F_numTv, F_denomTv
 
-def getting_statistical_properties(params, SYN_POPS, RATES,
+def getting_statistical_properties(params,
+                                   SYN_POPS, RATES,
                                    already_SI=False, with_Isyn=False, with_current_based=False):
     """ 
     We first translate those parameters into SI units for a safe calculus
