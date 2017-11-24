@@ -26,7 +26,10 @@ def get_acf_time(Vm, dt,
         res = minimize(func, [min_time],
                        bounds=[[min_time, max_time]], method='L-BFGS-B')
         return res.x[0]
-
+    else:
+        print('method: \"', method, '\" not implemented')
+        return 0
+    
 def fluctuations_properties(Vm, dt,
                             max_time_for_Tv=100.,
                             min_time=1., max_time=1000.,

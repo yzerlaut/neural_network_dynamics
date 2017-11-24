@@ -38,7 +38,10 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         if synapse['pconn']>0:
             # loop over each presynaptic element onto this target
             Gsyn = 'G'+synapse['name']
-            eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
+            if 'alpha' in synapse:
+                eqs += '+'+Gsyn+'*( %(alpha)f*(%(Erev)f*mV - V) + (1-%(alpha)f)*(%(Erev)f*mV - %(V0)f*mV) )' % synapse
+            else:
+                eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
     eqs += ' : amp'
 
     ## synaptic currents, 2) constructing the temporal dynamics of the synaptic conductances
