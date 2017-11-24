@@ -42,11 +42,10 @@ def fluctuations_properties(Vm, dt,
         for ax in AX: set_plot(ax)
         show()
         
-    return np.mean(Vm), np.std(Vm), skew(np.array(Vm)),\
+    return np.mean(Vm), np.std(Vm), skew(Vm),\
         get_acf_time(Vm, dt, max_time_for_Tv=max_time_for_Tv,
                      method=method,
                      min_time=min_time, max_time=max_time)
-
 
 if __name__=='__main__':
     Vm = np.load('temp.npy').flatten()
