@@ -23,10 +23,18 @@ def build_up_afferent_synaptic_input(Model, POP_STIM, NRN_KEY=None):
             print(' /!\ AFFERENT POP COULD NOT BE CLASSIFIED AS Exc or Inh /!\ ')
             print('-----> set to Exc by default')
             Erev, Ts = Model['Ee'], Model['Tse']
-        SYN_POPS.append({'name':source_pop, 'Erev': Erev, 'N': Model['N_'+source_pop],
+        SYN_POPS.append({'name':source_pop,
+                         'N': Model['N_'+source_pop],
+                         'Erev': Erev,
                          'Q': Model['Q_'+source_pop+'_'+NRN_KEY],
                          'pconn': Model['p_'+source_pop+'_'+NRN_KEY],
                          'Tsyn': Ts})
+        # for backward compatibility, only added here
+        if 'V0' in Model:
+            SYN_POPS[-1]['V0'] = Model['V0']
+        if 'alpha_'+source_pop+'_'+NRN_KEY in Model:
+            SYN_POPS[-1]['alpha'] = Model['alpha_'+source_pop+'_'+NRN_KEY]
+            
     return SYN_POPS
     
 def TF(RATES, Model, NRN_KEY):

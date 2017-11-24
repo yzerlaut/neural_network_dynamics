@@ -17,9 +17,17 @@ def getting_statistical_properties(params,
         if already_SI:
             SYN_PARAMS.append({'E_j': syn['Erev'], 'C_m':params['Cm'],
                                'Q_j':syn['Q'], 'tau_j':syn['Tsyn']})
+            if 'V0' in syn:
+                SYN_PARAMS[-1]['V0'] = syn['V0']
+            if 'alpha' in syn:
+                SYN_PARAMS[-1]['a_j'] = syn['alpha']
         else:
             SYN_PARAMS.append({'E_j': 1e-3*syn['Erev'], 'C_m':1e-12*params['Cm'],
                                'Q_j':syn['Q']*1e-9, 'tau_j':1e-3*syn['Tsyn']})
+            if 'V0' in syn:
+                SYN_PARAMS[-1]['V0'] = 1e-3*syn['V0']
+            if 'alpha' in syn:
+                SYN_PARAMS[-1]['a_j'] = syn['alpha']
         RATES2.append(RATES['F_'+syn['name']]*syn['N']*syn['pconn'])
 
     # A zero array to handle both float and array cases (for addition/multiplication)
@@ -32,9 +40,10 @@ def getting_statistical_properties(params,
         Gtot, muV = params['Gl']*1e-9+Zero, params['Gl']*params['El']*1e-12+Zero
 
     for i, syn in enumerate(SYN_PARAMS):
-        Gsyn = RATES2[i]*syn['tau_j']*syn['Q_j']
+        Gsyn = RATES2[i]*syn['tau_j']*syn['Q_j']*syn['a_j']
         Gtot += Gsyn
-        muV += Gsyn*syn['E_j']
+        Isyn = RATES2[i]*syn['tau_j']*syn['Q_j']*(1-syn['a_j'])*(syn['E_j']-syn['V0'])
+        muV += Gsyn*syn['E_j']+Isyn
     muV /= Gtot
 
     # from this we can get the mean membrane time constant
@@ -63,7 +72,8 @@ def getting_statistical_properties(params,
         # in case we also want synaptic currents
         Isyn = {}
         for i, syn in enumerate(SYN_PARAMS):
-            Isyn[SYN_POPS[i]['name']] = RATES2[i]*syn['tau_j']*syn['Q_j']*(syn['E_j']-muV)
+            Isyn[SYN_POPS[i]['name']] = RATES2[i]*syn['tau_j']*syn['Q_j']*\
+                                        (syn['a_j']*(syn['E_j']-muV)+(1-syn['a_j'])*(syn['E_j']-syn['V0']))
         if with_current_based:
             sV0 = 0
             for i, syn in enumerate(SYN_PARAMS):
