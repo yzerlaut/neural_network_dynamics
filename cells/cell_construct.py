@@ -3,6 +3,9 @@ This file construct the equations for brian2
 """
 import numpy as np
 import brian2
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+from cells.cell_library import get_neuron_params
 
 def get_membrane_equation(neuron_params, synaptic_array,\
                           return_equations=False, with_synaptic_currents=False,
@@ -40,6 +43,7 @@ def get_membrane_equation(neuron_params, synaptic_array,\
             Gsyn = 'G'+synapse['name']
             if 'alpha' in synapse:
                 eqs += '+'+Gsyn+'*( %(alpha)f*(%(Erev)f*mV - V) + (1-%(alpha)f)*(%(Erev)f*mV - %(V0)f*mV) )' % synapse
+                print('using conductance-current mixture in synaptic equations, with ratio', synapse['alpha'])
             else:
                 eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
     eqs += ' : amp'
@@ -107,10 +111,6 @@ def get_membrane_equation(neuron_params, synaptic_array,\
 
 def current_pulse_sim(args, params=None):
     
-    import brian2
-    from neural_network_dynamics.cells.cell_library import get_neuron_params
-    from graphs.my_graph import set_plot, show
-
     if params is None:
         params = get_neuron_params(args['NRN'])
         
@@ -124,24 +124,19 @@ def current_pulse_sim(args, params=None):
     trace = brian2.StateMonitor(neurons, 'V', record=0)
     spikes = brian2.SpikeMonitor(neurons)
     # rest run
-    brian2.run(100 * brian2.ms)
+    brian2.run(args['delay'] * brian2.ms)
     # first pulse
-    # neurons.I0 = args['amp']*brian2.pA
+    neurons.I0 = args['amp']*brian2.pA
     brian2.run(args['duration'] * brian2.ms)
     # second pulse
-    neurons.I0 -= 100.*brian2.pA
-    brian2.run(args['duration'] * brian2.ms)
-    # end second pulse
-    neurons.I0 += 100.*brian2.pA
-    brian2.run(args['duration'] * brian2.ms)
-    # end first pulse
-    # neurons.I0 = 0*brian2.pA
-    brian2.run(200 * brian2.ms) #
+    neurons.I0 = 0
+    brian2.run(args['delay'] * brian2.ms)
     # We draw nicer spikes
     Vm = trace[0].V[:]
     for t in spikes.t:
-        ax.plot(t/brian2.ms*np.ones(2), [Vm[int(t/brian2.defaultclock.dt)]/brian2.mV+2,-10], '--',\
-                 color=args['color'])
+        ax.plot(t/brian2.ms*np.ones(2),
+                [Vm[int(t/brian2.defaultclock.dt)]/brian2.mV,-10],
+                '--', color=args['color'])
     ax.plot(trace.t / brian2.ms, Vm / brian2.mV, color=args['color'])
     
     if 'NRN' in args.keys():
@@ -153,8 +148,8 @@ def current_pulse_sim(args, params=None):
     ax.plot([0,0], [-50, -40], 'k-', lw=4)
     ax.annotate('10mV', (-50,-38))
     ax.annotate('50ms', (0,-55))
-    set_plot(ax, [], xticks=[], yticks=[])
-    show()
+    # set_plot(ax, [], xticks=[], yticks=[])
+    # show()
     if 'save' in args.keys():
         fig.savefig(args['save'])
     return fig
@@ -188,6 +183,8 @@ if __name__=='__main__':
                         type=float, default=200.)
     parser.add_argument('-d', "--duration",help="Duration of the current step in ms",\
                         type=float, default=400.)
+    parser.add_argument("--delay",help="Duration of the current step in ms",\
+                        type=float, default=100.)
     parser.add_argument('-p', "--post",help="After-Pulse duration of the step (ms)",\
                         type=float, default=400.)
     parser.add_argument("-c", "--color", help="color of the plot",
@@ -195,7 +192,8 @@ if __name__=='__main__':
     parser.add_argument("--save", help="save the figures with a given string", )
     args = parser.parse_args()
 
+    from graphs.my_graph import set_plot, show
 
     current_pulse_sim(vars(args))
-
+    show()
 
