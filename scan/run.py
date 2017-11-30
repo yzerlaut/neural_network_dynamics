@@ -5,7 +5,7 @@ import zipfile
 
 def run_scan(Model, KEYS, VALUES,
              running_sim_func, running_sim_func_args={},
-             debug=False, parallelize=True):
+             parallelize=True):
 
     MODELS = []
     if parallelize:
@@ -15,16 +15,12 @@ def run_scan(Model, KEYS, VALUES,
     
     zf = zipfile.ZipFile(Model['zip_filename'], mode='w')
 
-    
-    # seeds = Model['SEEDS']
     Model['PARAMS_SCAN'] = {'FILENAMES':[]}
     for key in KEYS:
         Model['PARAMS_SCAN'][key] = []
 
     def run_func(i, output):
         running_sim_func(MODELS[i], **running_sim_func_args)
-        if not debug:
-            zf.write(MODELS[i]['filename'])
             
     i=0
     for VAL in product(*VALUES):
@@ -51,23 +47,32 @@ def run_scan(Model, KEYS, VALUES,
         for p in PROCESSES:
             p.start()
         # # Exit the completed processes
-        for p in PROCESSES:
+        for fn in PROCESSES:
             p.join()
-        
+
+
     # writing the parameters
     np.savez(Model['zip_filename'].replace('.zip', '_Model.npz'), **Model)
     zf.write(Model['zip_filename'].replace('.zip', '_Model.npz'))
+    
+    for i in range(len(MODELS)):
+        zf.write(MODELS[i]['filename'])
 
     zf.close()
     
     
 if __name__=='__main__':
 
-    Model = {'data_folder': './', 'SEED':0, 'x':2, 'zip_filename':'data.zip'}
+    Model = {'data_folder': 'data/', 'SEED':0, 'x':2, 'zip_filename':'data.zip'}
+    import sys, pathlib
+    sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+    from recording.load_and_save import write_as_hdf5, load_dict_from_hdf5
     def running_sim_func(Model, a=0):
+        NTWK = {'Model':Model, 'dt':0.1, 'tstop':1, 'NEURONS':[]}
         j = 0
         while j<1e7:
             j+=1
+        write_as_hdf5(NTWK, filename=Model['filename'])
 
     import time
     start_time = time.time()
@@ -76,7 +81,7 @@ if __name__=='__main__':
     run_scan(Model, ['SEED', 'x'],
              [np.arange(3), np.arange(5, 8)],
              running_sim_func, running_sim_func_args={'a':3},
-             debug=True, parallelize=False)
+             parallelize=False)
     print("--- %s seconds ---" % (time.time() - start_time))        
     print('-----------------------------------')
     start_time = time.time()
@@ -84,5 +89,5 @@ if __name__=='__main__':
     run_scan(Model, ['SEED', 'x'],
              [np.arange(3), np.arange(5, 8)],
              running_sim_func, running_sim_func_args={'a':3},
-             debug=True, parallelize=True)
+             parallelize=True)
     print("--- %s seconds ---" % (time.time() - start_time))        

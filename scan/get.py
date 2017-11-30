@@ -1,10 +1,9 @@
 import numpy as np
 from itertools import product
 import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-from data_analysis.IO.hdf5 import load_dict_from_hdf5
 import zipfile
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+from recording.load_and_save import load_dict_from_hdf5
 
 def get_scan(Model,
              filename=None):
@@ -20,6 +19,7 @@ def get_scan(Model,
     DATA = []
     print(Model['PARAMS_SCAN'])
     for fn in (Model['PARAMS_SCAN'].all()['FILENAMES']):
+        print(fn)
         data = zf.read(fn)
         with open(fn, 'wb') as f: f.write(data)
         with open(fn, 'rb') as f: data = load_dict_from_hdf5(fn)
@@ -30,3 +30,4 @@ if __name__=='__main__':
 
     Model = {'data_folder': './', 'SEED':0, 'x':2, 'zip_filename':'data.zip'}
     Model, PARAMS_SCAN, DATA = get_scan(Model)
+    print(DATA)
