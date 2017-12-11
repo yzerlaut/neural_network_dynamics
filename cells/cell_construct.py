@@ -124,6 +124,8 @@ def current_pulse_sim(args, params=None):
         
     neurons, eqs = get_membrane_equation(params, [],\
                                          return_equations=True)
+    if args['verbose']:
+        print(eqs)
 
     fig, ax = brian2.subplots(figsize=(5,3))
 
@@ -180,8 +182,7 @@ if __name__=='__main__':
     import argparse
     parser=argparse.ArgumentParser(description=
      """ 
-     Generating random sample of a given distributions and
-     comparing it with its theoretical value
+     By default the scripts runs the single neuron response to a current step
      """
     ,formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-n', "--NRN", help="NEURON TYPE", default='LIF')
@@ -195,11 +196,13 @@ if __name__=='__main__':
                         type=float, default=400.)
     parser.add_argument("-c", "--color", help="color of the plot",
                         default='k')
-    parser.add_argument("--save", help="save the figures with a given string", )
+    parser.add_argument("--save", help="save the figures with a given string")
+    parser.add_argument("-v", "--verbose", help="",
+                        action="store_true")
     args = parser.parse_args()
 
     from graphs.my_graph import set_plot, show
-
+    
     current_pulse_sim(vars(args))
     show()
 
