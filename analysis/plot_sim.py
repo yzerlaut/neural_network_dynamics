@@ -9,6 +9,13 @@ B, O, G, R, Purple, Brown, Pink, Grey,\
     Kaki, Cyan = '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',\
     '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
 
+def find_pop_keys(data):
+    ii, pops = 0, []
+    while str(ii) in data.keys():
+        pops.append(data[str(ii)]['name'])
+        ii+=1
+    return pops
+    
 def find_num_of_key(data,pop_key):
     ii, pops = 0, []
     while str(ii) in data.keys():
@@ -16,145 +23,119 @@ def find_num_of_key(data,pop_key):
         ii+=1
     i0 = np.argwhere(np.array(pops)==pop_key)[0][0]
     return i0
-    
-def raster_fig(data,
-               exc_pop_key='RecExc',
-               inh_pop_key='RecInh',
-               tzoom=[0, np.inf],
-               COLORS=['g', 'r', 'k', 'y'], NVm=3, Nnrn=500, Tbar=50):
-    
-    fig, ax = plt.subplots(1, figsize=(2.3,2))
+
+######################################
+#### RASTER PLOT
+######################################
+def raster(data,
+           POP_KEYS = None, COLORS=None,
+           NMAXS = None, tzoom=[0, np.inf],
+           Nnrn=500, Tbar=50, ms=1):
+
+    if POP_KEYS is None:
+        POP_KEYS = find_pop_keys(data)
+    if COLORS is None:
+        COLORS = ['C'+str(i) for i in range(len(POP_KEYS))]
+    if NMAXS is None:
+        NMAXS = np.array([float(data['N_'+pop]) for pop in POP_KEYS])
+        
+    fig, ax = plt.subplots(1, figsize=(3.2,2))
     plt.subplots_adjust(left=.05, bottom=.2)
     # raster activity
     nn = 0
-    try:
-        cond = (data['tRASTER_'+exc_pop_key]>tzoom[0]) & (data['tRASTER_'+exc_pop_key]<tzoom[1])
-        plt.plot(data['tRASTER_'+exc_pop_key][cond], data['iRASTER_'+exc_pop_key][cond], '.', color=G, ms=1)
-        nn+= data['iRASTER_'+exc_pop_key].max()
-        cond = (data['tRASTER_'+inh_pop_key]>tzoom[0]) & (data['tRASTER_'+inh_pop_key]<tzoom[1])
-        plt.plot(data['tRASTER_'+inh_pop_key][cond], nn+data['iRASTER_'+inh_pop_key][cond], '.', color=R, ms=1)
-    except ValueError:
-        pass
-    plt.plot(tzoom[0]*np.ones(2), [0, Nnrn], lw=5, color='gray')
-    plt.annotate(str(Nnrn)+' neurons',\
+    for n, pop_key, color, nmax in zip(range(len(NMAXS)), POP_KEYS, COLORS, NMAXS):
+        try:
+            cond = (data['tRASTER_'+pop_key]>tzoom[0]) & (data['tRASTER_'+pop_key]<tzoom[1]) & (data['iRASTER_'+pop_key]<nmax)
+            ax.plot(data['tRASTER_'+pop_key][cond], NMAXS[:n].sum()+data['iRASTER_'+pop_key][cond], '.', color=color, ms=ms)
+        except ValueError:
+            pass
+    ax.plot(tzoom[0]*np.ones(2), [0, Nnrn], lw=5, color='gray')
+    ax.annotate(str(Nnrn)+' neurons',\
                  (0, .7), rotation=90, fontsize=14, xycoords='figure fraction')
-    # plt.ylabel(str(Nnrn)+' neurons', fontsize=14)
-    plt.plot([tzoom[0],tzoom[0]+Tbar], [0, 0], lw=5, color='gray')
-    plt.annotate(str(Tbar)+' ms',
+    ax.plot([tzoom[0],tzoom[0]+Tbar], [0, 0], lw=5, color='gray')
+    ax.annotate(str(Tbar)+' ms',
                  (0.2, 0.1), fontsize=14, xycoords='figure fraction')
-    # plt.xlabel(str(Tbar)+' ms            ', fontsize=14)
-    set_plot(ax, [], yticks=[], xticks=[], xlim=tzoom,
-             ylim=[0, data['0']['N']+data['1']['N']])
+    set_plot(ax, [], yticks=[], xticks=[],
+             xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])],
+             ylim=[0, NMAXS.sum()])
     return fig
 
-def pop_act(data, tdiscard=200, Tbar=50):
-    
+######################################
+#### TIME-VARYING ACTIVITIES
+######################################
+
+# for smoothing
+from scipy.ndimage.filters import gaussian_filter1d
+def gaussian_smoothing(signal, idt_sbsmpl=10):
+    return gaussian_filter1d(signal, idt_sbsmpl)
+
+def pop_act(data,
+            POP_KEYS = None, COLORS=None,
+            with_smoothing=0,
+            tzoom=[0, np.inf]):
+
+    if POP_KEYS is None:
+        POP_KEYS = find_pop_keys(data)
+    if COLORS is None:
+        COLORS = ['C'+str(i) for i in range(len(POP_KEYS))]
+        
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
-    cond = t>tdiscard
+    cond = (t>tzoom[0]) & (t<tzoom[1])
     
-    fig, ax = plt.subplots(1, figsize=(2.6,2))
-    plt.subplots_adjust(left=.33, bottom=.2)
+    fig, ax = plt.subplots(1, figsize=(4,2.5))
+    plt.subplots_adjust(left=.3, bottom=.3)
 
-    BOTTOM, dmin = -3, 0.5 # 0.01 taken as the lower value for bar plot
-    ax.bar([0], np.log(data['F_AffExc'])/np.log(10)-BOTTOM)
-    ax.bar([1], np.log(data['F_DsInh'])/np.log(10)-BOTTOM)
-    for i, f, color in zip(range(2,4), [data['POP_ACT_'+exc_pop_key], data['POP_ACT_'+inh_pop_key]], [R, G]):
-        mean = f[cond].mean()
-        std = 0.434*f[cond].std()/(1e-9+mean) # using taylor expansion of log for error
-        if mean<0.001:
-            mean = 0.001*(1+dmin) # to get a visible value at 0
-        lmean = np.log(mean)/np.log(10)
-        # std2 = np.log(mean+f[cond].std())/np.log(10)-lmean
-        # ax.bar([i], [lmean-BOTTOM], yerr=[std])
-        ax.bar([i], [lmean-BOTTOM])
-    kwargs = dict(transform=ax.transAxes, color='k', clip_on=False)
-    ax.plot((-0.09,0), (0.05,0.08), **kwargs)
-    ax.plot((-0.09,0), (0.065,0.095), **kwargs)
-    ax.plot([0], [2.1-BOTTOM], 'w.', alpha=.1)
-    set_plot(ax, ['left'], xticks=np.arange(4),
-             yticks=np.array([-3,-2,-1,0,1,2])-BOTTOM, ylabel='pop. act. (Hz)',
-             yticks_labels=['0', '0.01', '0.1', '1', '10', '100'],
-             xticks_labels=['$\\nu_a$', '$\\nu_d$', '$\\nu_e$', '$\\nu_i$'])
+    for pop_key, color in zip(POP_KEYS, COLORS):
+        if with_smoothing>0:
+            ax.plot(t[cond],
+                    gaussian_smoothing(data['POP_ACT_'+pop_key][cond], int(with_smoothing/data['dt'])),
+                    color=color)
+        else:
+            ax.plot(t[cond], data['POP_ACT_'+pop_key][cond], color=color)
+            
+    set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)')
     
-    return fig
+    return fig, ax
 
-def Vm_Isyn_fig(data, pop_key='Exc',
-                tzoom=[0, np.inf], NVm=3,
-                COLORS=['g', 'r', 'k', 'y'], Nnrn=500, Tbar=50,
-                vpeak=-40, vbottom=-80):
 
-    NVm= max([NVm, len(data['VMS_'+str(pop_key)])])
-    
+def few_Vm_plot(data,
+                POP_KEYS = None, COLORS=None, NVMS=None,
+                tzoom=[0, np.inf],
+                vpeak=-40, vbottom=-80, shift=20.,
+                lw=1):
+
+    if POP_KEYS is None:
+        POP_KEYS = find_pop_keys(data)
+    if COLORS is None:
+        COLORS = ['C'+str(i) for i in range(len(POP_KEYS))]
+    if NVMS is None:
+        NVMS = np.array([range(len(data['VMS_'+pop_key])) for pop_key in POP_KEYS])
+        
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
 
-    fig, AX = plt.subplots(2, NVm, figsize=(2*NVm, 3))
+    fig, ax = plt.subplots(figsize=(5,3))
     plt.subplots_adjust(left=.15, bottom=.1, right=.99)
     
-    for i in range(NVm):
-        cond = (t>tzoom[0]) & (t<tzoom[1]) & (data['VMS_'+str(pop_key)][i]!=data[str(find_num_of_key(data,pop_key))+'_params']['Vreset'])
-        AX[0,i].plot(t[cond], data['ISYNe_'+str(pop_key)][i][cond], color='g')
-        AX[0,i].plot(t[cond], data['ISYNi_'+str(pop_key)][i][cond], color='r')
-        AX[1,i].plot(t[cond], data['VMS_'+str(pop_key)][i][cond], color='k')
-        AX[0,i].set_xticklabels([]);AX[1,i].set_xticklabels([])
-        AX[1,i].set_ylim([vbottom, vpeak])
-        if i>0:
-            AX[0,i].set_yticklabels([])
-            AX[1,i].set_yticklabels([])
-    # adding spikes
-    for i in range(NVm):
-        tspikes = data['tRASTER_'+str(pop_key)][np.argwhere(data['iRASTER_'+str(pop_key)]==i).flatten()]
-        cond = (tspikes>tzoom[0]) & (tspikes<tzoom[1])
-        for ts in tspikes[cond]:
-            AX[1,i].plot([ts, ts], [-50, vpeak], 'k--')
-    
-    AX[0,0].plot([tzoom[0],tzoom[0]+Tbar], AX[0,0].get_ylim()[0]*np.ones(2),
-                 lw=5, color='gray')
-    AX[0,0].annotate(str(Tbar)+' ms', (tzoom[0], .9*AX[0,0].get_ylim()[0]), fontsize=14)
-    
-    imax = 0
-    for ax in AX[0,:]:
-        imax = max([imax, max(np.abs(ax.get_ylim()))])
-    for ax in AX[0,:]:
-        ax.plot(tzoom, [-imax, imax], 'w.', alpha=0.01)
-        ax.set_ylim([-imax, imax])
-    for ax in AX[1,:]:
-        ax.plot(tzoom, [vbottom, vpeak], 'w.', alpha=0.01)
-        
-    for i in range(NVm):
-        AX[1,i].set_title('cell '+str(i+1))
-        if i==0:
-            set_plot(AX[0,i], ['left'], ylabel='current (pA)', xticks=[], num_yticks=3)
-            set_plot(AX[1,i], ['left'], ylabel='$V_m$ (mV)', xticks=[],
-                     yticks=[-70,-60,-50])
-        else:
-            set_plot(AX[0,i], ['left'], xticks=[], num_yticks=3)
-            set_plot(AX[1,i], ['left'], xticks=[], yticks=[-70,-60,-50])
-    return fig
-
-def few_Vm_fig(data, pop_key='Exc',
-               tzoom=[0, np.inf], NVm=3,
-               COLORS=['g', 'r', 'k', 'y'], Nnrn=500, Tbar=50,
-               vpeak=-40, vbottom=-80):
-
-    NVm= max([NVm, len(data['VMS_'+str(pop_key)])])
-    
-    t = np.arange(int(data['tstop']/data['dt']))*data['dt']
-
-    fig, ax = plt.subplots(figsize=(3,1))
-    # plt.subplots_adjust(left=.15, bottom=.1, right=.99)
-    
     cond = (t>tzoom[0]) & (t<tzoom[1])
-    for i in range(NVm):
-        ax.plot(t[cond], data['VMS_'+str(pop_key)][i][cond]+10*i, color='k')
-    # adding spikes
-    for i in range(NVm):
-        tspikes = data['tRASTER_'+str(pop_key)][np.argwhere(data['iRASTER_'+str(pop_key)]==i).flatten()]
-        cond = (tspikes>tzoom[0]) & (tspikes<tzoom[1])
-        for ts in tspikes[cond]:
-            ax.plot([ts, ts], 10*i+np.array([-50, vpeak]), 'k--')
-    ax.plot([tzoom[0],tzoom[0]+Tbar], ax.get_ylim()[0]*np.ones(2),
-                 lw=5, color='gray')
-    ax.annotate(str(Tbar)+' ms', (tzoom[0], .9*ax.get_ylim()[0]), fontsize=14)
+
+    nn = 0
+    for VmID, pop_key, color in zip(NVMS, POP_KEYS, COLORS):
+        threshold, rest = data[pop_key+'_Vthre'], data[pop_key+'_El']
+        if pop_key+'_delta_v' in data:
+            threshold += data[pop_key+'_delta_v']
+        for i in VmID:
+            nn+=1
+            ax.plot(t[cond], data['VMS_'+pop_key][i][cond]+shift*nn, color=color, lw=lw)
+            # adding spikes
+            tspikes = data['tRASTER_'+str(pop_key)][np.argwhere(data['iRASTER_'+str(pop_key)]==i).flatten()]
+            Scond = (tspikes>tzoom[0]) & (tspikes<tzoom[1])
+            for ts in tspikes[Scond]:
+                ax.plot([ts, ts], shift*nn+np.array([threshold, vpeak]), '--', color=color, lw=lw)
+            ax.plot([t[cond][0], t[cond][-1]], shift*nn+np.array([rest, rest]), ':', color=color, lw=lw)
+                
+    # ax.plot([tzoom[0],tzoom[0]+Tbar], ax.get_ylim()[0]*np.ones(2),
+    #              lw=5, color='gray')
+    # ax.annotate(str(Tbar)+' ms', (tzoom[0], .9*ax.get_ylim()[0]), fontsize=14)
     set_plot(ax, [], xticks=[], yticks=[])
     
     return fig

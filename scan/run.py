@@ -20,6 +20,7 @@ def run_scan(Model, KEYS, VALUES,
         Model['PARAMS_SCAN'][key] = []
 
     def run_func(i, output):
+        print(MODELS[i]['Iamp'])
         running_sim_func(MODELS[i], **running_sim_func_args)
             
     i=0
@@ -49,7 +50,6 @@ def run_scan(Model, KEYS, VALUES,
         # # Exit the completed processes
         for fn in PROCESSES:
             p.join()
-
 
     # writing the parameters
     np.savez(Model['zip_filename'].replace('.zip', '_Model.npz'), **Model)

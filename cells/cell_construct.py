@@ -34,6 +34,7 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         eqs += """
         w_adapt : amp  """
 
+    ## --> starting current definition
     ## synaptic currents, 1) adding all synaptic currents to the membrane equation via the I variable
     eqs += """
         I = I0 """
@@ -42,11 +43,18 @@ def get_membrane_equation(neuron_params, synaptic_array,\
             # loop over each presynaptic element onto this target
             Gsyn = 'G'+synapse['name']
             if 'alpha' in synapse:
-                eqs += '+'+Gsyn+'*( %(alpha)f*(%(Erev)f*mV - V) + (1-%(alpha)f)*(%(Erev)f*mV - %(V0)f*mV) )' % synapse
-                print('using conductance-current mixture in synaptic equations, with ratio', synapse['alpha'])
+                eqs += '+'+Gsyn+'*( %(alpha)f*(%(Erev)f*mV - V) + (1.0-%(alpha)f)*(%(Erev)f*mV - %(V0)f*mV) )' % synapse
+                # print('using conductance-current mixture in synaptic equations, with ratio', synapse['alpha'])
             else:
                 eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
+    # adding a potential clamping current
+    if 'Vclamp' in neuron_params:
+        eqs += ' + Gclamp * (%(Vclamp)f*mV - V)' % neuron_params
     eqs += ' : amp'
+    ## ending current definition <--
+    if 'Vclamp' in neuron_params:
+        eqs += """
+        Gclamp : siemens """
 
     ## synaptic currents, 2) constructing the temporal dynamics of the synaptic conductances
     ## N.B. VALID ONLY FOR EXPONENTIAL SYNAPSES UNTIL NOW !!!!
@@ -55,7 +63,7 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         if synapse['pconn']>0:
             Gsyn = 'G'+synapse['name']
             eqs += """
-            """+'d'+Gsyn+'/dt = -'+Gsyn+'*(1./(%(Tsyn)f*ms)) : siemens' % synapse
+        """+'d'+Gsyn+'/dt = -'+Gsyn+'*(1./(%(Tsyn)f*ms)) : siemens' % synapse
     eqs += """
         I0 : amp """
 
@@ -155,14 +163,12 @@ def current_pulse_sim(args, params=None):
     return fig
         
 def built_up_neuron_params(Model, NRN_KEY, N=1):
-
     params = {'name':NRN_KEY, 'N':N}
-    keys = ['Gl', 'Cm','Trefrac', 'El', 'Vthre', 'Vreset',\
-            'delta_v', 'a', 'b', 'tauw']
-    for k in keys:
-        params[k] = Model[NRN_KEY+'_'+k]
+    for key, val in Model.items():
+        if key.split('_')[0]==NRN_KEY:
+            # catching all model parameters that start with the population name
+            params[key.replace(NRN_KEY+'_', '')] = val
     return params
-
         
 if __name__=='__main__':
 
