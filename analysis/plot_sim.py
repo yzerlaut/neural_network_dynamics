@@ -54,10 +54,10 @@ def raster(data,
             pass
     ax.plot(tzoom[0]*np.ones(2), [0, Nnrn], lw=5, color='gray')
     ax.annotate(str(Nnrn)+' neurons',\
-                 (0, .7), rotation=90, fontsize=14, xycoords='figure fraction')
+                 (0, -.1), rotation=90, fontsize=14, xycoords='axes fraction')
     ax.plot([tzoom[0],tzoom[0]+Tbar], [0, 0], lw=5, color='gray')
     ax.annotate(str(Tbar)+' ms',
-                 (0.2, 0.1), fontsize=14, xycoords='figure fraction')
+                 (0., -0.1), fontsize=14, xycoords='axes fraction')
     set_plot(ax, [], yticks=[], xticks=[],
              xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])],
              ylim=[0, NMAXS.sum()])
@@ -107,6 +107,7 @@ def few_Vm_plot(data,
                 POP_KEYS = None, COLORS=None, NVMS=None,
                 tzoom=[0, np.inf],
                 vpeak=-40, vbottom=-80, shift=20.,
+                Tbar=50., Vbar=20.,
                 lw=1, ax=None):
 
     if POP_KEYS is None:
@@ -138,10 +139,14 @@ def few_Vm_plot(data,
             for ts in tspikes[Scond]:
                 ax.plot([ts, ts], shift*nn+np.array([threshold, vpeak]), '--', color=color, lw=lw)
             ax.plot([t[cond][0], t[cond][-1]], shift*nn+np.array([rest, rest]), ':', color=color, lw=lw)
-                
-    ax.plot([tzoom[0],tzoom[0]+Tbar], ax.get_ylim()[0]*np.ones(2),
-                 lw=5, color='gray')
-    ax.annotate(str(Tbar)+' ms', (tzoom[0], .9*ax.get_ylim()[0]), fontsize=14)
+
+    y0 = ax.get_ylim()[0]
+    ax.plot([tzoom[0],tzoom[0]+Tbar], y0*np.ones(2),
+                 lw=2, color='k')
+    ax.annotate(str(int(Tbar))+' ms', (tzoom[0], .9*y0), fontsize=14)
+    ax.plot([tzoom[0],tzoom[0]], y0+np.arange(2)*Vbar,
+                 lw=2, color='k')
+    ax.annotate(str(int(Vbar))+' mV', (tzoom[0], y0+Vbar), fontsize=14)
     set_plot(ax, [], xticks=[], yticks=[])
     
     return ax
