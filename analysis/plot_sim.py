@@ -30,7 +30,8 @@ def find_num_of_key(data,pop_key):
 def raster(data,
            POP_KEYS = None, COLORS=None,
            NMAXS = None, tzoom=[0, np.inf],
-           Nnrn=500, Tbar=50, ms=1):
+           Nnrn=500, Tbar=50,
+           ms=1, ax=None):
 
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
@@ -38,9 +39,11 @@ def raster(data,
         COLORS = ['C'+str(i) for i in range(len(POP_KEYS))]
     if NMAXS is None:
         NMAXS = np.array([float(data['N_'+pop]) for pop in POP_KEYS])
+
+    if ax is None
+        _, ax = plt.subplots(1, figsize=(3.2,2))
+        plt.subplots_adjust(left=.05, bottom=.2)
         
-    fig, ax = plt.subplots(1, figsize=(3.2,2))
-    plt.subplots_adjust(left=.05, bottom=.2)
     # raster activity
     nn = 0
     for n, pop_key, color, nmax in zip(range(len(NMAXS)), POP_KEYS, COLORS, NMAXS):
@@ -58,7 +61,7 @@ def raster(data,
     set_plot(ax, [], yticks=[], xticks=[],
              xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])],
              ylim=[0, NMAXS.sum()])
-    return fig
+    return ax
 
 ######################################
 #### TIME-VARYING ACTIVITIES
@@ -72,7 +75,8 @@ def gaussian_smoothing(signal, idt_sbsmpl=10):
 def pop_act(data,
             POP_KEYS = None, COLORS=None,
             with_smoothing=0,
-            tzoom=[0, np.inf]):
+            tzoom=[0, np.inf]
+            lw=2, ax=None):
 
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
@@ -81,28 +85,29 @@ def pop_act(data,
         
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
     cond = (t>tzoom[0]) & (t<tzoom[1])
-    
-    fig, ax = plt.subplots(1, figsize=(4,2.5))
-    plt.subplots_adjust(left=.3, bottom=.3)
+
+    if ax is None:
+        fig, ax = plt.subplots(1, figsize=(4,2.5))
+        plt.subplots_adjust(left=.3, bottom=.3)
 
     for pop_key, color in zip(POP_KEYS, COLORS):
         if with_smoothing>0:
             ax.plot(t[cond],
                     gaussian_smoothing(data['POP_ACT_'+pop_key][cond], int(with_smoothing/data['dt'])),
-                    color=color)
+                    color=color, lw=lw)
         else:
-            ax.plot(t[cond], data['POP_ACT_'+pop_key][cond], color=color)
+            ax.plot(t[cond], data['POP_ACT_'+pop_key][cond], color=color, lw=lw)
             
     set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)')
     
-    return fig, ax
+    return ax
 
 
 def few_Vm_plot(data,
                 POP_KEYS = None, COLORS=None, NVMS=None,
                 tzoom=[0, np.inf],
                 vpeak=-40, vbottom=-80, shift=20.,
-                lw=1):
+                lw=1, ax=None):
 
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
@@ -113,8 +118,9 @@ def few_Vm_plot(data,
         
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
 
-    fig, ax = plt.subplots(figsize=(5,3))
-    plt.subplots_adjust(left=.15, bottom=.1, right=.99)
+    if ax is None:
+        _, ax = plt.subplots(figsize=(5,3))
+        plt.subplots_adjust(left=.15, bottom=.1, right=.99)
     
     cond = (t>tzoom[0]) & (t<tzoom[1])
 
@@ -133,12 +139,12 @@ def few_Vm_plot(data,
                 ax.plot([ts, ts], shift*nn+np.array([threshold, vpeak]), '--', color=color, lw=lw)
             ax.plot([t[cond][0], t[cond][-1]], shift*nn+np.array([rest, rest]), ':', color=color, lw=lw)
                 
-    # ax.plot([tzoom[0],tzoom[0]+Tbar], ax.get_ylim()[0]*np.ones(2),
-    #              lw=5, color='gray')
-    # ax.annotate(str(Tbar)+' ms', (tzoom[0], .9*ax.get_ylim()[0]), fontsize=14)
+    ax.plot([tzoom[0],tzoom[0]+Tbar], ax.get_ylim()[0]*np.ones(2),
+                 lw=5, color='gray')
+    ax.annotate(str(Tbar)+' ms', (tzoom[0], .9*ax.get_ylim()[0]), fontsize=14)
     set_plot(ax, [], xticks=[], yticks=[])
     
-    return fig
+    return ax
 
 def exc_inh_balance(data, pop_key='Exc'):
     

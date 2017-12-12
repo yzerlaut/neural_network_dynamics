@@ -20,7 +20,6 @@ def run_scan(Model, KEYS, VALUES,
         Model['PARAMS_SCAN'][key] = []
 
     def run_func(i, output):
-        print(MODELS[i]['Iamp'])
         running_sim_func(MODELS[i], **running_sim_func_args)
             
     i=0
