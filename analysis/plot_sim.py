@@ -40,7 +40,7 @@ def raster(data,
     if NMAXS is None:
         NMAXS = np.array([float(data['N_'+pop]) for pop in POP_KEYS])
 
-    if ax is None
+    if ax is None:
         _, ax = plt.subplots(1, figsize=(3.2,2))
         plt.subplots_adjust(left=.05, bottom=.2)
         
