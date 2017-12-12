@@ -98,7 +98,8 @@ def pop_act(data,
         else:
             ax.plot(t[cond], data['POP_ACT_'+pop_key][cond], color=color, lw=lw)
             
-    set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)')
+    set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
+             xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
     
     return ax
 
@@ -147,7 +148,8 @@ def few_Vm_plot(data,
     ax.plot([tzoom[0],tzoom[0]], y0+np.arange(2)*Vbar,
                  lw=2, color='k')
     ax.annotate(str(int(Vbar))+' mV', (tzoom[0], y0+Vbar), fontsize=14)
-    set_plot(ax, [], xticks=[], yticks=[])
+    set_plot(ax, [], xticks=[], yticks=[],
+             xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
     
     return ax
 
