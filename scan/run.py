@@ -47,7 +47,7 @@ def run_scan(Model, KEYS, VALUES,
         for p in PROCESSES:
             p.start()
         # # Exit the completed processes
-        for fn in PROCESSES:
+        for p in PROCESSES:
             p.join()
 
     # writing the parameters
