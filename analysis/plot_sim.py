@@ -75,7 +75,7 @@ def gaussian_smoothing(signal, idt_sbsmpl=10):
 def pop_act(data,
             POP_KEYS = None, COLORS=None,
             with_smoothing=0,
-            tzoom=[0, np.inf]
+            tzoom=[0, np.inf],
             lw=2, ax=None):
 
     if POP_KEYS is None:
