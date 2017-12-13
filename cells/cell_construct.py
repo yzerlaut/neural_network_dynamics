@@ -18,7 +18,7 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         print(neuron_params)
         print('------------------------------------------------------------------')
     ## pure membrane equation
-    if neuron_params['delta_v']==0:
+    if ('delta_v' not in neuron_params) or (neuron_params['delta_v']==0):
         # if hard threshold : Integrate and Fire
         eqs = """
         dV/dt = (%(Gl)f*nS*(%(El)f*mV - V) + I - w_adapt)/(%(Cm)f*pF) : volt (unless refractory) """ % neuron_params

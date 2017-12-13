@@ -75,6 +75,7 @@ def gaussian_smoothing(signal, idt_sbsmpl=10):
 def pop_act(data,
             POP_KEYS = None, COLORS=None,
             with_smoothing=0,
+            with_log_scale=False, fout_min=0.01,
             tzoom=[0, np.inf],
             lw=2, ax=None):
 
@@ -97,9 +98,17 @@ def pop_act(data,
                     color=color, lw=lw)
         else:
             ax.plot(t[cond], data['POP_ACT_'+pop_key][cond], color=color, lw=lw)
-            
-    set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
-             xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
+
+    if with_log_scale:
+        ax.set_yscale("log", nonposy='clip')
+        set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
+                 xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])],
+                 ylim=[fout_min, ax.get_ylim()[1]],
+                 yticks=[0.01, 1, 100],
+                 yticks_labels=['$10^{-2}$', '$10^0$', '$10^{2}$'])
+    else:
+        set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
+                 xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
     
     return ax
 
