@@ -117,14 +117,14 @@ def get_membrane_equation(neuron_params, synaptic_array,\
     else:
         return neurons
 
-def current_pulse_sim(args, params=None):
+def current_pulse_sim(args, params=None, verbose=False):
     
     if params is None:
         params = get_neuron_params(args['NRN'])
         
     neurons, eqs = get_membrane_equation(params, [],\
                                          return_equations=True)
-    if args['verbose']:
+    if verbose:
         print(eqs)
 
     fig, ax = brian2.subplots(figsize=(5,3))
@@ -203,6 +203,6 @@ if __name__=='__main__':
 
     from graphs.my_graph import set_plot, show
     
-    current_pulse_sim(vars(args))
+    current_pulse_sim(vars(args), verbose=args.verbose)
     show()
 

@@ -54,10 +54,10 @@ def raster(data,
             pass
     ax.plot(tzoom[0]*np.ones(2), [0, Nnrn], lw=5, color='gray')
     ax.annotate(str(Nnrn)+' neurons',\
-                 (0, -.1), rotation=90, fontsize=14, xycoords='axes fraction')
+                 (-0.1, 0.5), rotation=90, fontsize=12, xycoords='axes fraction')
     ax.plot([tzoom[0],tzoom[0]+Tbar], [0, 0], lw=5, color='gray')
     ax.annotate(str(Tbar)+' ms',
-                 (0., -0.1), fontsize=14, xycoords='axes fraction')
+                 (0., -0.1), fontsize=12, xycoords='axes fraction')
     set_plot(ax, [], yticks=[], xticks=[],
              xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])],
              ylim=[0, NMAXS.sum()])
@@ -108,6 +108,7 @@ def pop_act(data,
                  yticks_labels=['$10^{-2}$', '$10^0$', '$10^{2}$'])
     else:
         set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
+                 num_yticks=4,
                  xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
     
     return ax
@@ -153,10 +154,12 @@ def few_Vm_plot(data,
     y0 = ax.get_ylim()[0]
     ax.plot([tzoom[0],tzoom[0]+Tbar], y0*np.ones(2),
                  lw=2, color='k')
-    ax.annotate(str(int(Tbar))+' ms', (tzoom[0], .9*y0), fontsize=14)
+    ax.annotate(str(int(Tbar))+' ms',
+                 (0., -0.1), fontsize=12, xycoords='axes fraction')
     ax.plot([tzoom[0],tzoom[0]], y0+np.arange(2)*Vbar,
                  lw=2, color='k')
-    ax.annotate(str(int(Vbar))+' mV', (tzoom[0], y0+Vbar), fontsize=14)
+    ax.annotate(str(int(Vbar))+' mV',
+                 (-0.1, 0.5), rotation=90, fontsize=12, xycoords='axes fraction')
     set_plot(ax, [], xticks=[], yticks=[],
              xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
     
