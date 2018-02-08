@@ -20,6 +20,7 @@ from neural_network_dynamics.analysis.plot_sim import *
 from neural_network_dynamics.analysis.macro_quantities import *
 # plt.style.use('ggplot') # a nice plotting style
 from graphs.my_graph import *
+from recording.hdf5 import load_dict_from_hdf5
 
 #########################################################################
 ######## Some quick visualization functions

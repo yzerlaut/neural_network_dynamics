@@ -1,8 +1,8 @@
 import brian2
 import numpy as np
 import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-from data_analysis.IO.hdf5 import save_dict_to_hdf5, make_writable_dict
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+from recording.hdf5 import save_dict_to_hdf5, make_writable_dict
 
 def write_as_hdf5(NTWK, filename='data.h5'):
 
