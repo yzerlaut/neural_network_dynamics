@@ -4,7 +4,7 @@ This file construct the equations for brian2
 import numpy as np
 import brian2
 import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 from graphs.my_graph import set_plot, show
 from neural_network_dynamics.cells.cell_library import get_neuron_params
 
@@ -121,19 +121,23 @@ def current_pulse_sim(args, params=None):
     trace = brian2.StateMonitor(neurons, 'V', record=0)
     spikes = brian2.SpikeMonitor(neurons)
     # rest run
-    brian2.run(100 * brian2.ms)
-    # first pulse
-    # neurons.I0 = args['amp']*brian2.pA
-    brian2.run(args['duration'] * brian2.ms)
-    # second pulse
-    neurons.I0 -= 100.*brian2.pA
-    brian2.run(args['duration'] * brian2.ms)
-    # end second pulse
-    neurons.I0 += 100.*brian2.pA
-    brian2.run(args['duration'] * brian2.ms)
-    # end first pulse
-    # neurons.I0 = 0*brian2.pA
-    brian2.run(200 * brian2.ms) #
+    brian2.run(args['delay'] * brian2.ms)
+    if len(args['amplitudes'])>0:
+        if len(args['durations'])==len(args['amplitudes']):
+            durations = args['durations']
+        else:
+            durations = args['duration']*np.ones(len(args['amplitudes']))
+        for amp, dur in zip(args['amplitudes'], durations):
+            neurons.I0 += amp*brian2.pA
+            brian2.run(dur * brian2.ms)
+            neurons.I0 -= amp*brian2.pA
+    else:
+        # start pulse
+        neurons.I0 += args['amp']*brian2.pA
+        brian2.run(args['duration'] * brian2.ms)
+        # end pulse
+        neurons.I0 -= args['amp']*brian2.pA
+    brian2.run(args['delay'] * brian2.ms)
     # We draw nicer spikes
     Vm = trace[0].V[:]
     for t in spikes.t:
@@ -183,13 +187,20 @@ if __name__=='__main__':
                         type=float, default=200.)
     parser.add_argument('-d', "--duration",help="Duration of the current step in ms",\
                         type=float, default=400.)
+    parser.add_argument('-as', "--amplitudes",
+                        help="ARRAY of Amplitude of different steps in pA",\
+                        type=float, default=[], nargs='*')
+    parser.add_argument('-ds', "--durations",
+                        help="ARRAY of durations of different steps in ms",\
+                        type=float, default=[], nargs='*')
+    parser.add_argument('-dl', "--delay",help="Duration of the current step in ms",\
+                        type=float, default=150.)
     parser.add_argument('-p', "--post",help="After-Pulse duration of the step (ms)",\
                         type=float, default=400.)
     parser.add_argument("-c", "--color", help="color of the plot",
                         default='k')
     parser.add_argument("--save", help="save the figures with a given string", )
     args = parser.parse_args()
-
 
     current_pulse_sim(vars(args))
 
