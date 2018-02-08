@@ -3,6 +3,10 @@ This file construct the equations for brian2
 """
 import numpy as np
 import brian2
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+from graphs.my_graph import set_plot, show
+from neural_network_dynamics.cells.cell_library import get_neuron_params
 
 def get_membrane_equation(neuron_params, synaptic_array,\
                           return_equations=False, with_synaptic_currents=False,
@@ -104,10 +108,6 @@ def get_membrane_equation(neuron_params, synaptic_array,\
 
 def current_pulse_sim(args, params=None):
     
-    import brian2
-    from neural_network_dynamics.cells.cell_library import get_neuron_params
-    from graphs.my_graph import set_plot, show
-
     if params is None:
         params = get_neuron_params(args['NRN'])
         
@@ -169,8 +169,6 @@ def built_up_neuron_params(Model, NRN_KEY, N=1):
 if __name__=='__main__':
 
     print(__doc__)
-    import sys
-    sys.path.append('../..')
     # starting from an example
 
     import argparse
