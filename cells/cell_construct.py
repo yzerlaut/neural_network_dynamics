@@ -5,7 +5,7 @@ import numpy as np
 import brian2
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-from graphs.my_graph import set_plot, show
+from graphs.my_graph import set_plot
 from neural_network_dynamics.cells.cell_library import get_neuron_params
 
 def get_membrane_equation(neuron_params, synaptic_array,\
@@ -155,7 +155,6 @@ def current_pulse_sim(args, params=None):
     ax.annotate('10mV', (-50,-38))
     ax.annotate('50ms', (0,-55))
     set_plot(ax, [], xticks=[], yticks=[])
-    show()
     if 'save' in args.keys():
         fig.savefig(args['save'])
     return fig
@@ -202,6 +201,7 @@ if __name__=='__main__':
     parser.add_argument("--save", help="save the figures with a given string", )
     args = parser.parse_args()
 
+    from graphs.my_graph import show
     current_pulse_sim(vars(args))
-
+    show()
 
