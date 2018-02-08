@@ -122,7 +122,7 @@ def current_pulse_sim(args, params=None):
     spikes = brian2.SpikeMonitor(neurons)
     # rest run
     brian2.run(args['delay'] * brian2.ms)
-    if len(args['amplitudes'])>0:
+    if ('amplitudes' in args) and len(args['amplitudes'])>0:
         if len(args['durations'])==len(args['amplitudes']):
             durations = args['durations']
         else:
