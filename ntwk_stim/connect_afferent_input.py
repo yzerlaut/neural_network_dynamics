@@ -4,6 +4,10 @@ This script sets up an afferent inhomogenous Poisson process onto the population
 import brian2, string
 import numpy as np
 
+import itertools, string, sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+from ntwk_stim.poisson_generator import 
+
 def set_spikes_from_time_varying_rate(time_array, rate_array, N, Nsyn, SEED=1):
     """
 
