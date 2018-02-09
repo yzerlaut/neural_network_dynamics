@@ -4,27 +4,6 @@ This script sets up an afferent inhomogenous Poisson process onto the population
 import brian2, string
 import numpy as np
 
-def set_spikes_from_time_varying_rate(time_array, rate_array, N, Nsyn, SEED=1):
-    """
-
-    """
-    np.random.seed(SEED) # setting the seed !
-    
-    ## time_array in ms !!
-    # so multplying rate array
-    
-    indices, times = [], []
-    DT = (time_array[1]-time_array[0])
-    
-    # trivial way to generate inhomogeneous poisson events
-    for it in range(len(time_array)):
-        rdm_num = np.random.random(N)
-        for ii in np.arange(N)[rdm_num<DT*Nsyn*rate_array[it]*1e-3]:
-            indices.append(ii) # all the indices
-            times.append(time_array[it]) # all the same time !
-
-    return np.array(indices), np.array(times)*brian2.ms
-
 
 def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
                                 t, rate_array,\
@@ -56,7 +35,7 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         indices, times = set_spikes_from_time_varying_rate(\
                             t, rate_array,\
                             NTWK['POPS'][ipop].N, Nsyn, SEED=(SEED+2)**2%100)
-        spikes = brian2.SpikeGeneratorGroup(NTWK['POPS'][ipop].N, indices, times)
+        spikes = brian2.SpikeGeneratorGroup(NTWK['POPS'][ipop].N, indices, times*brian2.ms)
         pre_increment = 'G'+afferent_pop+target_pop+' += w'
         synapse = brian2.Synapses(spikes, NTWK['POPS'][ipop], on_pre=pre_increment,\
                                         model='w:siemens')
@@ -79,24 +58,6 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
             NTWK['tRASTER_PRE'] = [times]
 
 
-def deal_with_multiple_spikes_within_one_bin(indices, times, DT):
-    # nasty loop
-    n=0
-    for tt in np.unique(times):
-        for ii in np.unique(indices):
-            i1 = np.argwhere((np.abs(times-tt)<DT) & (indices==ii)).flatten()
-            if len(i1)>1:
-                for j, index in enumerate(i1):
-                    times[index] += DT*(-1)**j*int(j/2+.5)
-                    n+=1
-                n-=1 # remove the spike unchanged
-    if n==0:
-        return indices, times, True
-    else:
-        print('n=', n, 'spikes were shifted by dt to insure no overlapping presynaptic spikes (Brian2 constraint)')
-        return indices, times, False
-
-    
 def set_spikes_from_time_varying_rate_correlated(time_array, rate_array, AFF_TO_POP_MATRIX, SEED=1):
     """
     here, we don't assume that all inputs are decorrelated, we actually
@@ -321,3 +282,6 @@ def construct_feedforward_input_synchronous(NTWK,
     return AFF_TO_POP_MATRIX
 
             
+if __name__=='__main__':
+
+    print('test')
