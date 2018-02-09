@@ -30,7 +30,7 @@ def spikes_from_time_varying_rate(time_array, rate_array,
     indices, times = [], []
     # indices and spike times in terms of the pre-synaptic cell
     # (N.B. valid only if AFF_TO_POP_MATRIX is not None)
-    true_indices, true_times = [], []
+    pre_indices, pre_times = [], []
 
     if AFF_TO_POP_MATRIX is not None:
 
@@ -39,11 +39,11 @@ def spikes_from_time_varying_rate(time_array, rate_array,
         for it in range(len(time_array)):
             rdm_num = np.random.random(Npop_pre)
             for ii in np.arange(Npop_pre)[rdm_num<DT*rate_array[it]*1e-3]:
-                true_indices.append(ii)
-                true_times.append(time_array[it])
+                pre_indices.append(ii)
+                pre_times.append(time_array[it])
         # and then distribute it across the post-synaptic cells
         indices, times = np.empty(0, dtype=np.int), np.empty(0, dtype=np.float64)
-        for ii, tt in zip(true_indices, true_times):
+        for ii, tt in zip(pre_indices, pre_times):
             indices = np.concatenate([indices, np.array(AFF_TO_POP_MATRIX[ii,:], dtype=int)]) # all the indices
             times = np.concatenate([times, np.array([tt for j in range(len(AFF_TO_POP_MATRIX[ii,:]))])])
 
@@ -56,10 +56,10 @@ def spikes_from_time_varying_rate(time_array, rate_array,
                 indices.append(ii) # all the indices
                 times.append(time_array[it]) # all the same time !
                 
-    return np.array(indices), np.array(times), np.array(true_indices), np.array(true_times)
+    return np.array(indices), np.array(times), np.array(pre_indices), np.array(pre_times)
 
 
-def deal_with_multiple_spikes_per_bin(indices, times, verbose=False):
+def deal_with_multiple_spikes_per_bin(indices, times, t, verbose=False):
     """
     Brian2 constraint:
     spikes have to be shifted to insure no overlapping presynaptic spikes !
