@@ -4,6 +4,21 @@ This script sets up an afferent inhomogenous Poisson process onto the population
 import brian2, string
 import numpy as np
 
+from poisson_generator import spikes_from_time_varying_rate,\
+    deal_with_multiple_spikes_per_bin
+
+def aff_to_pop_matrix(N_source_pop, N_target_pop,
+                      Nsyn_onto_target_from_source,
+                      SEED=3):
+    """
+    Generates the connectivity matrix for a random projection from 
+    one population to the other !
+    """
+    np.random.seed(SEED)
+    return np.array([\
+      np.random.choice(np.arange(N_target_pop), Nsyn_onto_target_from_source, replace=False)\
+                     for k in range(N_source_pop)])
+
 
 def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
                                 t, rate_array,\
@@ -58,39 +73,6 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
             NTWK['tRASTER_PRE'] = [times]
 
 
-def set_spikes_from_time_varying_rate_correlated(time_array, rate_array, AFF_TO_POP_MATRIX, SEED=1):
-    """
-    here, we don't assume that all inputs are decorrelated, we actually
-    model a population of N neurons and just produce spikes according
-    to the "rate_array" frequency
-    """
-    ## time_array in ms !!
-    # so multplying rate array
-
-    Npop_pre = AFF_TO_POP_MATRIX.shape[0] # 
-    
-    true_indices, true_times = [], []
-    DT = (time_array[1]-time_array[0])
-    
-    # trivial way to generate inhomogeneous poisson events
-    for it in range(len(time_array)):
-        rdm_num = np.random.random(Npop_pre)
-        for ii in np.arange(Npop_pre)[rdm_num<DT*rate_array[it]*1e-3]:
-            true_indices.append(ii)
-            true_times.append(time_array[it])
-
-    indices, times = np.empty(0, dtype=np.int), np.empty(0, dtype=np.float64)
-    for ii, tt in zip(true_indices, true_times):
-        indices = np.concatenate([indices, np.array(AFF_TO_POP_MATRIX[ii,:], dtype=int)]) # all the indices
-        times = np.concatenate([times, np.array([tt for j in range(len(AFF_TO_POP_MATRIX[ii,:]))])])
-
-    # because brian2 can not handle multiple spikes in one bin, we shift them by dt when concomitant
-    indices, times, success = deal_with_multiple_spikes_within_one_bin(indices, times, DT)
-    if not success:
-        indices, times, success = deal_with_multiple_spikes_within_one_bin(indices, times, DT)
-                    
-    return indices, times*brian2.ms, np.array(true_indices), np.array(true_times)*brian2.ms
-
 def construct_feedforward_input_correlated(NTWK, target_pop,
                                            afferent_pop,\
                                            t, rate_array,\
@@ -98,6 +80,7 @@ def construct_feedforward_input_correlated(NTWK, target_pop,
                                            AFF_TO_POP_MATRIX=None,
                                            verbose=False,
                                            SEED=1):
+    
     """
     POPS and AFFERENCE_ARRAY should be 1D arrrays as their is only one 
     source population
@@ -192,10 +175,12 @@ def set_spikes_from_time_varying_rate_synchronous(time_array, rate_array,
     # because brian2 can not handle multiple spikes in one bin, we shift them by dt when concomitant
     success, nn = False, 0
     while (not success) and (nn<4):
-        indices, times, success = deal_with_multiple_spikes_within_one_bin(indices, times, DT)
+        indices, times, success = deal_with_multiple_spikes_per_bin(indices, times, DT)
         nn+=1
                     
     return indices, times*brian2.ms, np.array(true_indices), np.array(true_times)
+
+
 
 def construct_feedforward_input_synchronous(NTWK,
                                             target_pop,
@@ -232,16 +217,12 @@ def construct_feedforward_input_synchronous(NTWK,
             DUPLICATION_MATRIX[k][ii] = np.random.randint(N_source)
     
     Nsyn = int(Model['p_'+afferent_pop+'_'+target_pop]*N_target)
+
+    AFF_TO_POP_MATRIX = aff_to_pop_matrix(N_source, N_target, Nsyn)
     
     if with_neuronpop_shift_synchronous_input:
         # we shift the stimulus above the N_target neurons
-        AFF_TO_POP_MATRIX = np.array([\
-                                  np.random.choice(np.arange(N_target, 2*N_target), Nsyn, replace=False)\
-                                  for k in range(N_source)])
-    else:
-        AFF_TO_POP_MATRIX = np.array([\
-                              np.random.choice(np.arange(N_target), Nsyn, replace=False)\
-                              for k in range(N_source)])
+        AFF_TO_POP_MATRIX += N_target
     
     indices, times, true_indices, true_times = set_spikes_from_time_varying_rate_synchronous(\
                                                 t, rate_array,\
@@ -285,3 +266,5 @@ def construct_feedforward_input_synchronous(NTWK,
 if __name__=='__main__':
 
     print('test')
+    print(aff_to_pop_matrix(3, 10, 2))
+
