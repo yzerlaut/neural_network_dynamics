@@ -72,7 +72,6 @@ t_array = ntwk.arange(int(Model['tstop']/Model['dt']))*Model['dt']
 # # # afferent excitation onto thalamic excitation
 ntwk.construct_feedforward_input(NTWK, 'Thal', 'AffExc',
                                      t_array, faff+0.*t_array,
-                                     with_presynaptic_spikes=True,
                                      verbose=True,
                                      SEED=int(38*faff)%37)
 

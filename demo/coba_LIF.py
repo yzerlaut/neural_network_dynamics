@@ -62,8 +62,6 @@ if sys.argv[-1]=='plot':
     
 else:
     ## we build and run the simulation
-
-
     NTWK = ntwk.build_populations(Model, ['Exc', 'Inh'],
                                   with_raster=True, with_Vm=4,
                                   # with_synaptic_currents=True,

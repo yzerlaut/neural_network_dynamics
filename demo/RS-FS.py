@@ -79,7 +79,6 @@ else:
     for i, tpop in enumerate(['Exc', 'Inh']): # both on excitation and inhibition
         ntwk.construct_feedforward_input(NTWK, tpop, 'AffExc',
                                          t_array, faff+0.*t_array,
-                                         with_presynaptic_spikes=True,
                                          verbose=True,
                                          SEED=int(37*faff+i)%37)
 
