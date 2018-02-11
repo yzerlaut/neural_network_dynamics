@@ -1,12 +1,8 @@
 import numpy as np
-<<<<<<< HEAD
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from recording.hdf5 import save_dict_to_hdf5, make_writable_dict
-=======
 import brian2, h5py, os
-
->>>>>>> c4e44675403bf6819178ba31bd95825368057d99
 
 def write_as_hdf5(NTWK, filename='data.h5'):
 
@@ -15,6 +11,8 @@ def write_as_hdf5(NTWK, filename='data.h5'):
     for key, val in NTWK['Model'].items():
         if (type(val)==int) or (type(val)==float):
             data[key] = np.ones(1)*val
+        if (type(val)==np.ndarray)
+            data[key] = val
             
     # we write it per population
     for ii in range(len(NTWK['NEURONS'])):

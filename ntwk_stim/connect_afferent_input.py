@@ -23,7 +23,7 @@ def build_aff_to_pop_matrix(afferent_pop, target_pop, Model,
     
     return np.array([\
       np.random.choice(np.arange(N_target_pop), Nsyn_onto_target_from_source, replace=False)\
-                     for k in range(N_source_pop)])
+                     for k in range(N_source_pop)], dtype=int)
 
 
 def translate_aff_spikes_into_syn_target_events(source_ids, source_times,
@@ -33,7 +33,7 @@ def translate_aff_spikes_into_syn_target_events(source_ids, source_times,
         for j in CONN_MATRIX[s,:]:
             indices.append(j)
             times.append(t)
-    return np.array(indices), np.array(times)
+    return np.array(indices, dtype=int), np.array(times)
 
 
 def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
@@ -53,6 +53,7 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
 
     if AFF_TO_POP_MATRIX then fixed pre-pop number: see "poisson_generator.py"
     """
+    print(additional_spikes)
 
     Model = NTWK['Model']
     
@@ -77,10 +78,14 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
                                                        Nsyn,
                                                        AFF_TO_POP_MATRIX=AFF_TO_POP_MATRIX,
                                                        SEED=(SEED+2)**2%100)
+        
+        print(additional_spikes)
+        
         # adding the additional spikes
         indices = np.concatenate([indices, additional_spikes['indices']])
         times = np.concatenate([times, additional_spikes['times']])
-
+        
+        
         # insuring no more than one prespike per bin
         indices, times = deal_with_multiple_spikes_per_bin(indices, times, t, verbose=verbose)
 
@@ -99,9 +104,7 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         print('Nsyn = 0 for', afferent_pop+'_'+target_pop)
         spikes, synapse, indices, times = None, None, [], []
     
-
     # storing quantities:
-    
     if 'iRASTER_PRE' in NTWK.keys():
         NTWK['iRASTER_PRE'].append(indices)
         NTWK['tRASTER_PRE'].append(times)
