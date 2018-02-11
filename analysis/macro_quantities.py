@@ -20,7 +20,8 @@ def get_CV_spiking(data, pop='Exc'):
         return 0
 
 def get_synchrony_of_spiking(data, pop='Exc',
-                             Tbin=2, Nmax_pairs=4000, seed=23):
+                             Tbin=2, Nmax_pairs=4000,
+                             seed=23, tzoom=[-np.inf, np.inf]):
     """see Kumar et al. 2008
 
     we introduce a limiting number of pairs for fast computation"""
@@ -36,6 +37,10 @@ def get_synchrony_of_spiking(data, pop='Exc',
         print('key not recognized !!')
 
     ispikes, tspikes = data['iRASTER_'+pop], data['tRASTER_'+pop]
+    # in case we focus on a subset of the temporal dynamics (none by default)
+    cond = (tspikes>tzoom[0]) & (tspikes<tzoom[1])
+    ispikes, tspikes = ispikes[cond], tspikes[cond]
+    
     ispikes_unique = np.unique(ispikes)
     new_t = np.arange(int(data['tstop'][0]/Tbin)+5)*Tbin
 

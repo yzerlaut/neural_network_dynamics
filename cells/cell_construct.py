@@ -5,7 +5,6 @@ import numpy as np
 import brian2
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-from graphs.my_graph import set_plot
 from neural_network_dynamics.cells.cell_library import get_neuron_params
 
 def get_membrane_equation(neuron_params, synaptic_array,\
@@ -19,7 +18,7 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         print(neuron_params)
         print('------------------------------------------------------------------')
     ## pure membrane equation
-    if neuron_params['delta_v']==0:
+    if ('delta_v' not in neuron_params) or (neuron_params['delta_v']==0):
         # if hard threshold : Integrate and Fire
         eqs = """
         dV/dt = (%(Gl)f*nS*(%(El)f*mV - V) + I - w_adapt)/(%(Cm)f*pF) : volt (unless refractory) """ % neuron_params
@@ -35,6 +34,7 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         eqs += """
         w_adapt : amp  """
 
+    ## --> starting current definition
     ## synaptic currents, 1) adding all synaptic currents to the membrane equation via the I variable
     eqs += """
         I = I0 """
@@ -42,8 +42,19 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         if synapse['pconn']>0:
             # loop over each presynaptic element onto this target
             Gsyn = 'G'+synapse['name']
-            eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
+            if 'alpha' in synapse:
+                eqs += '+'+Gsyn+'*( %(alpha)f*(%(Erev)f*mV - V) + (1.0-%(alpha)f)*(%(Erev)f*mV - %(V0)f*mV) )' % synapse
+                # print('using conductance-current mixture in synaptic equations, with ratio', synapse['alpha'])
+            else:
+                eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
+    # adding a potential clamping current
+    if 'Vclamp' in neuron_params:
+        eqs += ' + Gclamp * (%(Vclamp)f*mV - V)' % neuron_params
     eqs += ' : amp'
+    ## ending current definition <--
+    if 'Vclamp' in neuron_params:
+        eqs += """
+        Gclamp : siemens """
 
     ## synaptic currents, 2) constructing the temporal dynamics of the synaptic conductances
     ## N.B. VALID ONLY FOR EXPONENTIAL SYNAPSES UNTIL NOW !!!!
@@ -52,7 +63,7 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         if synapse['pconn']>0:
             Gsyn = 'G'+synapse['name']
             eqs += """
-            """+'d'+Gsyn+'/dt = -'+Gsyn+'*(1./(%(Tsyn)f*ms)) : siemens' % synapse
+        """+'d'+Gsyn+'/dt = -'+Gsyn+'*(1./(%(Tsyn)f*ms)) : siemens' % synapse
     eqs += """
         I0 : amp """
 
@@ -106,13 +117,15 @@ def get_membrane_equation(neuron_params, synaptic_array,\
     else:
         return neurons
 
-def current_pulse_sim(args, params=None):
+def current_pulse_sim(args, params=None, verbose=False):
     
     if params is None:
         params = get_neuron_params(args['NRN'])
         
     neurons, eqs = get_membrane_equation(params, [],\
                                          return_equations=True)
+    if verbose:
+        print(eqs)
 
     fig, ax = brian2.subplots(figsize=(5,3))
 
@@ -141,8 +154,9 @@ def current_pulse_sim(args, params=None):
     # We draw nicer spikes
     Vm = trace[0].V[:]
     for t in spikes.t:
-        ax.plot(t/brian2.ms*np.ones(2), [Vm[int(t/brian2.defaultclock.dt)]/brian2.mV+2,-10], '--',\
-                 color=args['color'])
+        ax.plot(t/brian2.ms*np.ones(2),
+                [Vm[int(t/brian2.defaultclock.dt)]/brian2.mV,-10],
+                '--', color=args['color'])
     ax.plot(trace.t / brian2.ms, Vm / brian2.mV, color=args['color'])
     
     if 'NRN' in args.keys():
@@ -160,14 +174,12 @@ def current_pulse_sim(args, params=None):
     return fig
         
 def built_up_neuron_params(Model, NRN_KEY, N=1):
-
     params = {'name':NRN_KEY, 'N':N}
-    keys = ['Gl', 'Cm','Trefrac', 'El', 'Vthre', 'Vreset',\
-            'delta_v', 'a', 'b', 'tauw']
-    for k in keys:
-        params[k] = Model[NRN_KEY+'_'+k]
+    for key, val in Model.items():
+        if key.split('_')[0]==NRN_KEY:
+            # catching all model parameters that start with the population name
+            params[key.replace(NRN_KEY+'_', '')] = val
     return params
-
         
 if __name__=='__main__':
 
@@ -177,8 +189,7 @@ if __name__=='__main__':
     import argparse
     parser=argparse.ArgumentParser(description=
      """ 
-     Generating random sample of a given distributions and
-     comparing it with its theoretical value
+     By default the scripts runs the single neuron response to a current step
      """
     ,formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-n', "--NRN", help="NEURON TYPE", default='LIF')
@@ -198,10 +209,12 @@ if __name__=='__main__':
                         type=float, default=400.)
     parser.add_argument("-c", "--color", help="color of the plot",
                         default='k')
-    parser.add_argument("--save", help="save the figures with a given string", )
+    parser.add_argument("--save", help="save the figures with a given string")
+    parser.add_argument("-v", "--verbose", help="",
+                        action="store_true")
     args = parser.parse_args()
 
-    from graphs.my_graph import show
+    from graphs.my_graph import set_plot, show
     current_pulse_sim(vars(args))
     show()
 

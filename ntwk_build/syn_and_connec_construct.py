@@ -99,7 +99,7 @@ def get_syn_and_conn_matrix(Model, POPULATIONS,
             print('-----> set to Exc by default')
             Erev, Ts = Model['Ee'], Model['Tse']
 
-        if ('p_'+source_pop+'_'+target_pop in Model.keys()) and ('Q_'+source_pop+'_'+target_pop in Model.keys()):
+        if ('p_'+source_pop+'_'+target_pop in Model) and ('Q_'+source_pop+'_'+target_pop in Model):
             pconn, Qsyn = Model['p_'+source_pop+'_'+target_pop], Model['Q_'+source_pop+'_'+target_pop]
         else:
             if verbose:
@@ -110,12 +110,18 @@ def get_syn_and_conn_matrix(Model, POPULATIONS,
                    'Erev': Erev, 'Tsyn': Ts,
                    'name':source_pop+target_pop}
 
+        # in case conductance-current mixture
+        if ('alpha_'+source_pop+'_'+target_pop in Model) and ('V0' in Model):
+            M[i,j]['alpha'], M[i,j]['V0'] = Model['alpha_'+source_pop+'_'+target_pop], Model['V0']
+
     if SI_units:
         print('synaptic network parameters in SI units')
         for m in M.flatten():
             m['Q'] *= 1e-9
             m['Erev'] *= 1e-3
             m['Tsyn'] *= 1e-3
+            if 'V0' in m:
+                m['V0'] *= 1e-3
     else:
         if verbose:
             print('synaptic network parameters --NOT-- in SI units')
