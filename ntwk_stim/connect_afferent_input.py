@@ -9,16 +9,23 @@ import numpy as np
 from ntwk_stim.poisson_generator import spikes_from_time_varying_rate,\
     deal_with_multiple_spikes_per_bin
 
-def build_aff_to_pop_matrix(afferent_pop, target_pop, Model,
+def build_aff_to_pop_matrix(afferent_pop, target_pop,
+                            Model,
+                            N_source_pop=None,
+                            N_target_pop=None,
                             SEED=3):
     """
     Generates the connectivity matrix for a random projection from 
     one population to the other !
+
+    possibility to subsample the target or source pop through the "N_source_pop" and "N_target_pop" args
     """
     np.random.seed(SEED) # insure a precise seed !
-    
-    N_source_pop = Model['N_'+afferent_pop]
-    N_target_pop = Model['N_'+target_pop]
+
+    if N_source_pop is None:
+        N_source_pop = Model['N_'+afferent_pop]
+    if N_target_pop is None:
+        N_target_pop = Model['N_'+target_pop]
     Nsyn_onto_target_from_source = int(Model['p_'+afferent_pop+'_'+target_pop]*Model['N_'+afferent_pop])
     
     return np.array([\

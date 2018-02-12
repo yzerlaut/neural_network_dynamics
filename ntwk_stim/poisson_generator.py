@@ -103,8 +103,8 @@ def deal_with_multiple_spikes_per_bin(indices, times, t, verbose=False):
     
 if __name__=='__main__':
 
-    t = np.arange(1000)*0.1
-    indices, times, _, _ = spikes_from_time_varying_rate(t, 100+0.*t, 100, 100, SEED=1)
+    t = np.arange(100000)*0.1
+    indices, times, _, _ = spikes_from_time_varying_rate(t, 10+0.*t, 100, 100, SEED=1)
     indices = np.concatenate([indices, np.random.choice(np.arange(100),1000)])
     times = np.concatenate([times, np.random.randn(1000)*10+50])
     
@@ -116,7 +116,7 @@ if __name__=='__main__':
         if len(binned_spikes[binned_spikes>1])>0:
             print('+1 neuron with duplicate spikes')
             
-    indices, times = deal_with_multiple_spikes_per_bin(indices, times)
+    indices, times = deal_with_multiple_spikes_per_bin(indices, times, t)
     print('--------- AFTER ------')
     for ii in np.unique(indices):
         binned_spikes = np.histogram(times[ii==indices], bins=t)[0]
