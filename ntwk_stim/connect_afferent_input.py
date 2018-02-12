@@ -53,7 +53,6 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
 
     if AFF_TO_POP_MATRIX then fixed pre-pop number: see "poisson_generator.py"
     """
-    print(additional_spikes)
 
     Model = NTWK['Model']
     
