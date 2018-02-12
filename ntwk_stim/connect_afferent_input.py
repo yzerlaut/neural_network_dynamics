@@ -85,8 +85,6 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
                                                        AFF_TO_POP_MATRIX=AFF_TO_POP_MATRIX,
                                                        SEED=(SEED+2)**2%100)
         
-        print(additional_spikes)
-        
         # adding the additional spikes
         indices = np.concatenate([indices, additional_spikes['indices']])
         times = np.concatenate([times, additional_spikes['times']])
