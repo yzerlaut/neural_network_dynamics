@@ -11,7 +11,7 @@ def write_as_hdf5(NTWK, filename='data.h5'):
     for key, val in NTWK['Model'].items():
         if (type(val)==int) or (type(val)==float):
             data[key] = np.ones(1)*val
-        if (type(val)==np.ndarray)
+        if (type(val)==np.ndarray):
             data[key] = val
             
     # we write it per population
