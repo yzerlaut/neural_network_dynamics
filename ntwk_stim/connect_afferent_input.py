@@ -89,7 +89,6 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         indices = np.concatenate([indices, additional_spikes['indices']])
         times = np.concatenate([times, additional_spikes['times']])
         
-        
         # insuring no more than one prespike per bin
         indices, times = deal_with_multiple_spikes_per_bin(indices, times, t, verbose=verbose)
 
