@@ -47,7 +47,6 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
                                 t, rate_array,\
                                 AFF_TO_POP_MATRIX=None,
                                 additional_spikes={'indices':[], 'times':[]},
-                                already_sorted_and_non_overlaping=False,
                                 verbose=False,
                                 SEED=1):
     """
