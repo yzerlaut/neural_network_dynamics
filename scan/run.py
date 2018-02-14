@@ -5,6 +5,7 @@ import zipfile
 
 def run_scan(Model, KEYS, VALUES,
              running_sim_func, running_sim_func_args={},
+             fix_missing_only=False,
              parallelize=True, scan_seed=10):
 
     np.random.seed(scan_seed)
@@ -27,7 +28,7 @@ def run_scan(Model, KEYS, VALUES,
     i=0
     for VAL in product(*VALUES):
         Model = Model.copy()
-        FN = Model['data_folder']
+        FN = Model['data_folder']#+'sim'
         for key, val in zip(KEYS, VAL):
             Model[key] = val
             FN += '_'+key+'_'+str(val)
@@ -46,11 +47,21 @@ def run_scan(Model, KEYS, VALUES,
 
     if parallelize:
         # Run processes
-        for p in PROCESSES:
-            p.start()
+        for p, f in zip(PROCESSES, Model['PARAMS_SCAN']['FILENAMES']):
+            if fix_missing_only:
+                # we only run the configuration
+                if not os.path.isfile(f): # if it doesn't exists !
+                    p.start()
+            else:
+                p.start()
         # # Exit the completed processes
-        for p in PROCESSES:
-            p.join()
+        for p, f in zip(PROCESSES, Model['PARAMS_SCAN']['FILENAMES']):
+            if fix_missing_only:
+                # we only run the configuration
+                if not os.path.isfile(f): # if it doesn't exists !
+                    p.join()
+            else:
+                p.join()
 
     # writing the parameters
     np.savez(Model['zip_filename'].replace('.zip', '_Model.npz'), **Model)
