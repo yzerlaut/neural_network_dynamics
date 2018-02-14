@@ -93,8 +93,8 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         indices, times = deal_with_multiple_spikes_per_bin(indices, times, t, verbose=verbose)
 
         # incorporating into Brian2 objects
-        spikes = brian2.SpikeGeneratorGroup(NTWK['POPS'][ipop].N, indices, times*brian2.ms,
-                                            sorted=True) # sorted = True, see "deal_with_multiple_spikes_per_bin"
+        spikes = brian2.SpikeGeneratorGroup(NTWK['POPS'][ipop].N, indices, times*brian2.ms)
+        # sorted = True, see "deal_with_multiple_spikes_per_bin"
         pre_increment = 'G'+afferent_pop+target_pop+' += w'
         synapse = brian2.Synapses(spikes, NTWK['POPS'][ipop], on_pre=pre_increment,\
                                         model='w:siemens')
