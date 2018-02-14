@@ -69,45 +69,46 @@ def deal_with_multiple_spikes_per_bin(indices, times, t, verbose=False, debug=Fa
     if verbose:
         print('Insuring only 1 presynaptic spikes per dt [...]')
 
-    for ii in np.array(np.unique(indices), dtype=int):
+    indices2, times2 = np.empty(0, dtype=int), np.empty(0) 
+    for nn in np.array(np.unique(indices), dtype=int):
         if debug:
-            print('neuron ', ii)
-        cond_ii = (ii==indices)
-        binned_spikes = np.histogram(times[cond_ii], bins=t)[0]
+            print('neuron ', nn)
+        binned_spikes = np.histogram(times[nn==indices], bins=t)[0]
         new_binned_spikes = 0.*binned_spikes
-        range_of_spk_num = np.arange(0, np.max(binned_spikes)+1)
+        range_of_spk_num = np.arange(1, np.max(binned_spikes)+1)
         for spk_num in range_of_spk_num[::-1]:
-            # let's find the times corresponding to this high spike number:
-            ii = np.argwhere(binned_spikes==spk_num).flatten()
             if debug:
-                print(spk_num, binned_spikes, new_binned_spikes)
+                print(spk_num, binned_spikes)
             # let's find the empty ones
             iempty = np.argwhere(new_binned_spikes==0).flatten()
-            for jj in ii:
+            # let's find the times corresponding to this high spike number:
+            for jj in np.argwhere(binned_spikes==spk_num).flatten():
                 new_binned_spikes[iempty[np.argmin((iempty-jj)**2)]] += 1
                 binned_spikes[jj] -= 1
-                
-        for jj, vv, in zip(np.arange(len(times))[cond_ii], np.array(t[:-1][new_binned_spikes==1]+dt/2.)):
-            times[jj] = vv
+            if debug:
+                print(spk_num, binned_spikes, new_binned_spikes)
 
-    return indices, times
+        times2 = np.concatenate([times2, np.array(t[:-1][new_binned_spikes==1]+dt/2.)])
+        indices2 = np.concatenate([indices2, nn*np.ones(len(t[:-1][new_binned_spikes==1]), dtype=int)])
+
+    return indices2, times2
 
     
 if __name__=='__main__':
 
     tstop, dt = 2e3, 0.1
     t = np.arange(int(tstop/dt))*dt
+    print('generate spikes [...]')
     indices, times, _, _ = spikes_from_time_varying_rate(t, 50+0.*t, 100, 100, SEED=1)
     indices = np.concatenate([indices, np.random.choice(np.arange(100),1000)])
-    # times = np.concatenate([times, np.random.randn(1000)*10+50])
     times = np.concatenate([times, 50*np.ones(1000)])
+    indices, times = deal_with_multiple_spikes_per_bin(indices, times, t, verbose=True, debug=False)
     
-    for ii in np.unique(indices):
-        binned_spikes = np.histogram(times[ii==indices], bins=t)[0]
-        if len(binned_spikes[binned_spikes>1])>0:
-            print('+1 neuron with duplicate spikes')
+    # for ii in np.unique(indices):
+    #     binned_spikes = np.histogram(times[ii==indices], bins=t)[0]
+    #     if len(binned_spikes[binned_spikes>1])>0:
+    #         print('+1 neuron with duplicate spikes')
 
-    indices, times = deal_with_multiple_spikes_per_bin(indices, times, t, verbose=True, debug=True)
     
     print('--------- AFTER ------')
     for ii in np.unique(indices):
@@ -118,6 +119,5 @@ if __name__=='__main__':
     # t = np.arange(10)*0.1
     # indices = np.concatenate([np.ones(8)*5, np.ones(4)*3, np.ones(1)])
     # times = np.concatenate([np.ones(8)*.5, np.ones(4)*.3, np.ones(1)*.1])
-    # print(indices)
-    # print(times)
+    # indices, times = deal_with_multiple_spikes_per_bin(indices, times, t, verbose=True, debug=True)
 
