@@ -1,10 +1,11 @@
 import multiprocessing as mp
 import numpy as np
 from itertools import product
-import zipfile
+import zipfile, os
 
 def run_scan(Model, KEYS, VALUES,
-             running_sim_func, running_sim_func_args={},
+             running_sim_func,
+             running_sim_func_args={},
              fix_missing_only=False,
              parallelize=True, scan_seed=10):
 
