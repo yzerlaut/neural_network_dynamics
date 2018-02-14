@@ -29,7 +29,7 @@ def run_scan(Model, KEYS, VALUES,
     i=0
     for VAL in product(*VALUES):
         Model = Model.copy()
-        FN = Model['data_folder']#+'sim'
+        FN = Model['data_folder']+'sim'
         for key, val in zip(KEYS, VAL):
             Model[key] = val
             FN += '_'+key+'_'+str(val)
@@ -45,7 +45,7 @@ def run_scan(Model, KEYS, VALUES,
                     print('running configuration ', FN)
                     PROCESSES.append(mp.Process(target=run_func, args=(i, output)))
                 else:
-                    print('configuration DONE: ', f)
+                    print('configuration DONE: ', FN)
             else:
                 PROCESSES.append(mp.Process(target=run_func, args=(i, output)))
         else:
