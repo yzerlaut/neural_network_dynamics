@@ -5,8 +5,10 @@ import zipfile
 
 def run_scan(Model, KEYS, VALUES,
              running_sim_func, running_sim_func_args={},
-             parallelize=True):
+             parallelize=True, scan_seed=10):
 
+    np.random.seed(scan_seed)
+    
     MODELS = []
     if parallelize:
         PROCESSES = []
