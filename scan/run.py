@@ -40,32 +40,25 @@ def run_scan(Model, KEYS, VALUES,
         MODELS.append(Model.copy())
         
         if parallelize:
-            PROCESSES.append(mp.Process(target=run_func, args=(i, output)))
+            if fix_missing_only:
+                if not os.path.isfile(FN): # if it doesn't exists !
+                    print('running configuration ', FN)
+                    PROCESSES.append(mp.Process(target=run_func, args=(i, output)))
+                else:
+                    print('configuration DONE: ', f)
+            else:
+                PROCESSES.append(mp.Process(target=run_func, args=(i, output)))
         else:
             run_func(i, 0)
         i+=1
 
     if parallelize:
         # Run processes
-        for p, f in zip(PROCESSES, Model['PARAMS_SCAN']['FILENAMES']):
-            if fix_missing_only:
-                # we only run the configuration
-                if not os.path.isfile(f): # if it doesn't exists !
-                    p.start()
-            else:
-                p.start()
+        for p in PROCESSES:
+            p.start()
         # # Exit the completed processes
-        for p, f in zip(PROCESSES, Model['PARAMS_SCAN']['FILENAMES']):
-            if fix_missing_only:
-                # we only run the configuration
-                if not os.path.isfile(f): # if it doesn't exists !
-                    print('running configuration ', f)
-                    p.join()
-                else:
-                    print('configuration DONE: ', f)
-            else:
-                print('running configuration ', f)
-                p.join()
+        for p in PROCESSES:
+            p.join()
 
     # writing the parameters
     np.savez(Model['zip_filename'].replace('.zip', '_Model.npz'), **Model)
