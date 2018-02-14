@@ -37,7 +37,6 @@ def run_scan(Model, KEYS, VALUES,
         FN += '_'+str(np.random.randint(100000))+'.h5'
         Model['filename'] = FN
         Model['PARAMS_SCAN']['FILENAMES'].append(FN)
-        print('running configuration ', Model['filename'])
         MODELS.append(Model.copy())
         
         if parallelize:
@@ -60,8 +59,12 @@ def run_scan(Model, KEYS, VALUES,
             if fix_missing_only:
                 # we only run the configuration
                 if not os.path.isfile(f): # if it doesn't exists !
+                    print('running configuration ', f)
                     p.join()
+                else:
+                    print('configuration DONE: ', f)
             else:
+                print('running configuration ', f)
                 p.join()
 
     # writing the parameters
