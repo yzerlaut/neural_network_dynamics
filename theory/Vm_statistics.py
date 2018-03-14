@@ -19,15 +19,20 @@ def getting_statistical_properties(params,
                                'Q_j':syn['Q'], 'tau_j':syn['Tsyn']})
             if 'V0' in syn:
                 SYN_PARAMS[-1]['V0'] = syn['V0']
-            if 'alpha' in syn:
-                SYN_PARAMS[-1]['a_j'] = syn['alpha']
+            else:
+                SYN_PARAMS[-1]['V0'] = 0
         else:
             SYN_PARAMS.append({'E_j': 1e-3*syn['Erev'], 'C_m':1e-12*params['Cm'],
                                'Q_j':syn['Q']*1e-9, 'tau_j':1e-3*syn['Tsyn']})
             if 'V0' in syn:
                 SYN_PARAMS[-1]['V0'] = 1e-3*syn['V0']
-            if 'alpha' in syn:
-                SYN_PARAMS[-1]['a_j'] = syn['alpha']
+            else:
+                SYN_PARAMS[-1]['V0'] = 0
+                
+        if 'alpha' in syn:
+            SYN_PARAMS[-1]['a_j'] = syn['alpha']
+        else:
+            SYN_PARAMS[-1]['a_j'] = 1 # pure conductance based by default
         RATES2.append(RATES['F_'+syn['name']]*syn['N']*syn['pconn'])
 
     # A zero array to handle both float and array cases (for addition/multiplication)
