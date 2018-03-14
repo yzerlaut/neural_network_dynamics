@@ -228,9 +228,13 @@ if __name__=='__main__':
 
     # import the model defined in root directory
     sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-    from model import Model
-    Model['COEFFS_RecExc'] = np.load('../../sparse_vs_balanced/data/COEFFS_RecExc.npy')
-    Model['COEFFS_RecInh'] = np.load('../../sparse_vs_balanced/data/COEFFS_RecInh.npy')
+    # f  = open('../configs/The_Spectrum_of_Asynch_Dyn_2018.py')
+    # exec(f)
+    Model = {}
+    exec(open('../configs/The_Spectrum_of_Asynch_Dyn_2018/model.py').read())
+    # exec(f)
+    Model['COEFFS_RecExc'] = np.load('../configs/The_Spectrum_of_Asynch_Dyn_2018/COEFFS_RecExc.npy')
+    Model['COEFFS_RecInh'] = np.load('../configs/The_Spectrum_of_Asynch_Dyn_2018//COEFFS_RecInh.npy')
     
     # show_phase_space(Model,
     #                  with_trajectory=[0.01, 0.01],
