@@ -1,4 +1,3 @@
-
 Model = {
     ## ---------------------------------------------------------------------------------
     ### Initialisation by default parameters
@@ -44,73 +43,3 @@ Model = {
     'DsInh_a':0., 'DsInh_b': 0., 'DsInh_tauw':1e9
 }
 
-# now let's say that we will modify or add a parameter in 'Model', we will execute scripts with the new statement:
-def pass_arguments_of_new_model(Model):
-    S = ''
-    for key, val in Model.items():
-        S += ' --'+key+' '+str(val)
-    return S
-
-import argparse
-parser=argparse.ArgumentParser(description='Model parameters',formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument("--Q_AffExc_RecExc", type=float, default=4.0) 
-parser.add_argument("--p_AffExc_RecExc", type=float, default=0.1) 
-parser.add_argument("--RecExc_Vreset", type=float, default=-70.0) 
-parser.add_argument("--RecInh_Vreset", type=float, default=-70.0) 
-parser.add_argument("--p_AffExc_RecInh", type=float, default=0.1) 
-parser.add_argument("--DsInh_Vreset", type=float, default=-70.0) 
-parser.add_argument("--N_DsInh", type=int, default=500) 
-parser.add_argument("--DsInh_b", type=float, default=0.0) 
-parser.add_argument("--N_AffExc", type=int, default=100) 
-parser.add_argument("--RecInh_El", type=float, default=-70.0) 
-parser.add_argument("--DsInh_tauw", type=float, default=1000000000.0) 
-parser.add_argument("--RecExc_tauw", type=float, default=1000000000.0) 
-parser.add_argument("--Q_RecInh_RecExc", type=float, default=10.0) 
-parser.add_argument("--F_DsInh", type=float, default=0.0) 
-parser.add_argument("--RecInh_Cm", type=float, default=200.0) 
-parser.add_argument("--DsInh_Vthre", type=float, default=-50.0) 
-parser.add_argument("--RecInh_a", type=float, default=0.0) 
-parser.add_argument("--F_RecExc", type=float, default=1.0) 
-parser.add_argument("--RecInh_b", type=float, default=0.0) 
-parser.add_argument("--RecExc_El", type=float, default=-70.0) 
-parser.add_argument("--F_RecInh", type=float, default=1.0) 
-parser.add_argument("--RecExc_delta_v", type=float, default=0.0) 
-parser.add_argument("--RecExc_Trefrac", type=float, default=5.0) 
-parser.add_argument("--p_RecInh_RecExc", type=float, default=0.05) 
-parser.add_argument("--SEED", type=int, default=3) 
-parser.add_argument("--Ei", type=float, default=-80.0) 
-parser.add_argument("--DsInh_Gl", type=float, default=10.0) 
-parser.add_argument("--N_RecExc", type=int, default=4000) 
-parser.add_argument("--RecExc_a", type=float, default=0.0) 
-parser.add_argument("--p_RecExc_RecInh", type=float, default=0.05) 
-parser.add_argument("--RecExc_Vthre", type=float, default=-50.0) 
-parser.add_argument("--RecInh_Gl", type=float, default=10.0) 
-parser.add_argument("--F_AffExc", type=float, default=10.0) 
-parser.add_argument("--DsInh_delta_v", type=float, default=0.0) 
-parser.add_argument("--DsInh_a", type=float, default=0.0) 
-parser.add_argument("--Q_RecInh_RecInh", type=float, default=10.0) 
-parser.add_argument("--p_DsInh_RecInh", type=float, default=0.05) 
-parser.add_argument("--RecInh_tauw", type=float, default=1000000000.0) 
-parser.add_argument("--RecInh_Trefrac", type=float, default=5.0) 
-parser.add_argument("--RecExc_Gl", type=float, default=10.0) 
-parser.add_argument("--Q_DsInh_RecInh", type=float, default=10.0) 
-parser.add_argument("--Q_RecExc_RecInh", type=float, default=2.0) 
-parser.add_argument("--Tse", type=float, default=5.0) 
-parser.add_argument("--RecInh_delta_v", type=float, default=0.0) 
-parser.add_argument("--DsInh_Cm", type=float, default=200.0) 
-parser.add_argument("--N_RecInh", type=int, default=1000) 
-parser.add_argument("--p_RecInh_RecInh", type=float, default=0.05) 
-parser.add_argument("--p_RecExc_RecExc", type=float, default=0.05) 
-parser.add_argument("--Tsi", type=float, default=5.0) 
-parser.add_argument("--Q_AffExc_DsInh", type=float, default=4.0) 
-parser.add_argument("--DsInh_Trefrac", type=float, default=5.0) 
-parser.add_argument("--Ee", type=float, default=0.0) 
-parser.add_argument("--RecExc_Cm", type=float, default=200.0) 
-parser.add_argument("--RecExc_b", type=float, default=0.0) 
-parser.add_argument("--Q_AffExc_RecInh", type=float, default=4.0) 
-parser.add_argument("--p_AffExc_DsInh", type=float, default=0.0) 
-parser.add_argument("--tstop", type=float, default=100.0) 
-parser.add_argument("--Q_RecExc_RecExc", type=float, default=2.0) 
-parser.add_argument("--dt", type=float, default=0.1) 
-parser.add_argument("--DsInh_El", type=float, default=-70.0) 
-parser.add_argument("--RecInh_Vthre", type=float, default=-53.0) 
