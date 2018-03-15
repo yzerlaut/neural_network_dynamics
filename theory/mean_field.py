@@ -44,6 +44,7 @@ def solve_mean_field_first_order(Model,
                                  T=5e-3,
                                  replace_x0=False):
     """
+    
 
     if replace_x0 -> then you can directly use get_stat_props
     """
@@ -53,8 +54,8 @@ def solve_mean_field_first_order(Model,
     for key in DYN_KEYS:
         DYN_SYSTEM[key]['nrn_params'] = built_up_neuron_params(Model, key)
         DYN_SYSTEM[key]['syn_input'] = build_up_afferent_synaptic_input(Model, DYN_KEYS+DYN_SYSTEM[key]['aff_pops'], key)
+
         
-    
     # --- CONSTRUCT THE DIFFERENTIAL OPERATOR --- #
     def dX_dt(X, t, DYN_KEYS, DYN_SYSTEM):
         dX_dt, RATES = [], {}
@@ -64,13 +65,13 @@ def solve_mean_field_first_order(Model,
         # then we compute it, key by key
         for i, key in enumerate(DYN_KEYS):
             for aff_key in DYN_SYSTEM[key]['aff_pops']:
-                print(t, aff_key, key)
                 RATES['F_'+aff_key] = EXTERNAL_INPUT_FUNC(t, aff_key, key)
             Fout = input_output(DYN_SYSTEM[key]['nrn_params'], DYN_SYSTEM[key]['syn_input'], RATES, Model['COEFFS_'+key])
             dX_dt.append((Fout-X[i])/T) # Simple one-dimensional framework
         return dX_dt
     # ------------------------------------------- #
 
+    
     # starting point
     X0 = []
     for key in DYN_KEYS:
