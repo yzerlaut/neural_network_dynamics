@@ -5,7 +5,7 @@ import numpy as np
 import brian2
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-from neural_network_dynamics.cells.cell_library import get_neuron_params
+from neural_network_dynamics.cells.cell_library import get_neuron_params, built_up_neuron_params
 
 def get_membrane_equation(neuron_params, synaptic_array,\
                           return_equations=False, with_synaptic_currents=False,
@@ -172,14 +172,6 @@ def current_pulse_sim(args, params=None, verbose=False):
     if 'save' in args.keys():
         fig.savefig(args['save'])
     return fig
-        
-def built_up_neuron_params(Model, NRN_KEY, N=1):
-    params = {'name':NRN_KEY, 'N':N}
-    for key, val in Model.items():
-        if key.split('_')[0]==NRN_KEY:
-            # catching all model parameters that start with the population name
-            params[key.replace(NRN_KEY+'_', '')] = val
-    return params
         
 if __name__=='__main__':
 

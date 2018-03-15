@@ -3,6 +3,14 @@ Some configuration of neuronal properties so that we pick up
 within this file
 """
 
+def built_up_neuron_params(Model, NRN_KEY, N=1):
+    params = {'name':NRN_KEY, 'N':N}
+    for key, val in Model.items():
+        if key.split('_')[0]==NRN_KEY:
+            # catching all model parameters that start with the population name
+            params[key.replace(NRN_KEY+'_', '')] = val
+    return params
+        
 def change_units_to_SI(params):
     print('/!\ PASSING cell parameters in SI units /!\ ')
     # mV to V, ms to s
