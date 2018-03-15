@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pylab as plt
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 from graphs.my_graph import set_plot, Brown
-from scipy.integrate import odeint
+from scipy.integrate import odeint, RK23
 
 def input_output(neuron_params, SYN_POPS, RATES, COEFFS, already_SI=False):
     muV, sV, gV, Tv = getting_statistical_properties(neuron_params,
@@ -24,23 +24,13 @@ def input_output(neuron_params, SYN_POPS, RATES, COEFFS, already_SI=False):
     Fout = firing_rate(muV, sV, gV, Tv, Proba, COEFFS)
     return Fout
 
-def func0(t, aff_key, target_key):
-    """
-    EXTERNAL_INPUT_FUNC in "solve_mean_field" has to be of that form
-    """
-    if aff_key=='AffExc':
-        return 1.
-    else:
-        print('/!\ pb, there should be one unique pre-pop !')
-        return 0.
-
 def solve_mean_field_first_order(Model,
                                  DYN_SYSTEM = {
                                      'RecExc': {'aff_pops':['AffExc'], 'x0':1.},
                                      'RecInh': {'aff_pops':['AffExc'], 'x0':1.}
                                  },
-                                 t = np.arange(10),
-                                 EXTERNAL_INPUT_FUNC = func0,
+                                 dt = 0.1, tstop = 100.,
+                                 INPUTS = {'AffExc_RecExc':np.ones(1000), 'AffExc_RecInh':np.ones(1000)},
                                  T=5e-3,
                                  replace_x0=False):
     """
@@ -53,11 +43,12 @@ def solve_mean_field_first_order(Model,
     # initialize neuronal and synaptic params
     for key in DYN_KEYS:
         DYN_SYSTEM[key]['nrn_params'] = built_up_neuron_params(Model, key)
-        DYN_SYSTEM[key]['syn_input'] = build_up_afferent_synaptic_input(Model, DYN_KEYS+DYN_SYSTEM[key]['aff_pops'], key)
+        DYN_SYSTEM[key]['syn_input'] = build_up_afferent_synaptic_input(Model,\
+                                                DYN_KEYS+DYN_SYSTEM[key]['aff_pops'], key)
 
         
     # --- CONSTRUCT THE DIFFERENTIAL OPERATOR --- #
-    def dX_dt(X, t, DYN_KEYS, DYN_SYSTEM):
+    def dX_dt(X, t, dt, DYN_KEYS, DYN_SYSTEM, INPUTS):
         dX_dt, RATES = [], {}
         # we fill the X-defined recurent act:
         for x, key in zip(X, DYN_KEYS):
@@ -65,8 +56,11 @@ def solve_mean_field_first_order(Model,
         # then we compute it, key by key
         for i, key in enumerate(DYN_KEYS):
             for aff_key in DYN_SYSTEM[key]['aff_pops']:
-                RATES['F_'+aff_key] = EXTERNAL_INPUT_FUNC(t, aff_key, key)
-            Fout = input_output(DYN_SYSTEM[key]['nrn_params'], DYN_SYSTEM[key]['syn_input'], RATES, Model['COEFFS_'+key])
+                RATES['F_'+aff_key] = INPUTS[aff_key+'_'+key][min([int(t/dt), len(INPUTS[aff_key+'_'+key])-1])]
+            Fout = input_output(DYN_SYSTEM[key]['nrn_params'],
+                                DYN_SYSTEM[key]['syn_input'],
+                                RATES,
+                                Model['COEFFS_'+key])
             dX_dt.append((Fout-X[i])/T) # Simple one-dimensional framework
         return dX_dt
     # ------------------------------------------- #
@@ -77,7 +71,8 @@ def solve_mean_field_first_order(Model,
     for key in DYN_KEYS:
         X0.append(DYN_SYSTEM[key]['x0'])
         
-    X = odeint(dX_dt, X0, t, args=(DYN_KEYS, DYN_SYSTEM))
+    X = odeint(dX_dt, X0, np.arange(int(tstop/dt))*dt,
+               args=(dt, DYN_KEYS, DYN_SYSTEM, INPUTS))
 
     output = {}
     for key, x in zip(DYN_KEYS, X.T):
@@ -91,23 +86,26 @@ def find_fp(Model,
                 'RecExc': {'aff_pops':['AffExc'], 'aff_pops_input_values':[1.], 'x0':1.},
                 'RecInh': {'aff_pops':['AffExc'], 'aff_pops_input_values':[1.], 'x0':1.}
             },
-            EXTERNAL_INPUT_FUNC = func0,
-            t = None,
-            T=5e-3,
+            dt=0.1, tstop=None, T=5e-3,
             replace_x0=True):
     
-    if t is None:
-        t = np.arange(500.)*T/10.
+    X = solve_mean_field_first_order(Model, DYN_SYSTEM)
+    
+    if tstop is None:
+        tstop = 50.*T
 
     DYN_SYSTEM_FP = DYN_SYSTEM.copy()
     
     def func(t, aff_key, target_key):
         return DYN_SYSTEM[target_key]['aff_pops_input_values'][0]
 
-    for key in DYN_SYSTEM_FP.keys():
-        DYN_SYSTEM_FP[key]['aff_pops_funcs'] = [func]
-    
-    X = solve_mean_field_first_order(Model, DYN_SYSTEM_FP, t=t, EXTERNAL_INPUT_FUNC=func)
+    INPUTS = {}
+    for key in DYN_SYSTEM.keys():
+        for aff_key, x in zip(DYN_SYSTEM[key]['aff_pops'], DYN_SYSTEM[key]['aff_pops_input_values']):
+            INPUTS[aff_key+'_'+key] = x*np.ones(int(tstop/dt))
+            
+    X = solve_mean_field_first_order(Model, DYN_SYSTEM_FP,
+                                     dt, tstop, INPUTS, T, replace_x0)
 
     if replace_x0:
         # we set the initial condition 'x0' with 
@@ -159,13 +157,14 @@ if __name__=='__main__':
         'RecExc': {'aff_pops':['AffExc'], 'aff_pops_input_values':[3.], 'x0':1.},
         'RecInh': {'aff_pops':['AffExc'], 'aff_pops_input_values':[3.], 'x0':1.}
     }
-    # be careful you'll need to label everything with respect to the DYN_KEYS (that change over different runs)
-    DYN_KEYS = [key for key in DYN_SYSTEM.keys()]
-    def func(t, key1, key2):
-        return 3.+20*t
+    INPUTS = {
+        'AffExc_RecExc':np.ones(int(tstop/dt))*3.,
+        'AffExc_RecInh':np.ones(int(tstop/dt))*3.
+        }
+        
     
-    X0 = find_fp(Model, DYN_SYSTEM, replace_x0=True)
-    X = solve_mean_field_first_order(Model, DYN_SYSTEM, np.arange(int(tstop/dt))*dt, EXTERNAL_INPUT_FUNC=func)
+    X0 = find_fp(Model, DYN_SYSTEM, dt, tstop, replace_x0=True)
+    X = solve_mean_field_first_order(Model, DYN_SYSTEM, dt, tstop, INPUTS)
 
     print(get_full_statistical_quantities(Model,
                                           DYN_SYSTEM))

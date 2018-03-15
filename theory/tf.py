@@ -8,11 +8,11 @@ import numpy as np
 from matplotlib import cm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-def build_up_afferent_synaptic_input(Model, POP_STIM, NRN_KEY=None):
+def build_up_afferent_synaptic_input(Model, POP_STIM, NRN_KEY=None, verbose=True):
 
     if NRN_KEY is None:
         NRN_KEY = Model['NRN_KEY']
-    
+
     SYN_POPS = []
     for source_pop in POP_STIM:
         if len(source_pop.split('Exc'))>1:
@@ -23,11 +23,20 @@ def build_up_afferent_synaptic_input(Model, POP_STIM, NRN_KEY=None):
             print(' /!\ AFFERENT POP COULD NOT BE CLASSIFIED AS Exc or Inh /!\ ')
             print('-----> set to Exc by default')
             Erev, Ts = Model['Ee'], Model['Tse']
+
+        # here we set 0 connectivity for those not explicitely defined
+        try:
+            Q, pconn = Model['Q_'+source_pop+'_'+NRN_KEY], Model['p_'+source_pop+'_'+NRN_KEY]
+        except KeyError:
+            if verbose:
+                print('/!\ connection parameters missing, set to 0 by default')
+                print(' ---> ', source_pop+'_'+NRN_KEY, 'misses either its Q or pconn argument')
+            Q, pconn = 0, 0
+            
         SYN_POPS.append({'name':source_pop,
                          'N': Model['N_'+source_pop],
                          'Erev': Erev,
-                         'Q': Model['Q_'+source_pop+'_'+NRN_KEY],
-                         'pconn': Model['p_'+source_pop+'_'+NRN_KEY],
+                         'Q': Q, 'pconn': pconn,
                          'Tsyn': Ts})
         # for backward compatibility, only added here
         if 'V0' in Model:
