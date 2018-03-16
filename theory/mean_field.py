@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pylab as plt
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 from graphs.my_graph import set_plot, Brown
-from scipy.integrate import odeint, RK23
+from scipy.integrate import odeint
 
 def input_output(neuron_params, SYN_POPS, RATES, COEFFS, already_SI=False):
     muV, sV, gV, Tv = getting_statistical_properties(neuron_params,
@@ -46,7 +46,6 @@ def solve_mean_field_first_order(Model,
         DYN_SYSTEM[key]['syn_input'] = build_up_afferent_synaptic_input(Model,\
                                                 DYN_KEYS+DYN_SYSTEM[key]['aff_pops'], key)
 
-        
     # --- CONSTRUCT THE DIFFERENTIAL OPERATOR --- #
     def dX_dt(X, t, dt, DYN_KEYS, DYN_SYSTEM, INPUTS):
         dX_dt, RATES = [], {}
@@ -89,13 +88,9 @@ def find_fp(Model,
             dt=0.1, tstop=None, T=5e-3,
             replace_x0=True):
     
-    X = solve_mean_field_first_order(Model, DYN_SYSTEM)
-    
     if tstop is None:
         tstop = 50.*T
 
-    DYN_SYSTEM_FP = DYN_SYSTEM.copy()
-    
     def func(t, aff_key, target_key):
         return DYN_SYSTEM[target_key]['aff_pops_input_values'][0]
 
@@ -103,20 +98,21 @@ def find_fp(Model,
     for key in DYN_SYSTEM.keys():
         for aff_key, x in zip(DYN_SYSTEM[key]['aff_pops'], DYN_SYSTEM[key]['aff_pops_input_values']):
             INPUTS[aff_key+'_'+key] = x*np.ones(int(tstop/dt))
-            
-    X = solve_mean_field_first_order(Model, DYN_SYSTEM_FP,
+
+    print(INPUTS.keys())
+    X = solve_mean_field_first_order(Model, DYN_SYSTEM,
                                      dt, tstop, INPUTS, T, replace_x0)
 
     if replace_x0:
         # we set the initial condition 'x0' with 
-        for key in DYN_SYSTEM_FP.keys():
+        for key in DYN_SYSTEM.keys():
             DYN_SYSTEM[key]['x0'] = X[key][-1]
-    return [X[key][-1] for key in DYN_SYSTEM_FP.keys()]
+    return [X[key][-1] for key in DYN_SYSTEM.keys()]
 
 def get_full_statistical_quantities(Model,
                                     DYN_SYSTEM = {
-                                        'RecExc': {'aff_pops':['AffExc'], 'aff_pops_input_values':[1.], 'x0':1.},
-                                        'RecInh': {'aff_pops':['AffExc'], 'aff_pops_input_values':[1.], 'x0':1.}
+                            'RecExc': {'aff_pops':['AffExc'], 'aff_pops_input_values':[1.], 'x0':1.},
+                            'RecInh': {'aff_pops':['AffExc'], 'aff_pops_input_values':[1.], 'x0':1.}
                                     }):
                                     
     """
@@ -129,7 +125,8 @@ def get_full_statistical_quantities(Model,
     # initialize neuronal and synaptic params (very likely already done)
     for key in DYN_KEYS:
         DYN_SYSTEM[key]['nrn_params'] = built_up_neuron_params(Model, key)
-        DYN_SYSTEM[key]['syn_input'] = build_up_afferent_synaptic_input(Model, DYN_KEYS+DYN_SYSTEM[key]['aff_pops'], key)
+        DYN_SYSTEM[key]['syn_input'] = build_up_afferent_synaptic_input(Model,
+                                                DYN_KEYS+DYN_SYSTEM[key]['aff_pops'], key)
         
     output, RATES = {}, {}
     for key in DYN_KEYS:
