@@ -32,7 +32,7 @@ def solve_mean_field_first_order(Model,
                                  dt = 0.1, tstop = 100.,
                                  INPUTS = {'AffExc_RecExc':np.ones(1000), 'AffExc_RecInh':np.ones(1000)},
                                  T=5e-3,
-                                 replace_x0=False):
+                                 replace_x0=False, verbose=False):
     """
     
 
@@ -44,7 +44,8 @@ def solve_mean_field_first_order(Model,
     for key in DYN_KEYS:
         DYN_SYSTEM[key]['nrn_params'] = built_up_neuron_params(Model, key)
         DYN_SYSTEM[key]['syn_input'] = build_up_afferent_synaptic_input(Model,\
-                                                DYN_KEYS+DYN_SYSTEM[key]['aff_pops'], key)
+                                                                        DYN_KEYS+DYN_SYSTEM[key]['aff_pops'], key,
+                                                                        verbose=verbose)
 
     # --- CONSTRUCT THE DIFFERENTIAL OPERATOR --- #
     def dX_dt(X, t, dt, DYN_KEYS, DYN_SYSTEM, INPUTS):
