@@ -44,8 +44,8 @@ def solve_mean_field_first_order(Model,
     for key in DYN_KEYS:
         DYN_SYSTEM[key]['nrn_params'] = built_up_neuron_params(Model, key)
         DYN_SYSTEM[key]['syn_input'] = build_up_afferent_synaptic_input(Model,\
-                                                                        DYN_KEYS+DYN_SYSTEM[key]['aff_pops'], key,
-                                                                        verbose=verbose)
+                                                        DYN_KEYS+DYN_SYSTEM[key]['aff_pops'], key,
+                                                        verbose=verbose)
 
     # --- CONSTRUCT THE DIFFERENTIAL OPERATOR --- #
     def dX_dt(X, t, dt, DYN_KEYS, DYN_SYSTEM, INPUTS):
@@ -56,7 +56,8 @@ def solve_mean_field_first_order(Model,
         # then we compute it, key by key
         for i, key in enumerate(DYN_KEYS):
             for aff_key in DYN_SYSTEM[key]['aff_pops']:
-                RATES['F_'+aff_key] = INPUTS[aff_key+'_'+key][min([int(t/dt), len(INPUTS[aff_key+'_'+key])-1])]
+                RATES['F_'+aff_key] = INPUTS[aff_key+'_'+key][\
+                                        min([int(t/dt), len(INPUTS[aff_key+'_'+key])-1]) ]
             Fout = input_output(DYN_SYSTEM[key]['nrn_params'],
                                 DYN_SYSTEM[key]['syn_input'],
                                 RATES,

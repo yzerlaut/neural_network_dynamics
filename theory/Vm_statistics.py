@@ -68,10 +68,19 @@ def getting_statistical_properties(params,
         # kV += RATES2[i]*F_iiiiPSP(**syn)
         nTv += RATES2[i]*F_numTv(**syn)
         dTv += RATES2[i]*F_denomTv(**syn)
+<<<<<<< HEAD
     sV = np.sqrt(np.max([sV, 1e-12])) # thresholded to 1e-12
+=======
+
+    sV = np.sqrt(np.max([sV, 1e-6])) # thresholded to 0.001 mV
+>>>>>>> ebf1cea7c4be0a8320504a36fe43933e56a63f50
     gV = gV/sV**3
     # kV = kV/sV**4
-    Tv = 1./2.*(nTv/dTv)**(-1)
+    
+    if dTv<=0:
+        Tv = Tm
+    else:
+        Tv = 1./2.*(nTv/dTv)**(-1)
 
     if with_Isyn:
         # in case we also want synaptic currents
