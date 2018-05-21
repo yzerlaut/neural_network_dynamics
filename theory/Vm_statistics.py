@@ -68,7 +68,7 @@ def getting_statistical_properties(params,
         # kV += RATES2[i]*F_iiiiPSP(**syn)
         nTv += RATES2[i]*F_numTv(**syn)
         dTv += RATES2[i]*F_denomTv(**syn)
-    sV = np.sqrt(sV)
+    sV = np.sqrt(np.max([sV, 1e-12])) # thresholded to 1e-12
     gV = gV/sV**3
     # kV = kV/sV**4
     Tv = 1./2.*(nTv/dTv)**(-1)

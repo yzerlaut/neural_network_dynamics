@@ -23,12 +23,14 @@ NORM = [N_muV, N_sV, N_Id, N_Tv, N_Id] # array of normalizing functions
 
 # effective threshold by inversion of the Firing rate data
 
+
 def effective_Vthre(Fout, muV, sV, Tv):
     """
     inverting the basic firing approx 
     """
     Vthre_eff = muV+np.sqrt(2)*sV*sp_spec.erfcinv(Fout*2.*Tv)
     return Vthre_eff
+
 
 def get_all_normalized_terms(muV, sV, gV, Tv, Proba, order=2):
     X = muV, sV, gV, Tv, Proba
