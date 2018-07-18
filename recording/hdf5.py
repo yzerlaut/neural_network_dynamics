@@ -28,11 +28,8 @@ def recursively_save_dict_contents_to_group(h5file, path, dic):
     ....
     """
     for key, item in dic.items():
-        if isinstance(item, (np.ndarray, np.int64, np.float64)):
+        if isinstance(item, (np.ndarray, np.int64, np.float64, str, bytes)):
             h5file[path + key] = item
-        if isinstance(item, (str, bytes)):
-            print(item)
-            h5file[path + key] = np.array(item)
         elif isinstance(item, dict):
             recursively_save_dict_contents_to_group(h5file, path + key + '/', item)
         elif isinstance(item, tuple):
@@ -51,7 +48,6 @@ def load_dict_from_hdf5(filename):
     with h5py.File(filename, 'r') as h5file:
         return recursively_load_dict_contents_from_group(h5file, '/')
 
-    
 def recursively_load_dict_contents_from_group(h5file, path):
     """
     ....
@@ -63,7 +59,6 @@ def recursively_load_dict_contents_from_group(h5file, path):
         elif isinstance(item, h5py._hl.group.Group):
             ans[key] = recursively_load_dict_contents_from_group(h5file, path + key + '/')
     return ans
-
 
 if __name__ == '__main__':
 
