@@ -28,16 +28,25 @@ def recursively_save_dict_contents_to_group(h5file, path, dic):
     ....
     """
     for key, item in dic.items():
-        if isinstance(item, (np.ndarray, np.int64, np.float64, str, bytes)):
-            h5file[path + key] = item
+        new_key = np.string_(path+key)
+        if isinstance(item, (np.ndarray, np.int64, np.float64, bytes)):
+            h5file[new_key] = item
+        elif isinstance(item, str):
+            print(item)
+            h5file[new_key] = np.string_(item)
         elif isinstance(item, dict):
             recursively_save_dict_contents_to_group(h5file, path + key + '/', item)
         elif isinstance(item, tuple):
-            h5file[path + key] = np.array(item)
+            h5file[new_key] = np.array(item)
         elif isinstance(item, list):
-            h5file[path + key] = np.array(item)
-        elif isinstance(item, float):
-            h5file[path + key] = np.array(item)
+            try:
+                if type(item[0])==str:
+                    item = np.array([np.string_(ii) for ii in item])
+            except (IndexError, AttributeError):
+                pass
+            h5file[new_key] = np.array(item)
+        elif isinstance(item, (float, int)):
+            h5file[new_key] = np.array(item)
         else:
             raise ValueError('Cannot save %s type'%type(item))
 
