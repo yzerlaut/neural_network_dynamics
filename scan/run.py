@@ -74,8 +74,8 @@ if __name__=='__main__':
 
     Model = {'data_folder': 'data/', 'SEED':0, 'x':2, 'zip_filename':'data.zip'}
     import sys, pathlib
-    sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-    from recording.hdf5 import save_dict_to_hdf5, load_dict_from_hdf5
+    sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
+    from data_analysis.IO.hdf5 import save_dict_to_hdf5, load_dict_from_hdf5
     def running_sim_func(Model, a=0):
         NTWK = {'Model':Model, 'dt':0.1, 'tstop':1, 'NEURONS':[]}
         j = 0

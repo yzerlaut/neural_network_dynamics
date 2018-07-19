@@ -2,7 +2,13 @@ import numpy as np
 import sys, pathlib
 import brian2, os
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-from data_analysis.IO.hdf5 import save_dict_to_hdf5, make_writable_dict
+try:
+    from data_analysis.IO.hdf5 import save_dict_to_hdf5, make_writable_dict
+except ImportError:
+    print('---------------------------------------------------------------')
+    print('you need the data_analysis folder')
+    print('get it at: bitbucket.org/yzerlaut/data_analysis')
+    print('---------------------------------------------------------------')
 
 def write_as_hdf5(NTWK, filename='data.h5',
                   KEY_NOT_TO_RECORD=[]):
