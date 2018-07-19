@@ -3,7 +3,7 @@ import sys, pathlib
 import brian2, os
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 try:
-    from data_analysis.IO.hdf5 import save_dict_to_hdf5, make_writable_dict
+    from data_analysis.IO.hdf5 import save_dict_to_hdf5
 except ImportError:
     print('---------------------------------------------------------------')
     print('you need the data_analysis folder')
@@ -16,16 +16,13 @@ def write_as_hdf5(NTWK, filename='data.h5',
     data = {'dt':NTWK['dt']*np.ones(1), 'tstop':NTWK['tstop']*np.ones(1)}
 
     for key, val in NTWK['Model'].items():
-        if (type(val)==int) or (type(val)==float):
-            data[key] = np.ones(1)*val
-        if (type(val)==np.ndarray):
-            data[key] = val
+        data[key] = val
             
     # we write it per population
     for ii in range(len(NTWK['NEURONS'])):
         nrn = NTWK['NEURONS'][ii]
-        data[str(ii)] = make_writable_dict({'name': nrn['name'] , 'N':nrn['N']})
-        data[str(ii)+'_params'] = make_writable_dict(nrn['params'])
+        data[str(ii)] = {'name': nrn['name'] , 'N':nrn['N']}
+        data[str(ii)+'_params'] = nrn['params']
         name = NTWK['NEURONS'][ii]['name']
         
         if ('RASTER' in NTWK) and ('RASTER' not in KEY_NOT_TO_RECORD):
