@@ -75,13 +75,13 @@ if __name__=='__main__':
     Model = {'data_folder': 'data/', 'SEED':0, 'x':2, 'zip_filename':'data.zip'}
     import sys, pathlib
     sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-    from recording.load_and_save import write_as_hdf5, load_dict_from_hdf5
+    from recording.hdf5 import save_dict_to_hdf5, load_dict_from_hdf5
     def running_sim_func(Model, a=0):
         NTWK = {'Model':Model, 'dt':0.1, 'tstop':1, 'NEURONS':[]}
         j = 0
-        while j<1e7:
+        while j<1e3:
             j+=1
-        write_as_hdf5(NTWK, filename=Model['filename'])
+        save_dict_to_hdf5(NTWK, filename=Model['filename'])
 
     import time
     start_time = time.time()

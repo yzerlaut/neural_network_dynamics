@@ -27,14 +27,14 @@ def get_synchrony_of_spiking(data, pop='Exc',
     we introduce a limiting number of pairs for fast computation"""
 
     np.random.seed(seed)
-    
+
     n, Ntot = 0, 0
     while str(n) in data.keys():
-        if data[str(n)]['name']==pop:
+        if (data[str(n)]['name']==pop):
             Ntot = int(data[str(n)]['N'])
         n+=1
     if Ntot==0:
-        print('key not recognized !!')
+        print('key not recognized in neural_net_dyn.macro_quantities.get_synchrony_of_spiking !!')
 
     ispikes, tspikes = data['iRASTER_'+pop], data['tRASTER_'+pop]
     # in case we focus on a subset of the temporal dynamics (none by default)

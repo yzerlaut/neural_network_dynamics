@@ -3,7 +3,7 @@ from itertools import product
 import sys, pathlib
 import zipfile
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-from recording.load_and_save import load_dict_from_hdf5
+from recording.hdf5 import load_dict_from_hdf5
 
 def get_scan(Model,
              filename=None,
@@ -22,7 +22,6 @@ def get_scan(Model,
         return Model, dict(Model['PARAMS_SCAN'].all()), None
     else:
         DATA = []
-        print(Model['PARAMS_SCAN'])
         for fn in (Model['PARAMS_SCAN'].all()['FILENAMES']):
             print(fn)
             data = zf.read(fn)
