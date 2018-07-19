@@ -70,6 +70,7 @@ def recursively_load_dict_contents_from_group(h5file, path):
     ans = {}
     for key, item in h5file[path].items():
         if isinstance(item, h5py._hl.dataset.Dataset):
+            # print(path, key, item.value, type(item.value))
             if isinstance(item.value, bytes):
                 to_be_put = str(item.value,'utf-8')
             else:
@@ -80,13 +81,6 @@ def recursively_load_dict_contents_from_group(h5file, path):
                         to_be_put = np.array([str(ii,'utf-8') for ii in to_be_put])
             except TypeError:
                 pass
-            # elif isinstance(item.value, list):
-            #     # print(key, item)
-            #     to_be_put = np.array(item.value)
-            #     try:
-            #         if type(item.value[0])==bytes:
-            #     except (IndexError, AttributeError):
-            #         pass
             ans[str(key)] = to_be_put
         elif isinstance(item, h5py._hl.group.Group):
             ans[str(key)] = recursively_load_dict_contents_from_group(h5file, path + key + '/')

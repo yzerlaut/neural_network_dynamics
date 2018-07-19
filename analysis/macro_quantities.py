@@ -26,9 +26,8 @@ def get_synchrony_of_spiking(data, pop='Exc',
     we introduce a limiting number of pairs for fast computation"""
 
     np.random.seed(seed)
-    
+
     n, Ntot = 0, 0
-    print(data)
     while str(n) in data.keys():
         if (data[str(n)]['name']==pop):
             Ntot = int(data[str(n)]['N'])
