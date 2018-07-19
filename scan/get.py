@@ -23,10 +23,10 @@ def get_scan(Model,
     else:
         DATA = []
         for fn in (Model['PARAMS_SCAN'].all()['FILENAMES']):
+            print(fn)
             data = zf.read(fn)
             with open(fn, 'wb') as f: f.write(data)
             with open(fn, 'rb') as f: data = load_dict_from_hdf5(fn)
-            print(fn, 'ksjdhfkjdshf')
             DATA.append(data)
         return Model, dict(Model['PARAMS_SCAN'].all()), DATA
 
