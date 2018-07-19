@@ -79,7 +79,7 @@ if __name__=='__main__':
     def running_sim_func(Model, a=0):
         NTWK = {'Model':Model, 'dt':0.1, 'tstop':1, 'NEURONS':[]}
         j = 0
-        while j<1e7:
+        while j<1e3:
             j+=1
         save_dict_to_hdf5(NTWK, filename=Model['filename'])
 

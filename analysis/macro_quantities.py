@@ -28,12 +28,13 @@ def get_synchrony_of_spiking(data, pop='Exc',
     np.random.seed(seed)
     
     n, Ntot = 0, 0
+    print(data)
     while str(n) in data.keys():
-        if data[str(n)]['name']==pop:
+        if (data[str(n)]['name']==pop):
             Ntot = int(data[str(n)]['N'])
         n+=1
     if Ntot==0:
-        print('key not recognized !!')
+        print('key not recognized in neural_net_dyn.macro_quantities.get_synchrony_of_spiking !!')
 
     ispikes, tspikes = data['iRASTER_'+pop], data['tRASTER_'+pop]
     ispikes_unique = np.unique(ispikes)
