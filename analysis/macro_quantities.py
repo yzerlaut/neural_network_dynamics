@@ -87,6 +87,28 @@ def get_currents_and_balance(data, pop='Exc', tdiscard=200, Vreset=-70):
         balance = 0
     return meanIe, meanIi, balance
 
+def get_afferent_and_recurrent_currents(data, pop='Exc', tdiscard=200, Vreset=-70):
+    """
+    TO BE DONE !
+    make this function more general ! (here assumes RecExc and RecInh names)
+    """
+    t = np.arange(int(data['tstop']/data['dt']))*data['dt']
+    
+    meanIe_Aff, meanIe_Rec, meanIi_Rec = 0, 0, 0
+    for i in range(len(data['VMS_'+pop])):
+        # discarding initial transient as well as refractory period !
+        cond = (t>tdiscard) & (data['VMS_'+pop][i,:]!=Vreset)
+
+        # meanIi += data['ISYNi_'+pop][i,cond].mean()/len(data['ISYNi_'+pop])
+        meanIe_Rec += np.abs(np.mean(data['POP_ACT_RecExc'])*data['p_RecExc_'+pop]*data['N_RecExc']*\
+                                          data['Q_RecExc_'+pop]*data['Tse']*1e-3*(data['Ee']-data['VMS_'+pop][i,cond]))/len(data['VMS_'+pop])
+        meanIi_Rec += np.abs(np.mean(data['POP_ACT_RecInh'])*data['p_RecInh_'+pop]*data['N_RecInh']*\
+                                          data['Q_RecInh_'+pop]*data['Tsi']*1e-3*(data['Ei']-data['VMS_'+pop][i,cond]))/len(data['VMS_'+pop])
+        meanIe_Aff += np.abs(np.mean(data['F_AffExc']*data['p_AffExc_'+pop]*data['N_AffExc']*\
+                                          data['Q_AffExc_'+pop]*data['Tse']*1e-3*(data['Ee']-data['VMS_'+pop][i,cond]))/len(data['VMS_'+pop])
+
+    return meanIe_Aff, meanIe_Rec, meanIi_Rec
+
 
 def get_all_macro_quant(data, exc_pop_key='Exc', inh_pop_key='Inh', other_pops=[]):
 
