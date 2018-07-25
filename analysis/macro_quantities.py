@@ -101,14 +101,13 @@ def get_afferent_and_recurrent_currents(data, pop='Exc', tdiscard=200, Vreset=-7
 
         # meanIi += data['ISYNi_'+pop][i,cond].mean()/len(data['ISYNi_'+pop])
         meanIe_Rec += np.abs(np.mean(data['POP_ACT_RecExc'])*data['p_RecExc_'+pop]*data['N_RecExc']*\
-                                          data['Q_RecExc_'+pop]*data['Tse']*1e-3*(data['Ee']-data['VMS_'+pop][i,cond]))/len(data['VMS_'+pop])
+                        data['Q_RecExc_'+pop]*data['Tse']*1e-3*(data['Ee']-np.mean(data['VMS_'+pop][i,cond])))/len(data['VMS_'+pop])
         meanIi_Rec += np.abs(np.mean(data['POP_ACT_RecInh'])*data['p_RecInh_'+pop]*data['N_RecInh']*\
-                                          data['Q_RecInh_'+pop]*data['Tsi']*1e-3*(data['Ei']-data['VMS_'+pop][i,cond]))/len(data['VMS_'+pop])
-        meanIe_Aff += np.abs(np.mean(data['F_AffExc']*data['p_AffExc_'+pop]*data['N_AffExc']*\
-                                          data['Q_AffExc_'+pop]*data['Tse']*1e-3*(data['Ee']-data['VMS_'+pop][i,cond]))/len(data['VMS_'+pop])
+                              data['Q_RecInh_'+pop]*data['Tsi']*1e-3*(data['Ei']-np.mean(data['VMS_'+pop][i,cond])))/len(data['VMS_'+pop])
+        meanIe_Aff += np.abs(data['F_AffExc']*data['p_AffExc_'+pop]*data['N_AffExc']*\
+                     data['Q_AffExc_'+pop]*data['Tse']*1e-3*(data['Ee']-np.mean(data['VMS_'+pop][i,cond])))/len(data['VMS_'+pop])
 
     return meanIe_Aff, meanIe_Rec, meanIi_Rec
-
 
 def get_all_macro_quant(data, exc_pop_key='Exc', inh_pop_key='Inh', other_pops=[]):
 
@@ -121,6 +120,9 @@ def get_all_macro_quant(data, exc_pop_key='Exc', inh_pop_key='Inh', other_pops=[
                                                                                                  pop=exc_pop_key)
     output['meanIe_Inh'], output['meanIi_Inh'], output['balance_Inh'] = get_currents_and_balance(data,
                                                                                                  pop=inh_pop_key)
+    output['meanIe_Aff'], output['meanIe_Rec'], output['meanIi_Rec'] = get_afferent_and_recurrent_currents(data,
+                                                                                                           pop=exc_pop_key)
+
     try:
         output['mean_exc'] = get_mean_pop_act(data, pop=exc_pop_key)
         output['mean_inh'] = get_mean_pop_act(data, pop=inh_pop_key)
@@ -139,8 +141,9 @@ def get_all_macro_quant(data, exc_pop_key='Exc', inh_pop_key='Inh', other_pops=[
 if __name__=='__main__':
     import sys
     sys.path.append('../../')
-    from params_scan.aff_exc_aff_dsnh_params_space import get_scan
-    args, F_aff, F_dsnh, DATA = get_scan(\
+    # from params_scan.aff_exc_aff_dsnh_params_space import get_scan
+    import neural_network_dynamics.main as ntwk
+    args, F_aff, F_dsnh, DATA = ntwk.get_scan(\
                     '../../params_scan/data/scan.zip')
     print(get_synchrony_of_spiking(DATA[2]))
     print(get_synchrony_of_spiking(DATA[-1]))
