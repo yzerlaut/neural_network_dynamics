@@ -7,7 +7,8 @@ from theory.tf import  build_up_afferent_synaptic_input, built_up_neuron_params
 from sklearn import linear_model
 import numpy as np
 
-def fit_data(data, order=2, Fout_high=50., fit_filename=None):
+def fit_data(data, order=2, Fout_high=50., fit_filename=None,
+             included_factors = ['muV', 'sV', 'gV', 'Tv', 'Proba']):
     
     mFout, sFout = data['Fout_mean'], data['Fout_std']
     Model = data['Model']
@@ -24,6 +25,18 @@ def fit_data(data, order=2, Fout_high=50., fit_filename=None):
                                                      SYN_POPS, RATES,
                                                      already_SI=False)
     Proba = Proba_g_P(muV, sV, gV, 1e-3*neuron_params['Vthre'])
+
+    # removing non-included factors
+    if 'muV' not in included_factors:
+        muV *= 0 
+    if 'sV' not in included_factors:
+        sV *= 0 
+    if 'Tv' not in included_factors:
+        Tv = 0*Tv+20e-3 
+    if 'gV' not in included_factors:
+        gV *= 0
+    if 'Proba' not in included_factors:
+        Proba *= 0 
 
     # # only strictly positive firing rates taken into account
     cond = (mFout>0) & (mFout<Fout_high)
@@ -44,7 +57,7 @@ def fit_data(data, order=2, Fout_high=50., fit_filename=None):
     reg = linear_model.Ridge(alpha=.9, fit_intercept=False, normalize=False)
     reg.fit(X, Vthre_eff) # FITTING
     COEFFS = reg.coef_
-
+    print(COEFFS)
     if fit_filename is not None:
         np.save(fit_filename, COEFFS)
         
