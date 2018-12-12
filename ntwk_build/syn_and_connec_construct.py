@@ -39,19 +39,30 @@ def collect_and_run(NTWK, verbose=False, INTERMEDIATE_INSTRUCTIONS=[]):
         print('-> done !')
     return net
 
-def build_up_recurrent_connections(NTWK, SEED=1, verbose=False):
+def build_up_recurrent_connections(NTWK, SEED=1,
+                                   with_ring_geometry=False,
+                                   verbose=False):
     """
     Construct the synapses from the connectivity matrix
     """
-    CONN = np.empty((len(NTWK['POPS']), len(NTWK['POPS'])), dtype=object)
-    CONN2 = []
-
+    
     # brian2.seed(SEED)
     np.random.seed(SEED)
 
     if verbose:
         print('drawing random connections [...]')
+
+    if with_ring_geometry:
+        NTWK['REC_SYNAPSES'] = random_distance_dependent_connections(NTWK)
+    else:
+        NTWK['REC_SYNAPSES'] = random_connections(NTWK)
+
         
+def random_connections(NTWK):
+    
+    CONN = np.empty((len(NTWK['POPS']), len(NTWK['POPS'])), dtype=object)
+    CONN2 = []
+
     for ii, jj in itertools.product(range(len(NTWK['POPS'])), range(len(NTWK['POPS']))):
         if (NTWK['M'][ii,jj]['pconn']>0) and (NTWK['M'][ii,jj]['Q']!=0):
             CONN[ii,jj] = brian2.Synapses(NTWK['POPS'][ii], NTWK['POPS'][jj], model='w:siemens',\
@@ -74,8 +85,66 @@ def build_up_recurrent_connections(NTWK, SEED=1, verbose=False):
             CONN[ii,jj].w = NTWK['M'][ii,jj]['Q']*brian2.nS
             CONN2.append(CONN[ii,jj])
 
-    NTWK['REC_SYNAPSES'] = CONN2
+    return CONN2
 
+def draw_spatially_dependent_connectivity_profile(index_target_cell,
+                                                  pool_of_potential_inputs_in_index_units,
+                                                  number_of_desired_synapses,
+                                                  spatial_decay_in_index_units,
+                                                  delay_in_ms_per_index_units,
+                                                  exclude_self=False):
+    """
+    ring geometry
+    """
+    Nmax = np.max(pool_of_potential_inputs_in_index_units)
+    inputs = pool_of_potential_inputs_in_index_units
+    
+    input_to_target_distance = np.min([(inputs-index_target_cell)%Nmax, (index_target_cell-inputs)%Nmax], axis=0)
+    delays = delay_in_ms_per_index_units*input_to_target_distance
+    
+    gaussian_proba = np.exp(-(input_to_target_distance/spatial_decay_in_index_units)**2)
+    if exclude_self:
+        gaussian_proba[index_target_cell] = 0.
+
+    ipre = np.random.choice(inputs, number_of_desired_synapses, p=gaussian_proba/gaussian_proba.sum(), replace=False)
+    return ipre, delays[ipre]
+    
+    
+def random_distance_dependent_connections(NTWK):
+    
+    CONN = np.empty((len(NTWK['POPS']), len(NTWK['POPS'])), dtype=object)
+    CONN2 = []
+
+    for ii, jj in itertools.product(range(len(NTWK['POPS'])), range(len(NTWK['POPS']))):
+        if (NTWK['M'][ii,jj]['pconn']>0) and (NTWK['M'][ii,jj]['Q']!=0):
+            CONN[ii,jj] = brian2.Synapses(NTWK['POPS'][ii], NTWK['POPS'][jj], model='w:siemens',\
+                               on_pre='G'+NTWK['M'][ii,jj]['name']+'_post+=w')
+            # CONN[ii,jj].connect(p=NTWK['M'][ii,jj]['pconn'], condition='i!=j')
+            # N.B. the brian2 settings does weird things (e.g. it creates synchrony)
+            # so we draw manually the connection to fix synaptic numbers
+            N_per_cell = int(NTWK['M'][ii,jj]['pconn']*NTWK['POPS'][ii].N)
+            if ii==jj: # need to take care of no autapse
+                exclude_self = True
+            else:
+                exclude_self = False
+            I_rdms, Delays = np.empty(0, dtype=int), np.empty(0)
+            for index_target_cell in range(NTWK['POPS'][jj].N):
+                i_rdms, delays = draw_spatially_dependent_connectivity_profile(index_target_cell,
+                                                                               np.arange(NTWK['POPS'][ii].N),
+                                                                               N_per_cell,
+                                                                               NTWK['M'][ii,jj]['SpatialDecay'],
+                                                                               NTWK['M'][ii,jj]['Delay'],
+                                                                               exclude_self=exclude_self)
+                I_rdms = np.concatenate([I_rdms, i_rdms])
+                Delays = np.concatenate([Delays, delays])
+
+            j_fixed = np.concatenate([np.ones(N_per_cell,dtype=int)*jjj for jjj in range(NTWK['POPS'][jj].N)])
+            CONN[ii,jj].connect(i=np.array(I_rdms, dtype=int), j=j_fixed) 
+            CONN[ii,jj].w = NTWK['M'][ii,jj]['Q']*brian2.nS
+            CONN[ii,jj].delay = Delays*brian2.ms
+            CONN2.append(CONN[ii,jj])
+
+    return CONN2
 
 def get_syn_and_conn_matrix(Model, POPULATIONS,
                             AFFERENT_POPULATIONS=[],
@@ -114,6 +183,14 @@ def get_syn_and_conn_matrix(Model, POPULATIONS,
         if ('alpha_'+source_pop+'_'+target_pop in Model) and ('V0' in Model):
             M[i,j]['alpha'], M[i,j]['V0'] = Model['alpha_'+source_pop+'_'+target_pop], Model['V0']
 
+        # in case of spatially decaying connectivity probability
+        if ('SpatialDecay_'+source_pop+'_'+target_pop in Model):
+            M[i,j]['SpatialDecay'] = Model['SpatialDecay_'+source_pop+'_'+target_pop]
+            if ('Delay_'+source_pop+'_'+target_pop in Model): # with delays if present
+                M[i,j]['Delay'] = Model['Delay_'+source_pop+'_'+target_pop]
+            else:
+                M[i,j]['Delay'] = 0
+            
     if SI_units:
         print('synaptic network parameters in SI units')
         for m in M.flatten():
