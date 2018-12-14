@@ -1,8 +1,7 @@
 """
-Demo file simulating the Vogels & Abbott 2005 network 
+Demo file simulating the Vogels and Abbott 2005 network 
 adapted from http://brian2.readthedocs.io/en/2.0b4/examples/COBAHH.html
 """
-
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 import numpy as np

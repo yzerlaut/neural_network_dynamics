@@ -2,8 +2,15 @@ import numpy as np
 from itertools import product
 import sys, pathlib
 import zipfile
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-from recording.load_and_save import load_dict_from_hdf5
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
+try:
+    from data_analysis.IO.hdf5 import load_dict_from_hdf5
+except ImportError:
+    print('---------------------------------------------------------------')
+    print('you need the data_analysis folder')
+    print('get it at: bitbucket.org/yzerlaut/data_analysis')
+    print('---------------------------------------------------------------')
+
 
 def get_scan(Model,
              filename=None,
@@ -22,7 +29,6 @@ def get_scan(Model,
         return Model, dict(Model['PARAMS_SCAN'].all()), None
     else:
         DATA = []
-        print(Model['PARAMS_SCAN'])
         for fn in (Model['PARAMS_SCAN'].all()['FILENAMES']):
             print(fn)
             data = zf.read(fn)
