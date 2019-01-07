@@ -173,8 +173,7 @@ if __name__=='__main__':
     sys.path.append('../../')
     # from params_scan.aff_exc_aff_dsnh_params_space import get_scan
     import neural_network_dynamics.main as ntwk
-    args, F_aff, F_dsnh, DATA = ntwk.get_scan(\
-                    '../../params_scan/data/scan.zip')
+    args, F_aff, F_dsnh, DATA = ntwk.get_scan({}, filename='../../params_scan/data/scan.zip')
     print(get_synchrony_of_spiking(DATA[2]))
     print(get_synchrony_of_spiking(DATA[-1]))
     # print(get_CV_spiking(data))
