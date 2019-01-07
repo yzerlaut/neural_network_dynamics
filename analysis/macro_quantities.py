@@ -4,6 +4,8 @@ from itertools import combinations # for cross correlations
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 from graphs.my_graph import *
+from scipy.stats import skew
+
 
 def get_CV_spiking(data, pop='Exc'):
     """see Kumar et al. 2008"""
@@ -63,6 +65,7 @@ def get_mean_pop_act(data, pop='Exc', tdiscard=200):
     cond = t>tdiscard
     return data['POP_ACT_'+pop][cond].mean()
 
+
 def get_Vm_fluct_props(data, pop='Exc', tdiscard=200, twindow=5, Vreset=-70):
     
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
@@ -110,10 +113,16 @@ def get_all_macro_quant(data, exc_pop_key='Exc', inh_pop_key='Inh', other_pops=[
     output['synchrony'] = .2*get_synchrony_of_spiking(data, pop=inh_pop_key)+\
                           .8*get_synchrony_of_spiking(data, pop=exc_pop_key)
     output['irregularity'] = .2*get_CV_spiking(data, pop=inh_pop_key)+.8*get_CV_spiking(data, pop=exc_pop_key)
-    output['meanIe_Exc'], output['meanIi_Exc'], output['balance_Exc'] = get_currents_and_balance(data,
-                                                                                                 pop=exc_pop_key)
-    output['meanIe_Inh'], output['meanIi_Inh'], output['balance_Inh'] = get_currents_and_balance(data,
-                                                                                                 pop=inh_pop_key)
+    output['meanIe_'+exc_pop_key], output['meanIi_'+exc_pop_key],\
+        output['balance_'+exc_pop_key] = get_currents_and_balance(data, pop=exc_pop_key)
+    output['meanIe_'+inh_pop_key], output['meanIi_'+inh_pop_key],\
+        output['balance_'+inh_pop_key] = get_currents_and_balance(data, pop=inh_pop_key)
+
+    output['muV_'+exc_pop_key], output['sV_'+exc_pop_key], output['gV_'+exc_pop_key], output['Tv_'+exc_pop_key] =\
+                                                get_Vm_fluct_props(data, pop=exc_pop_key)
+    output['muV_'+inh_pop_key], output['sV_'+inh_pop_key], output['gV_'+inh_pop_key], output['Tv_'+inh_pop_key] =\
+                                                get_Vm_fluct_props(data, pop=inh_pop_key)
+    
     try:
         output['mean_exc'] = get_mean_pop_act(data, pop=exc_pop_key)
         output['mean_inh'] = get_mean_pop_act(data, pop=inh_pop_key)
