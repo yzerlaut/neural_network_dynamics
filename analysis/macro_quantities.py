@@ -63,6 +63,26 @@ def get_mean_pop_act(data, pop='Exc', tdiscard=200):
     cond = t>tdiscard
     return data['POP_ACT_'+pop][cond].mean()
 
+def get_Vm_fluct_props(data, pop='Exc', tdiscard=200, twindow=5, Vreset=-70):
+    
+    t = np.arange(int(data['tstop']/data['dt']))*data['dt']
+
+    MUV, SV, SKV, TV = [], [], [], []
+    for i in range(len(data['VMS_'+pop])):
+        cond = (t>tdiscard)
+        # then removing spikes
+        tspikes = data['tRASTER_'+str(pop)][\
+                                            np.argwhere(data['iRASTER_'+str(pop)]==i).flatten()]
+        for ts in tspikes:
+            cond = cond & np.invert((t>=ts-twindow) & (t<=(ts+twindow)))
+        MUV.append(data['VMS_'+pop][i][cond].mean())
+        SV.append(data['VMS_'+pop][i][cond].std())
+        SKV.append(skew(data['VMS_'+pop][i][cond]))
+        TV.append(0)
+        # TV.append(get_acf_time(data['VMS_'+pop][i][cond], dt))
+    
+    return np.array(MUV), np.array(SV), np.array(SKV), np.array(TV)
+
 def get_currents_and_balance(data, pop='Exc', tdiscard=200, Vreset=-70):
     
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
@@ -112,16 +132,18 @@ def get_all_macro_quant(data, exc_pop_key='Exc', inh_pop_key='Inh', other_pops=[
 if __name__=='__main__':
     import sys
     sys.path.append('../../')
-    from params_scan.aff_exc_aff_dsnh_params_space import get_scan
-    args, F_aff, F_dsnh, DATA = get_scan(\
-                    '../../params_scan/data/scan.zip')
-    print(get_synchrony_of_spiking(DATA[2]))
-    print(get_synchrony_of_spiking(DATA[-1]))
+    from sparse_vs_balanced.varying_AffExc import get_scan
+    # from params_scan.aff_exc_aff_dsnh_params_space import get_scan
+    # args, F_aff, F_dsnh, DATA = get_scan({}, filename='../../params_scan/data/scan.zip')
+    args, F_aff, F_dsnh, DATA = get_scan({}, filename='../../sparse_vs_balanced/data/varying_AffExc.zip')
+    # print(get_synchrony_of_spiking(DATA[2]))
+    # print(get_synchrony_of_spiking(DATA[-1]))
     # print(get_CV_spiking(data))
     # print(get_mean_pop_act(data))
     # print(get_mean_pop_act(data, pop='Inh'))
     for data in DATA[8:]:
-        print(get_currents_and_balance(data, pop='Exc'))
+        print(get_Vm_fluct_props(data, pop='Exc', tdiscard=200, twindow=5, Vreset=-70))
+        # print(get_currents_and_balance(data, pop='Exc'))
     # print(get_currents_and_balance(DATA[-1], pop='Inh'))
 
 
