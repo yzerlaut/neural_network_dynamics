@@ -57,13 +57,16 @@ ntwk.build_up_recurrent_connections(NTWK, SEED=5, verbose=True)
 ########### AFFERENT INPUTS ###########
 #######################################
 
+print('-------------------------------------------------------')
+print('BROKEN SCRIPT, NEED TO UPDATE WRT TO NEW ntwk_stim')
+print('-------------------------------------------------------')
 faff = 1.
 t_array = ntwk.arange(int(Model['tstop']/Model['dt']))*Model['dt']
 # # # afferent excitation onto cortical excitation and inhibition
 for i, tpop in enumerate(['Exc', 'Inh']): # both on excitation and inhibition
     ntwk.construct_feedforward_input_correlated(NTWK, tpop, 'AffExc',
                                                 t_array, faff+0.*t_array,
-                                                with_presynaptic_spikes=True,
+                                                # with_presynaptic_spikes=True,
                                                 verbose=True,
                                                 SEED=int(37*faff+i)%37)
 

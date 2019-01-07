@@ -64,7 +64,6 @@ def run_sim(Model,
     if firing_rate_only:
         return vec.mean(), vec.std()
     else:
-        print(np.array(NTWK['RASTER'][0].i))
         output = {'ispikes':np.array(NTWK['RASTER'][0].i),
                   'tspikes':np.array(NTWK['RASTER'][0].t/ntwk.ms),
                   'Model':Model, 'fout_mean':vec.mean(), 'fout_std':vec.std()}

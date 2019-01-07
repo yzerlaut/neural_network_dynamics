@@ -3,7 +3,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from theory.Vm_statistics import getting_statistical_properties
 from theory.probability import Proba_g_P
 from theory.spiking_function import firing_rate
-from cells.cell_construct import built_up_neuron_params
+from cells.cell_library import built_up_neuron_params
 from theory.tf import build_up_afferent_synaptic_input
 import numpy as np
 import matplotlib.pylab as plt
@@ -11,245 +11,164 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 from graphs.my_graph import set_plot, Brown
 from scipy.integrate import odeint
 
-def input_output(neuron_params, SYN_POPS, RATES, COEFFS):
+def input_output(neuron_params, SYN_POPS, RATES, COEFFS, already_SI=False):
     muV, sV, gV, Tv = getting_statistical_properties(neuron_params,
                                                      SYN_POPS, RATES,
-                                                     already_SI=False)
-    Proba = Proba_g_P(muV, sV, gV, 1e-3*neuron_params['Vthre'])
+                                                     already_SI=already_SI)
+    if already_SI:
+        Vthre = neuron_params['Vthre']
+    else:
+        Vthre = 1e-3*neuron_params['Vthre']
+        
+    Proba = Proba_g_P(muV, sV, gV, Vthre)
     Fout = firing_rate(muV, sV, gV, Tv, Proba, COEFFS)
     return Fout
 
-def build_up_differential_operator_first_order(Model,
-                                               KEY1='RecExc', KEY2='RecInh',
-                                               KEY_RATES1 = ['AffExc'], VAL_RATES1=[4.],
-                                               KEY_RATES2 = ['AffExc', 'DsInh'], VAL_RATES2=[4., .5],
-                                               T=5e-3):
+def solve_mean_field_first_order(Model,
+                                 DYN_SYSTEM = {
+                                     'RecExc': {'aff_pops':['AffExc'], 'x0':1.},
+                                     'RecInh': {'aff_pops':['AffExc'], 'x0':1.}
+                                 },
+                                 dt = 0.1, tstop = 100.,
+                                 INPUTS = {'AffExc_RecExc':np.ones(1000), 'AffExc_RecInh':np.ones(1000)},
+                                 T=5e-3,
+                                 replace_x0=False, verbose=False):
     """
-    simple first order system
+    
+
+    if replace_x0 -> then you can directly use get_stat_props
     """
+    DYN_KEYS = [key for key in DYN_SYSTEM.keys()] # for a quick access to the dynamical system variables
 
-    Model['RATES'] = {}
-    POP_STIM1 = [KEY1, KEY2]+KEY_RATES1
-    POP_STIM2 = [KEY1, KEY2]+KEY_RATES2
-    # neuronal and synaptic params
-    neuron_params1 = built_up_neuron_params(Model, KEY1)
-    SYN_POPS1 = build_up_afferent_synaptic_input(Model, POP_STIM1, KEY1)
-    neuron_params2 = built_up_neuron_params(Model, KEY2)
-    SYN_POPS2 = build_up_afferent_synaptic_input(Model, POP_STIM2, KEY2)
+    # initialize neuronal and synaptic params
+    for key in DYN_KEYS:
+        DYN_SYSTEM[key]['nrn_params'] = built_up_neuron_params(Model, key)
+        DYN_SYSTEM[key]['syn_input'] = build_up_afferent_synaptic_input(Model,\
+                                                        DYN_KEYS+DYN_SYSTEM[key]['aff_pops'], key,
+                                                        verbose=verbose)
+
+    # --- CONSTRUCT THE DIFFERENTIAL OPERATOR --- #
+    def dX_dt(X, t, dt, DYN_KEYS, DYN_SYSTEM, INPUTS):
+        dX_dt, RATES = [], {}
+        # we fill the X-defined recurent act:
+        for x, key in zip(X, DYN_KEYS):
+            RATES['F_'+key] = x
+        # then we compute it, key by key
+        for i, key in enumerate(DYN_KEYS):
+            for aff_key in DYN_SYSTEM[key]['aff_pops']:
+                RATES['F_'+aff_key] = INPUTS[aff_key+'_'+key][\
+                                        min([int(t/dt), len(INPUTS[aff_key+'_'+key])-1]) ]
+            Fout = input_output(DYN_SYSTEM[key]['nrn_params'],
+                                DYN_SYSTEM[key]['syn_input'],
+                                RATES,
+                                Model['COEFFS_'+key])
+            dX_dt.append((Fout-X[i])/T) # Simple one-dimensional framework
+        return dX_dt
+    # ------------------------------------------- #
+
     
-    # initialize rates that are static external parameters
-    RATES1, RATES2 = {}, {}
-    for f, pop in zip(VAL_RATES1, KEY_RATES1):
-        RATES1['F_'+pop] = f
-    for f, pop in zip(VAL_RATES2, KEY_RATES2):
-        RATES2['F_'+pop] = f
+    # starting point
+    X0 = []
+    for key in DYN_KEYS:
+        X0.append(DYN_SYSTEM[key]['x0'])
         
-    def TF1(X):
-        RATES1['F_'+KEY1], RATES1['F_'+KEY2] = X[0], X[1] # two pop only
-        return input_output(neuron_params1, SYN_POPS1, RATES1, Model['COEFFS_'+str(KEY1)])
+    X = odeint(dX_dt, X0, np.arange(int(tstop/dt))*dt,
+               args=(dt, DYN_KEYS, DYN_SYSTEM, INPUTS))
 
-    def TF2(X):
-        RATES2['F_'+KEY1], RATES2['F_'+KEY2] = X[0], X[1] # two pop only
-        return input_output(neuron_params2, SYN_POPS2, RATES2, Model['COEFFS_'+str(KEY2)])
-    
-    # the differential operator is an array of functions
-    def A0(X):
-        return 1./T*(TF1(X)-X[0])
-    def A1(X):
-        return 1./T*(TF2(X)-X[1])
-
-    return [A0, A1]
-
-
-def run_trajectory(Model,
-                   X0 = [0.05, 100.],
-                   KEY1='RecExc', KEY2='RecInh',
-                   KEY_RATES1 = ['AffExc'], VAL_RATES1=[4.],
-                   KEY_RATES2 = ['AffExc', 'DsInh'], VAL_RATES2=[4., .5],
-                   t = np.arange(2)*1e-10,
-                   plot=False):
-    
-    Operator = build_up_differential_operator_first_order(Model, 
-                                                          KEY1=KEY1, KEY2=KEY2,
-                                                          KEY_RATES1 = KEY_RATES1, VAL_RATES1=VAL_RATES1,
-                                                          KEY_RATES2 = KEY_RATES2, VAL_RATES2=VAL_RATES2)
-    def dX_dt(X, t=0):
-        return Operator[0](X), Operator[1](X)
-    
-    X = odeint(dX_dt, X0, t)         # we don't need infodict here
-    
-    return X
-    
-def show_phase_space(Model,
-                     KEY1='RecExc', KEY2='RecInh',
-                     F1 = np.logspace(-2., 2.1, 100),
-                     F2 = np.logspace(-2., 2.2, 400),
-                     KEY_RATES1 = ['AffExc'], VAL_RATES1=[4.],
-                     KEY_RATES2 = ['AffExc', 'DsInh'], VAL_RATES2=[4., .5],
-                     with_trajectory = [0.02, 10.],
-                     t = np.arange(1000)*1e-5):
-
-        
-    Model['RATES'] = {}
-    POP_STIM1 = [KEY1, KEY2]+KEY_RATES1
-    POP_STIM2 = [KEY1, KEY2]+KEY_RATES2
-    # neuronal and synaptic params
-    neuron_params1 = built_up_neuron_params(Model, KEY1)
-    SYN_POPS1 = build_up_afferent_synaptic_input(Model, POP_STIM1, KEY1)
-    neuron_params2 = built_up_neuron_params(Model, KEY2)
-    SYN_POPS2 = build_up_afferent_synaptic_input(Model, POP_STIM2, KEY2)
-    
-    # initialize rates
-    RATES1, RATES2 = {}, {}
-    for f, pop in zip(VAL_RATES1, KEY_RATES1):
-        RATES1['F_'+pop] = f
-    for f, pop in zip(VAL_RATES2, KEY_RATES2):
-        RATES2['F_'+pop] = f
-    
-    # ---------------------------
-    # computing the vector field
-    # ---------------------------
-    FE, FI = np.meshgrid(F1, F2)
-    ZE, ZI = 0.*FE, 0.*FE
-    F1_nullcline, F2_nullcline = 0.*F1, 0.*F1
-    ZE = np.exp(-(FE-.1*FE.mean())**2)
-    ZI = np.exp(-(FI-.1*FI.mean())**2)
-    for kk in range(len(F1)):
-        for ll in range(len(F2)):
-            # pop 1
-            RATES1['F_'+KEY1], RATES1['F_'+KEY2] = FE[ll, kk], FI[ll, kk]
-            Fout1 = input_output(neuron_params1, SYN_POPS1, RATES1, Model['COEFFS_'+str(KEY1)])
-            ZE[ll, kk] = Fout1-FE[ll, kk]
-            # pop 2
-            RATES2['F_'+KEY1], RATES2['F_'+KEY2] = FE[ll, kk], FI[ll, kk]
-            Fout2 = input_output(neuron_params2, SYN_POPS2, RATES2, Model['COEFFS_'+str(KEY2)])
-            ZI[ll, kk] = Fout2-FI[ll, kk]
-        # ---------------------------
-        # finding the nullclines, detected as change of sign of derivative
-        # ---------------------------
-        i0 = np.arange(len(F2)-1)[(np.sign(ZE[1:,kk])!=np.sign(ZE[:-1,kk]))]
-        if len(i0)>0:
-            F1_nullcline[kk] = F2[i0[0]-1]
-        i0 = np.arange(len(F2)-1)[(np.sign(ZI[1:,kk])!=np.sign(ZI[:-1,kk]))]
-        if len(i0)>0:
-            F2_nullcline[kk] = F2[i0[0]-1]
-
-    if with_trajectory is not None:
-        X0 = with_trajectory
-        X = run_trajectory(Model, X0=X0, t=t, 
-                           KEY1=KEY1, KEY2=KEY2,
-                           KEY_RATES1 = KEY_RATES1, VAL_RATES1=VAL_RATES1,
-                           KEY_RATES2 = KEY_RATES2, VAL_RATES2=VAL_RATES2)
-        f1_fp, f2_fp = X.T[0][-1], X.T[1][-1]
-
-    # then we get the other quantities:
-    RATES1['F_'+KEY1], RATES1['F_'+KEY2] = f1_fp, f2_fp
-    RATES2['F_'+KEY1], RATES2['F_'+KEY2] = f1_fp, f2_fp
-        
-    output = {'F_'+KEY1:f1_fp, 'F_'+KEY2:f2_fp}
-    output['muV_'+KEY1], output['sV_'+KEY1],\
-        output['gV_'+KEY1], output['Tv_'+KEY1],\
-        output['Isyn_'+KEY1] = getting_statistical_properties(
-            neuron_params1, SYN_POPS1, RATES1, already_SI=False, with_Isyn=True, with_current_based=True)
-    output['muV_'+KEY2], output['sV_'+KEY2],\
-        output['gV_'+KEY2], output['Tv_'+KEY2],\
-        output['Isyn_'+KEY2] = getting_statistical_properties(
-            neuron_params2, SYN_POPS2, RATES2, already_SI=False, with_Isyn=True, with_current_based=True)
-        
-    # plot of phase space
-    fig1, ax1 = plt.subplots(1, figsize=(4,3.3))
-    plt.subplots_adjust(left=.2, bottom=.2)
-    
-    F1_nullcline[F1_nullcline==0], F2_nullcline[F2_nullcline==0] = np.nan, np.nan # masking 0 points for plotting
-    ax1.streamplot(np.log(F1)/np.log(10), np.log(F2)/np.log(10), ZE, ZI, density=0.4, color='lightgray', linewidth=1)
-    ax1.plot(np.log(F1)/np.log(10), np.log(F1_nullcline)/np.log(10), 'g-', lw=3, label=r'$\partial_t \nu_e=0$')
-    ax1.plot(np.log(F1)/np.log(10), np.log(F2_nullcline)/np.log(10), 'r-', lw=3, label=r'$\partial_t \nu_i=0$')
-    if len(i0)>0:
-        ax1.plot([np.log(f1_fp)/np.log(10)],[np.log(f2_fp)/np.log(10)], 'ko', mfc='none', ms=10, label='stable FP')
-
-    if with_trajectory is not None:
-        ax1.plot(np.log(X.T[0])/np.log(10), np.log(X.T[1])/np.log(10), ':', color=Brown, label='trajectory')
-    
-    ax1.legend(loc='best', frameon=False, prop={'size':'small'})
-    set_plot(ax1, xlabel='$\\nu_e$ (Hz)', ylabel='$\\nu_i$ (Hz)',
-             yticks=[-1, 0, 1], yticks_labels=['0.1', '1', '10'],
-             xticks=[-1, 0, 1], xticks_labels=['0.1', '1', '10'])
-    return fig1, output
-
+    output = {}
+    for key, x in zip(DYN_KEYS, X.T):
+        output[key] = x
+        if replace_x0:
+            DYN_SYSTEM[key]['x0'] = x[-1]
+    return output
 
 def find_fp(Model,
-            KEY1='RecExc', KEY2='RecInh',
-            KEY_RATES1 = ['AffExc'], VAL_RATES1=[4.],
-            KEY_RATES2 = ['AffExc', 'DsInh'], VAL_RATES2=[4., .5],
-            X0 = [0.01, 0.01], t = np.arange(5000)*1e-5):
-
-    X = run_trajectory(Model, X0=X0, t=t, 
-                       KEY1=KEY1, KEY2=KEY2,
-                       KEY_RATES1 = KEY_RATES1, VAL_RATES1=VAL_RATES1,
-                       KEY_RATES2 = KEY_RATES2, VAL_RATES2=VAL_RATES2)
-
-    return X.T[0][-1], X.T[1][-1]
-
-def get_full_statistical_quantities(Model, X,
-                                    KEY1='RecExc', KEY2='RecInh',
-                                    KEY_RATES1 = ['AffExc'], VAL_RATES1=[4.],
-                                    KEY_RATES2 = ['AffExc', 'DsInh'], VAL_RATES2=[4., .5]):
-
-    Model['RATES'] = {}
-    POP_STIM1 = [KEY1, KEY2]+KEY_RATES1
-    POP_STIM2 = [KEY1, KEY2]+KEY_RATES2
-    # neuronal and synaptic params
-    neuron_params1 = built_up_neuron_params(Model, KEY1)
-    SYN_POPS1 = build_up_afferent_synaptic_input(Model, POP_STIM1, KEY1)
-    neuron_params2 = built_up_neuron_params(Model, KEY2)
-    SYN_POPS2 = build_up_afferent_synaptic_input(Model, POP_STIM2, KEY2)
+            DYN_SYSTEM = {
+                'RecExc': {'aff_pops':['AffExc'], 'aff_pops_input_values':[1.], 'x0':1.},
+                'RecInh': {'aff_pops':['AffExc'], 'aff_pops_input_values':[1.], 'x0':1.}
+            },
+            dt=0.1, tstop=None, T=5e-3,
+            replace_x0=True):
     
-    # initialize rates that are static external parameters
-    RATES1 = {'F_'+KEY1:X[0], 'F_'+KEY2:X[1]} # RATES
-    RATES2 = {'F_'+KEY1:X[0], 'F_'+KEY2:X[1]} # RATES
-    for f, pop in zip(VAL_RATES1, KEY_RATES1):
-        RATES1['F_'+pop] = f
-    for f, pop in zip(VAL_RATES2, KEY_RATES2):
-        RATES2['F_'+pop] = f
+    if tstop is None:
+        tstop = 50.*T
+
+    def func(t, aff_key, target_key):
+        return DYN_SYSTEM[target_key]['aff_pops_input_values'][0]
+
+    INPUTS = {}
+    for key in DYN_SYSTEM.keys():
+        for aff_key, x in zip(DYN_SYSTEM[key]['aff_pops'], DYN_SYSTEM[key]['aff_pops_input_values']):
+            INPUTS[aff_key+'_'+key] = x*np.ones(int(tstop/dt))
+
+    print(INPUTS.keys())
+    X = solve_mean_field_first_order(Model, DYN_SYSTEM,
+                                     dt, tstop, INPUTS, T, replace_x0)
+
+    if replace_x0:
+        # we set the initial condition 'x0' with 
+        for key in DYN_SYSTEM.keys():
+            DYN_SYSTEM[key]['x0'] = X[key][-1]
+    return [X[key][-1] for key in DYN_SYSTEM.keys()]
+
+def get_full_statistical_quantities(Model,
+                                    DYN_SYSTEM = {
+                            'RecExc': {'aff_pops':['AffExc'], 'aff_pops_input_values':[1.], 'x0':1.},
+                            'RecInh': {'aff_pops':['AffExc'], 'aff_pops_input_values':[1.], 'x0':1.}
+                                    }):
+                                    
+    """
+    we use the x0 point to calculate the satistical values, 
+    so consider the replace_x0 options in find_FP or run_dyn_system
+    """
+
+    DYN_KEYS = [key for key in DYN_SYSTEM.keys()] # for a quick access to the dynamical system variables
+
+    # initialize neuronal and synaptic params (very likely already done)
+    for key in DYN_KEYS:
+        DYN_SYSTEM[key]['nrn_params'] = built_up_neuron_params(Model, key)
+        DYN_SYSTEM[key]['syn_input'] = build_up_afferent_synaptic_input(Model,
+                                                DYN_KEYS+DYN_SYSTEM[key]['aff_pops'], key)
         
-    output = {'F_'+KEY1:X[0], 'F_'+KEY2:X[1]}
-    output['muV_'+KEY1], output['sV_'+KEY1],\
-        output['gV_'+KEY1], output['Tv_'+KEY1],\
-        output['Isyn_'+KEY1] = getting_statistical_properties(
-            neuron_params1, SYN_POPS1, RATES1, already_SI=False, with_Isyn=True)
-    output['muV_'+KEY2], output['sV_'+KEY2],\
-        output['gV_'+KEY2], output['Tv_'+KEY2],\
-        output['Isyn_'+KEY2] = getting_statistical_properties(
-            neuron_params2, SYN_POPS2, RATES2, already_SI=False, with_Isyn=True)
-    
+    output, RATES = {}, {}
+    for key in DYN_KEYS:
+        RATES['F_'+key] = DYN_SYSTEM[key]['x0'] # we use x0 as the activity point to compute
+    for key in DYN_KEYS:
+        for aff_key, x in zip(DYN_SYSTEM[key]['aff_pops'], DYN_SYSTEM[key]['aff_pops_input_values']):
+            RATES['F_'+aff_key] = x
+        output['muV_'+key], output['sV_'+key],\
+            output['gV_'+key], output['Tv_'+key],\
+            output['Isyn_'+key] = getting_statistical_properties(
+                                                              DYN_SYSTEM[key]['nrn_params'],
+                                                              DYN_SYSTEM[key]['syn_input'],
+                                                              RATES, already_SI=False, with_Isyn=True)
     return output
 
 if __name__=='__main__':
 
-    # import the model defined in root directory
-    sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-    from model import Model
-    Model['COEFFS_RecExc'] = np.load('../../sparse_vs_balanced/data/COEFFS_RecExc.npy')
-    Model['COEFFS_RecInh'] = np.load('../../sparse_vs_balanced/data/COEFFS_RecInh.npy')
+    exec(open('../configs/The_Spectrum_of_Asynch_Dyn_2018/model.py').read())
+    Model['COEFFS_RecExc'] = np.load('../configs/The_Spectrum_of_Asynch_Dyn_2018/COEFFS_RecExc.npy')
+    Model['COEFFS_RecInh'] = np.load('../configs/The_Spectrum_of_Asynch_Dyn_2018/COEFFS_RecInh.npy')
+
+    tstop, dt = 1, 5e-4
+
+    DYN_SYSTEM = {
+        'RecExc': {'aff_pops':['AffExc'], 'aff_pops_input_values':[3.], 'x0':1.},
+        'RecInh': {'aff_pops':['AffExc'], 'aff_pops_input_values':[3.], 'x0':1.}
+    }
+    INPUTS = {
+        'AffExc_RecExc':np.ones(int(tstop/dt))*3.,
+        'AffExc_RecInh':np.ones(int(tstop/dt))*3.
+        }
+        
     
-    # show_phase_space(Model,
-    #                  with_trajectory=[0.01, 0.01],
-    #                  t = np.arange(5000)*1e-5, 
-    #                  KEY1='RecExc', KEY2='RecInh',
-    #                  KEY_RATES1 = ['AffExc'], VAL_RATES1=[15.],
-    #                  KEY_RATES2 = ['AffExc'], VAL_RATES2=[15.])
-    X = find_fp(Model,
-                t = np.arange(5000)*1e-5, 
-                KEY1='RecExc', KEY2='RecInh',
-                KEY_RATES1 = ['AffExc'], VAL_RATES1=[15.],
-                KEY_RATES2 = ['AffExc'], VAL_RATES2=[15.])
-    
-    # fig1, _, _ = find_fp(Model, plot=True)
-    output = get_full_statistical_quantities(Model, X,
-                                    KEY1='RecExc', KEY2='RecInh',
-                                    KEY_RATES1 = ['AffExc'], VAL_RATES1=[15.],
-                                    KEY_RATES2 = ['AffExc'], VAL_RATES2=[15.])
-    print(output)
-    
-    # fig1.savefig('/Users/yzerlaut/Desktop/temp.svg')
-    plt.show()
+    X0 = find_fp(Model, DYN_SYSTEM, dt, tstop, replace_x0=True)
+    X = solve_mean_field_first_order(Model, DYN_SYSTEM, dt, tstop, INPUTS)
+
+    print(get_full_statistical_quantities(Model,
+                                          DYN_SYSTEM))
+    from graphs.my_graph import *
+    fig, ax = figure(figsize=(.5,.15))
+    ax.set_yscale('log')
+    plot(Y=[X['RecExc'], X['RecInh']], COLORS=[Green, Red], ax=ax, axes_args=dict(yticks=[0.1,1.,10]))
+    show()
