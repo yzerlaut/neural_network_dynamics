@@ -31,7 +31,7 @@ def run_sim(Model,
     for p in Model['POP_STIM']:
         if p!=Model['NRN_KEY']:
             aff_pops_discard_self.append(p)
-            
+
     # note that number of neurons become number of different seeds
     NTWK = ntwk.build_populations(Model, [Model['NRN_KEY']],
                                   NEURONS = [{'name':Model['NRN_KEY'], 'N':Model['N_SEED']}],
@@ -47,7 +47,7 @@ def run_sim(Model,
         rate_array = RATES['F_'+afferent_pop]+0.*t_array
         ntwk.construct_feedforward_input(NTWK, Model['NRN_KEY'], afferent_pop,
                                          t_array, rate_array,
-                                         SEED=i+Model['SEED'], with_presynaptic_spikes=True)
+                                         SEED=i+Model['SEED'])
 
     sim = ntwk.collect_and_run(NTWK)
 
