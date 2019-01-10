@@ -1,11 +1,17 @@
 import numpy as np
-import matplotlib.pylab as plt
 from itertools import combinations # for cross correlations
+from scipy.stats import skew
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-from graphs.my_graph import *
-from scipy.stats import skew
+try:
+    from data_analysis.processing.signanalysis import get_acf_time
+except ImportError:
+    print('---------------------------------------------------------------')
+    print('you need the data_analysis folder')
+    print('get it at: bitbucket.org/yzerlaut/data_analysis')
+    print('---------------------------------------------------------------')
 
+    
 def get_CV_spiking(data, pop='Exc'):
     """see Kumar et al. 2008"""
     ispikes, tspikes = data['iRASTER_'+pop], data['tRASTER_'+pop]

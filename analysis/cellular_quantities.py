@@ -2,23 +2,15 @@ import numpy as np
 import matplotlib.pylab as plt
 from itertools import combinations # for cross correlations
 import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-from graphs.my_graph import *
 from scipy.stats import skew
-
-def get_CV_spiking(data, pop='Exc'):
-    """see Kumar et al. 2008"""
-    ispikes, tspikes = data['iRASTER_'+pop], data['tRASTER_'+pop]
-    CV = []
-    for i in np.unique(ispikes):
-        tspikes_i = tspikes[np.argwhere(ispikes==i).flatten()]
-        isi = np.diff(tspikes_i)
-        if len(isi)>2:
-            CV.append(np.mean(isi)/np.std(isi))
-    if len(CV)>1:
-        return np.array(CV).mean()
-    else:
-        return 0
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
+try:
+    from data_analysis.processing.signanalysis import get_acf_time
+except ImportError:
+    print('---------------------------------------------------------------')
+    print('you need the data_analysis folder')
+    print('get it at: bitbucket.org/yzerlaut/data_analysis')
+    print('---------------------------------------------------------------')
 
 def get_synchrony_of_spiking(data, pop='Exc',
                              Tbin=2, Nmax_pairs=4000,
@@ -63,12 +55,6 @@ def get_synchrony_of_spiking(data, pop='Exc',
     else:
         return 0
     
-def get_mean_pop_act(data, pop='Exc', tdiscard=200):
-    
-    t = np.arange(int(data['tstop']/data['dt']))*data['dt']
-    cond = t>tdiscard
-    return data['POP_ACT_'+pop][cond].mean()
-
 def get_currents_and_balance(data, pop='Exc', tdiscard=200, Vreset=-70):
     
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
@@ -111,77 +97,63 @@ def get_afferent_and_recurrent_currents(data, pop='Exc', tdiscard=200, Vreset=-7
     return meanIe_Aff, meanIe_Rec, meanIi_Rec
 
 
-def get_Vm_fluct_props(data, pop='Exc', tdiscard=200, twindow=5, Vreset=-70):
-    
+def get_firing_rate(data, pop='Exc',
+                    tdiscard=200):
+
+    FR = []
+    for i in range(len(data['VMS_'+pop])):
+        tspikes = data['tRASTER_'+str(pop)][np.argwhere(data['iRASTER_'+str(pop)]==i).flatten()]
+        FR.append(len(tspikes[tspikes>tdiscard])/(data['tstop']-tdiscard))
+    return np.array(FR)
+
+def get_Vm_fluct_props(data, pop='Exc',
+                       tdiscard=200,
+                       twindow=None):
+
+    if twindow is None:
+        try:
+            twindow = data[pop+'_Trefrac']
+        except KeyError:
+            print('Refractory period not found, set as 5ms')
+            twindow = 5
+            
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
 
     MUV, SV, SKV, TV = [], [], [], []
+    
     for i in range(len(data['VMS_'+pop])):
         cond = (t>tdiscard)
         # then removing spikes
-        tspikes = data['tRASTER_'+str(pop)][\
-                                            np.argwhere(data['iRASTER_'+str(pop)]==i).flatten()]
+        tspikes = data['tRASTER_'+str(pop)][np.argwhere(data['iRASTER_'+str(pop)]==i).flatten()]
         for ts in tspikes:
             cond = cond & np.invert((t>=ts-twindow) & (t<=(ts+twindow)))
         MUV.append(data['VMS_'+pop][i][cond].mean())
         SV.append(data['VMS_'+pop][i][cond].std())
         SKV.append(skew(data['VMS_'+pop][i][cond]))
-        TV.append(0)
-        # TV.append(get_acf_time(data['VMS_'+pop][i][cond], dt))
-    
+        TV.append(get_acf_time(data['VMS_'+pop][i][cond], data['dt'], min_time=1., max_time=100., procedure='integrate'))
+        
     return np.array(MUV), np.array(SV), np.array(SKV), np.array(TV)
 
-def get_all_macro_quant(data, exc_pop_key='Exc', inh_pop_key='Inh', other_pops=[]):
-    """
-    need to make this function more general !
-    """
-
-    output = {}
-    # weighted sum (by num of neurons) over exc and inhibtion
-    output['synchrony'] = .2*get_synchrony_of_spiking(data, pop=inh_pop_key)+\
-                          .8*get_synchrony_of_spiking(data, pop=exc_pop_key)
-    output['irregularity'] = .2*get_CV_spiking(data, pop=inh_pop_key)+.8*get_CV_spiking(data, pop=exc_pop_key)
-    output['meanIe_'+exc_pop_key], output['meanIi_'+exc_pop_key], output['balance_'+exc_pop_key] = get_currents_and_balance(data,
-                                                                                                        pop=exc_pop_key)
-    output['meanIe_'+inh_pop_key], output['meanIi_'+inh_pop_key], output['balance_'+inh_pop_key] = get_currents_and_balance(data,
-                                                                                                        pop=inh_pop_key)
-    
-    output['meanIe_Aff'], output['meanIe_Rec'], output['meanIi_Rec'] = get_afferent_and_recurrent_currents(data,
-                                                                                                           pop=exc_pop_key)
-
-    output['muV_'+exc_pop_key], output['sV_'+exc_pop_key], output['gV_'+exc_pop_key], output['Tv_'+exc_pop_key] =\
-                                                get_Vm_fluct_props(data, pop=exc_pop_key)
-    output['muV_'+inh_pop_key], output['sV_'+inh_pop_key], output['gV_'+inh_pop_key], output['Tv_'+inh_pop_key] =\
-                                                get_Vm_fluct_props(data, pop=inh_pop_key)
-    
-    try:
-        output['mean_exc'] = get_mean_pop_act(data, pop=exc_pop_key)
-        output['mean_inh'] = get_mean_pop_act(data, pop=inh_pop_key)
-    except KeyError:
-        output['mean_exc'] = 0.
-        output['mean_inh'] = 0.
-        
-    for pop in other_pops:
-        try:
-            output['mean_'+pop] = get_mean_pop_act(data, pop=pop)
-        except KeyError:
-            output['mean_'+pop] = 0.
-            
-    return output
 
 if __name__=='__main__':
-    import sys
-    sys.path.append('../../')
-    # from params_scan.aff_exc_aff_dsnh_params_space import get_scan
     import neural_network_dynamics.main as ntwk
-    args, F_aff, F_dsnh, DATA = ntwk.get_scan({}, filename='../../params_scan/data/scan.zip')
-    print(get_synchrony_of_spiking(DATA[2]))
-    print(get_synchrony_of_spiking(DATA[-1]))
-    # print(get_CV_spiking(data))
-    # print(get_mean_pop_act(data))
-    # print(get_mean_pop_act(data, pop='Inh'))
-    for data in DATA[8:]:
-        print(get_currents_and_balance(data, pop='Exc'))
-    # print(get_currents_and_balance(DATA[-1], pop='Inh'))
+    data = ntwk.load_dict_from_hdf5('../../sparse_vs_balanced/data/weakrec_level2.h5')
+    # from graphs.my_graph import *
+    print(get_firing_rate(data, pop='RecExc'))
+    print(get_Vm_fluct_props(data, pop='RecExc'))
+    # plot(data['VMS_RecExc'][0])
+    # show()
+    # import sys
+    # sys.path.append('../../')
+    # # from params_scan.aff_exc_aff_dsnh_params_space import get_scan
+    # args, F_aff, F_dsnh, DATA = ntwk.get_scan({}, filename='../../params_scan/data/scan.zip')
+    # print(get_synchrony_of_spiking(DATA[2]))
+    # print(get_synchrony_of_spiking(DATA[-1]))
+    # # print(get_CV_spiking(data))
+    # # print(get_mean_pop_act(data))
+    # # print(get_mean_pop_act(data, pop='Inh'))
+    # for data in DATA[8:]:
+    #     print(get_currents_and_balance(data, pop='Exc'))
+    # # print(get_currents_and_balance(DATA[-1], pop='Inh'))
 
 
