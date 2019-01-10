@@ -19,7 +19,7 @@ def get_firing_rate(data, pop='Exc',
     for i in range(len(data['VMS_'+pop])):
         tspikes = data['tRASTER_'+str(pop)][np.argwhere(data['iRASTER_'+str(pop)]==i).flatten()]
         FR.append(len(tspikes[tspikes>tdiscard])/(data['tstop']-tdiscard))
-    return np.array(FR)
+    return 1e3*np.array(FR) # from ms to s -> Hz
 
 def get_Vm_fluct_props(data, pop='Exc',
                        tdiscard=200,
