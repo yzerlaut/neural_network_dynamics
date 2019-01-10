@@ -20,7 +20,9 @@ from data_analysis.IO.hdf5 import load_dict_from_hdf5
 # for plotting
 from neural_network_dynamics.analysis.plot_sim import *
 # for analysis of netwok activity
-from neural_network_dynamics.analysis.macro_quantities import *
+from neural_network_dynamics.analysis.population_quantities import *
+from neural_network_dynamics.analysis.cellular_quantities import get_firing_rate as single_cell_firing_rate
+from neural_network_dynamics.analysis.cellular_quantities import get_Vm_fluct_props
 # for parameter scans
 from neural_network_dynamics.scan.run import run_scan
 from neural_network_dynamics.scan.get import get_scan

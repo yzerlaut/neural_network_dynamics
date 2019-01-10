@@ -117,26 +117,6 @@ def get_afferent_and_recurrent_currents(data, pop='Exc', tdiscard=200, Vreset=-7
     return meanIe_Aff, meanIe_Rec, meanIi_Rec
 
 
-def get_Vm_fluct_props(data, pop='Exc', tdiscard=200, twindow=5, Vreset=-70):
-    
-    t = np.arange(int(data['tstop']/data['dt']))*data['dt']
-
-    MUV, SV, SKV, TV = [], [], [], []
-    for i in range(len(data['VMS_'+pop])):
-        cond = (t>tdiscard)
-        # then removing spikes
-        tspikes = data['tRASTER_'+str(pop)][\
-                                            np.argwhere(data['iRASTER_'+str(pop)]==i).flatten()]
-        for ts in tspikes:
-            cond = cond & np.invert((t>=ts-twindow) & (t<=(ts+twindow)))
-        MUV.append(data['VMS_'+pop][i][cond].mean())
-        SV.append(data['VMS_'+pop][i][cond].std())
-        SKV.append(skew(data['VMS_'+pop][i][cond]))
-        TV.append(0)
-        # TV.append(get_acf_time(data['VMS_'+pop][i][cond], dt))
-    
-    return np.array(MUV), np.array(SV), np.array(SKV), np.array(TV)
-
 def get_all_macro_quant(data, exc_pop_key='Exc', inh_pop_key='Inh', other_pops=[]):
     """
     need to make this function more general !
@@ -155,11 +135,6 @@ def get_all_macro_quant(data, exc_pop_key='Exc', inh_pop_key='Inh', other_pops=[
     output['meanIe_Aff'], output['meanIe_Rec'], output['meanIi_Rec'] = get_afferent_and_recurrent_currents(data,
                                                                                                            pop=exc_pop_key)
 
-    output['muV_'+exc_pop_key], output['sV_'+exc_pop_key], output['gV_'+exc_pop_key], output['Tv_'+exc_pop_key] =\
-                                                get_Vm_fluct_props(data, pop=exc_pop_key)
-    output['muV_'+inh_pop_key], output['sV_'+inh_pop_key], output['gV_'+inh_pop_key], output['Tv_'+inh_pop_key] =\
-                                                get_Vm_fluct_props(data, pop=inh_pop_key)
-    
     try:
         output['mean_exc'] = get_mean_pop_act(data, pop=exc_pop_key)
         output['mean_inh'] = get_mean_pop_act(data, pop=inh_pop_key)
