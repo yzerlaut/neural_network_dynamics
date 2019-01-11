@@ -42,10 +42,18 @@ def get_Vm_fluct_props(data, pop='Exc',
         tspikes = data['tRASTER_'+str(pop)][np.argwhere(data['iRASTER_'+str(pop)]==i).flatten()]
         for ts in tspikes:
             cond = cond & np.invert((t>=ts-twindow) & (t<=(ts+twindow)))
-        MUV.append(data['VMS_'+pop][i][cond].mean())
-        SV.append(data['VMS_'+pop][i][cond].std())
-        SKV.append(skew(data['VMS_'+pop][i][cond]))
-        TV.append(get_acf_time(data['VMS_'+pop][i][cond], data['dt'], min_time=1., max_time=100., procedure='integrate'))
+        if len(data['VMS_'+pop][i][cond])>1:
+            MUV.append(np.mean(data['VMS_'+pop][i][cond]))
+            SV.append(np.std(data['VMS_'+pop][i][cond]))
+            SKV.append(skew(data['VMS_'+pop][i][cond]))
+            try:
+                TV.append(get_acf_time(data['VMS_'+pop][i][cond], data['dt'], min_time=1., max_time=100., procedure='integrate'))
+            except IndexError:
+                print('problem in determining Tv ...')
+        else:
+            print('--------------------------------------')
+            print('no subthreshold dynamics in those cell...     ', pop)
+            print('--------------------------------------')
         
     return np.array(MUV), np.array(SV), np.array(SKV), np.array(TV)
 
