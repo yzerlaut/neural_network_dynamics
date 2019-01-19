@@ -117,61 +117,6 @@ def get_membrane_equation(neuron_params, synaptic_array,\
     else:
         return neurons
 
-def current_pulse_sim(args, params=None, verbose=False):
-    
-    if params is None:
-        params = get_neuron_params(args['NRN'])
-        
-    neurons, eqs = get_membrane_equation(params, [],\
-                                         return_equations=True)
-    if verbose:
-        print(eqs)
-
-    fig, ax = brian2.subplots(figsize=(5,3))
-
-    # V value initialization
-    neurons.V = params['El']*brian2.mV
-    trace = brian2.StateMonitor(neurons, 'V', record=0)
-    spikes = brian2.SpikeMonitor(neurons)
-    # rest run
-    brian2.run(args['delay'] * brian2.ms)
-    if ('amplitudes' in args) and len(args['amplitudes'])>0:
-        if len(args['durations'])==len(args['amplitudes']):
-            durations = args['durations']
-        else:
-            durations = args['duration']*np.ones(len(args['amplitudes']))
-        for amp, dur in zip(args['amplitudes'], durations):
-            neurons.I0 += amp*brian2.pA
-            brian2.run(dur * brian2.ms)
-            neurons.I0 -= amp*brian2.pA
-    else:
-        # start pulse
-        neurons.I0 += args['amp']*brian2.pA
-        brian2.run(args['duration'] * brian2.ms)
-        # end pulse
-        neurons.I0 -= args['amp']*brian2.pA
-    brian2.run(args['delay'] * brian2.ms)
-    # We draw nicer spikes
-    Vm = trace[0].V[:]
-    for t in spikes.t:
-        ax.plot(t/brian2.ms*np.ones(2),
-                [Vm[int(t/brian2.defaultclock.dt)]/brian2.mV,-10],
-                '--', color=args['color'])
-    ax.plot(trace.t / brian2.ms, Vm / brian2.mV, color=args['color'])
-    
-    if 'NRN' in args.keys():
-        ax.set_title(args['NRN'])
-
-    ax.annotate(str(int(params['El']))+'mV', (-50,params['El']-5))
-    ax.plot([-20], [params['El']], 'k>')
-    ax.plot([0,50], [-50, -50], 'k-', lw=4)
-    ax.plot([0,0], [-50, -40], 'k-', lw=4)
-    ax.annotate('10mV', (-50,-38))
-    ax.annotate('50ms', (0,-55))
-    set_plot(ax, [], xticks=[], yticks=[])
-    if 'save' in args.keys():
-        fig.savefig(args['save'])
-    return fig
         
 if __name__=='__main__':
 
@@ -201,12 +146,13 @@ if __name__=='__main__':
                         type=float, default=400.)
     parser.add_argument("-c", "--color", help="color of the plot",
                         default='k')
-    parser.add_argument("--save", help="save the figures with a given string")
+    parser.add_argument("--save", default='', help="save the figures with a given string")
     parser.add_argument("-v", "--verbose", help="",
                         action="store_true")
     args = parser.parse_args()
 
     from graphs.my_graph import set_plot, show
+    from neural_network_dynamics.cells.pulse_protocols import current_pulse_sim
     current_pulse_sim(vars(args))
     show()
 
