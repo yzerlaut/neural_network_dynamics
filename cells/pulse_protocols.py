@@ -8,13 +8,11 @@ def current_pulse_sim(args, params=None, verbose=False):
     
     if params is None:
         params = get_neuron_params(args['NRN'])
-        
+
     neurons, eqs = get_membrane_equation(params, [],\
                                          return_equations=True)
     if verbose:
         print(eqs)
-
-    fig, ax = figure()
 
     # V value initialization
     neurons.V = params['El']*brian2.mV
