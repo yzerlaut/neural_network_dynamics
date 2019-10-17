@@ -13,6 +13,11 @@ Given the strong ongoing activity characterizing thalamo-cortical
 activity, understanding the dynamical regimes of brain activity is a
 key step to unveil cortical function.
 
+In particular recent analysis of recurrent dynamics in spiking
+networks call for the needs of clarification / standardization of the
+terminology of the recurrent dynamics.
+
+
 ** Dynamical Regimes in Spiking Networks
 
 *** Spiking Activity in Neural Networks: Synchrony, Regularity and Rhythmicity
@@ -31,11 +36,33 @@ The definition of those three terms are the following:
 
 - Rhythmicity: tendency of the population to phase-lock to a given oscillation
 
+The reason behind this classification is that activity can be:
+
+- Irregular, Asynchronous, Non-Rhythmic (fully desynchronized activity, e.g. high-arousal wakefulness)
+- Irregular, Synchronous, Non-Rhythmic (stochastic Up & Down states, e.g. deep anesthesia)
+- Irregular, Synchronous, Rhythmic (regular Up & Down states dynamics, e.g. SWS)
+- Regular, Synchronous, Rhythmic (Epilespy)
+- Regular, asynchronous, Rhythmic (Epilespy)
+
+Not possible:
+- Regular, Synchronous, Non-Rhythmic (non-rhythmicity implies irregularity)
+
+
 *** Asynchronous Activity
 
-An ideality on which we build up to understand.
+An ideality on which we build upon to understand.
 
 There is always residual sychrony. Finding a good criteria to consider the dynamics aysnchronous (at a given scale ?): ??
+
+**** Mechanisms behind asynchronous activity
+
+- Inherited asynchrony: spontaneous synaptic release, inherited from afferent brain regions
+
+- Interaction-mediated asynchrony: unreliability of synaptic transmission destroying synchronization, ...
+
+- An emergent solutions of recurrent activity in balanced networks. Self-sustained asynchronous activity shows that 
+
+Those different sources of asynchrony are not exclusive and can co-exist within the same network (cf CellRep, ...). Indeed, several studies use those mechanisms together to .
 
 *** Sources of Synchrony
 
