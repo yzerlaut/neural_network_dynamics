@@ -1,38 +1,53 @@
-#+title: Dynamical Regimes of Thalamocortical Activity: Insights from Theoretical Models of Spiking Networks & Experimental Characterization
+#+title: Dynamical Regimes of Thalamocortical Activity: Insights from Theoretical Models of Spiking Networks
 #+author: Y.Zerlaut
 
 ** Abstract
 
-We review here the 
+We review here the literature on network dynamics of spiking units with an emphasis on the dynamical regime. We compare those recordings with the 
+
+We highlight how different models 
+
+** Introduction
+
+Given the strong ongoing activity characterizing thalamo-cortical
+activity, understanding the dynamical regimes of brain activity is a
+key step to unveil cortical function.
 
 ** Dynamical Regimes in Spiking Networks
 
-*** Synchrony, Regularity and Rhythmicity of Spiking Activity in Neural Networks
+*** Spiking Activity in Neural Networks: Synchrony, Regularity and Rhythmicity
 
-A seminal study introduced synchrony and regularity  (Brunel, 2000)
+What are the quantities defining the dynamical regime of 
+
+A seminal study introduced synchrony and regularity to characterize recurrent dynamics (Brunel, 2000). 
+
+We argue here that, for a broader view on recurrent dynamics, there is the need to add the concept of "rhythmicity". 
+
+The definition of those three terms are the following:
 
 - Regularity: property of a single neuron spiking over time
+
 - Synchrony: property of pairwise interaction to simultaneously fire together
-- rhythmicity: population 
 
-
-
-
-Here, we complement this classification by adding another dimension: the rhythmicity. Indeed, network activity can
+- Rhythmicity: tendency of the population to phase-lock to a given oscillation
 
 *** Asynchronous Activity
 
+An ideality on which we build up to understand.
+
+There is always residual sychrony. Finding a good criteria to consider the dynamics aysnchronous (at a given scale ?): ??
+
 *** Sources of Synchrony
 
-- Finite-Size Effects & Clustering
+- Finite-Size Effects & Connectivity-based Mechanisms
 
-- Stochastic Transitions in 
+- Stochastic Transitions in multi-stable systems
 
 *** Sources of Rhytmicity
 
 - Pacemaker-like biophysical mechanisms
 
-- Network 
+- Network loops
 
 **** Weak synchrony: fast oscillation
 
@@ -59,6 +74,12 @@ of
 ** Regimes of Sleep
 
 ** Regimes of Wakefulness
+
+** Discussion
+
+We reviewed here
+
+Future work should focus on 
 
 ** References
 
