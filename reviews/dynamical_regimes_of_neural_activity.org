@@ -1,0 +1,35 @@
+#+title: Dynamical Regimes of Thalamocortical Activity: Insights from Theoretical Models of Spiking Networks
+#+author: Y.Zerlaut
+
+** Abstract
+
+We review here the 
+
+** Dynamical Regimes in Spiking Networks
+
+*** Rhythmic versus
+
+
+*** Asynchronous Activity
+
+*** Sources of Synchrony
+
+- Finite size effects
+
+- 
+
+**** Weak synchrony: fast oscillation
+
+**** Strong synchrony: slow rhythm, finite size effects 
+
+***** Strong synchrony: slow rhythm
+
+
+
+** Regimes of Wakefulness
+
+** Regimes of Slow Wave Activity
+
+** References
+
+
