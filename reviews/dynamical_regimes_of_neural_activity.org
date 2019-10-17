@@ -1,4 +1,4 @@
-#+title: Dynamical Regimes of Thalamocortical Activity: Insights from Theoretical Models of Spiking Networks
+#+title: Dynamical Regimes of Thalamocortical Activity: Insights from Theoretical Models of Spiking Networks & Experimental Characterization
 #+author: Y.Zerlaut
 
 ** Abstract
@@ -7,16 +7,32 @@ We review here the
 
 ** Dynamical Regimes in Spiking Networks
 
-*** Rhythmic versus
+*** Synchrony, Regularity and Rhythmicity of Spiking Activity in Neural Networks
 
+A seminal study introduced synchrony and regularity  (Brunel, 2000)
+
+- Regularity: property of a single neuron spiking over time
+- Synchrony: property of pairwise interaction to simultaneously fire together
+- rhythmicity: population 
+
+
+
+
+Here, we complement this classification by adding another dimension: the rhythmicity. Indeed, network activity can
 
 *** Asynchronous Activity
 
 *** Sources of Synchrony
 
-- Finite size effects
+- Finite-Size Effects & Clustering
 
-- 
+- Stochastic Transitions in 
+
+*** Sources of Rhytmicity
+
+- Pacemaker-like biophysical mechanisms
+
+- Network 
 
 **** Weak synchrony: fast oscillation
 
@@ -25,10 +41,24 @@ We review here the
 ***** Strong synchrony: slow rhythm
 
 
+** Experimental Characterization of Thalamocortical Dynamics
+
+*** Intracellular recordings
+
+Because a cortical neuron receives inputs from underds to thousands of
+its neighbors, the intracellular dynamics offers an particular readout
+of
+
+*** Extracellular recordings
+
+*** Perturbations 1: sensory stimuli
+
+*** Perturbations 2: Electrical and optogenetic stimulation
+
+
+** Regimes of Sleep
 
 ** Regimes of Wakefulness
-
-** Regimes of Slow Wave Activity
 
 ** References
 
