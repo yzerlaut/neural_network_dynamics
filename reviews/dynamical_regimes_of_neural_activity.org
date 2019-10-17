@@ -1,4 +1,4 @@
-#+title: Dynamical Regimes of Thalamocortical Activity: Insights from Theoretical Models of Spiking Networks
+#+title: Dynamical Regimes of Cortical Activity: A Review of the Insights from Theoretical Models of Spiking Networks
 #+author: Y.Zerlaut
 
 ** Abstract
