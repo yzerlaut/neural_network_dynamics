@@ -1,4 +1,4 @@
-#+title: Dynamical Regimes of Cortical Activity: A Review of the Insights from Theoretical Models of Spiking Networks
+#+title: Dynamical Regimes of Cortical Activity: A Review of the Insights from the Theoretical Analysis of Spiking Networks
 #+author: Y.Zerlaut
 
 ** Abstract
@@ -17,6 +17,9 @@ In particular recent analysis of recurrent dynamics in spiking
 networks call for the needs of clarification / standardization of the
 terminology of the recurrent dynamics.
 
+** Unique predictive features of spiking networks
+
+?? -> maybe after the dynamical regimes, because exactly the dynamical regimes
 
 ** Dynamical Regimes in Spiking Networks
 
