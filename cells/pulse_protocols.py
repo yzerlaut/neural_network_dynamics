@@ -76,8 +76,10 @@ if __name__=='__main__':
                         action="store_true")
     args = parser.parse_args()
 
-    from graphs.my_graph import set_plot, show
-    from graphs.single_cell_plots import *
+    from graphs.my_graph import graphs
+    mg = graphs()
+    
+    # from graphs.single_cell_plots import *
     # response_to_current_pulse(*current_pulse_sim(vars(args)))
     # VMS, II, SPIKES = [], [], []
     # for amp in [-50, 50, 200]:
@@ -98,6 +100,7 @@ if __name__=='__main__':
             VMS.append(Vm)
             II.append(I)
             SPIKES.append(spikes)
-        fig, ax = response_to_multiple_current_pulse(t, VMS, II, SPIKES)
-        fig.suptitle('$\delta$=%imV' % delta)
-        fig.savefig(desktop+'fig+%i.svg' % delta)
+    fig, ax = mg.response_to_multiple_current_pulse(t, VMS, II, SPIKES)
+    # fig.suptitle('$\delta$=%imV' % delta)
+    # fig.savefig(desktop+'fig+%i.svg' % delta)
+    mg.show()

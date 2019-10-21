@@ -152,8 +152,10 @@ if __name__=='__main__':
                         action="store_true")
     args = parser.parse_args()
 
-    from graphs.my_graph import set_plot, show
     from neural_network_dynamics.cells.pulse_protocols import current_pulse_sim
-    current_pulse_sim(vars(args))
-    show()
+    from graphs.my_graph import graphs
+    mg = graphs()
+    
+    mg.response_to_current_pulse(*current_pulse_sim(vars(args)))
+    mg.show()
 
