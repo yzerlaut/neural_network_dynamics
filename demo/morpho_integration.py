@@ -1,12 +1,14 @@
-import sys, pathlib
+import sys, pathlib, os
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 import main as ntwk
 import numpy as np
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-from graphs.my_graph import *
+from graphs.my_graph import graphs
 from graphs.nrn_morpho import *
 
-filename=home+'work/neural_network_dynamics/single_cell_integration/morphologies/Jiang_et_al_2015/L5pyr-j140408b.CNG.swc'
+mg = graphs()
+
+filename = os.path.join(pathlib.Path(__file__).resolve().parents[1], 'single_cell_integration', 'morphologies', 'Jiang_et_al_2015', 'L5pyr-j140408b.CNG.swc')
 morpho = ntwk.Morphology.from_swc_file(filename)
 
 COMP_LIST = get_compartment_list(morpho)
@@ -35,12 +37,12 @@ S.connect(i=0, j=100)
 M = ntwk.StateMonitor(neuron, ('v'), record=np.arange(len(neuron.v)))
 ntwk.run(60.*ntwk.ms)
 
-fig, ax = plot_nrn_shape(COMP_LIST, axon_color='None')
+fig, ax = plot_nrn_shape(mg, COMP_LIST, axon_color='None')
 cond = SEGMENT_LIST['comp_type']!='axon' # only plot dendritic integration
 tsubsampling = 5
 ani = show_animated_time_varying_trace(np.array(M.t/ntwk.ms)[::tsubsampling],
                                        np.array(M.v/ntwk.mV)[:, ::tsubsampling],
-                                       SEGMENT_LIST, fig, ax,
+                                       SEGMENT_LIST, fig, ax, mg,
                                        picked_locations = [100, 50, 0, 1100, 300],
                                        segment_condition=cond)
-show()
+mg.show()
