@@ -36,11 +36,11 @@ Model = {
     # === cellular properties (based on AdExp), population by population ===
     # --> Excitatory population (Exc, recurrent excitation)
     'Exc_Gl':10., 'Exc_Cm':200.,'Exc_Trefrac':3.,
-    'Exc_El':-60., 'Exc_Vthre':-50., 'Exc_Vreset':-60., 'Exc_delta_v':0.,
+    'Exc_El':-60., 'Exc_Vthre':-50., 'Exc_Vreset':-60., 'Exc_deltaV':0.,
     'Exc_a':0., 'Exc_b': 0., 'Exc_tauw':1e9,
     # --> Inhibitory population (Inh, recurrent inhibition)
     'Inh_Gl':10., 'Inh_Cm':200.,'Inh_Trefrac':3.,
-    'Inh_El':-60., 'Inh_Vthre':-50., 'Inh_Vreset':-60., 'Inh_delta_v':0.,
+    'Inh_El':-60., 'Inh_Vthre':-50., 'Inh_Vreset':-60., 'Inh_deltaV':0.,
     'Inh_a':0., 'Inh_b': 0., 'Inh_tauw':1e9,
 }
 

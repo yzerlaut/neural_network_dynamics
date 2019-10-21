@@ -32,27 +32,28 @@ Model = {
     'p_DsInh_Inh':0.02, 
     'p_AffExc_Exc':0.1, 'p_AffExc_Inh':0.1, 'p_AffExc_DsInh':0.1, 
     # simulation parameters
-    'dt':0.1, 'tstop': 100., 'SEED':3, # low by default, see later
+    'dt':0.1, 'tstop': 1000., 'SEED':3, # low by default, see later
     ## ---------------------------------------------------------------------------------
     # === cellular properties (based on AdExp), population by population ===
     # --> Excitatory population (Exc, recurrent excitation)
     'Exc_Gl':10., 'Exc_Cm':200.,'Exc_Trefrac':3.,
-    'Exc_El':-60., 'Exc_Vthre':-50., 'Exc_Vreset':-60., 'Exc_delta_v':0.,
+    'Exc_El':-60., 'Exc_Vthre':-50., 'Exc_Vreset':-60., 'Exc_deltaV':0.,
     'Exc_a':0., 'Exc_b': 0., 'Exc_tauw':1e9,
     # --> Inhibitory population (Inh, recurrent inhibition)
     'Inh_Gl':10., 'Inh_Cm':200.,'Inh_Trefrac':3.,
-    'Inh_El':-60., 'Inh_Vthre':-53., 'Inh_Vreset':-60., 'Inh_delta_v':0.,
+    'Inh_El':-60., 'Inh_Vthre':-53., 'Inh_Vreset':-60., 'Inh_deltaV':0.,
     'Inh_a':0., 'Inh_b': 0., 'Inh_tauw':1e9,
     # --> Disinhibitory population (Inh, recurrent inhibition)
     'DsInh_Gl':10., 'DsInh_Cm':200.,'DsInh_Trefrac':3.,
-    'DsInh_El':-60., 'DsInh_Vthre':-53., 'DsInh_Vreset':-60., 'DsInh_delta_v':0.,
+    'DsInh_El':-60., 'DsInh_Vthre':-53., 'DsInh_Vreset':-60., 'DsInh_deltaV':0.,
     'DsInh_a':0., 'DsInh_b': 0., 'DsInh_tauw':1e9,
 }
 
 
 NTWK = ntwk.build_populations(Model, ['Exc', 'Inh', 'DsInh'],
                               AFFERENT_POPULATIONS=['AffExc'],
-                              with_raster=True, with_Vm=4,
+                              with_raster=True,
+                              with_Vm=4,
                               # with_synaptic_currents=True,
                               # with_synaptic_conductances=True,
                               verbose=True)
@@ -86,17 +87,22 @@ network_sim = ntwk.collect_and_run(NTWK, verbose=True)
 # ######################
 # ## ----- Plot ----- ##
 # ######################
+from graphs.my_graph import graphs
+mg = graphs()
+fig, ax = mg.figure(figsize=(5,5))
+
 ii=0
 for pop in NTWK['RASTER']:
-    plt.plot(pop.t/ntwk.ms, ii+pop.i, 'o')
+    ax.plot(pop.t/ntwk.ms, ii+pop.i, 'o')
     try:
         ii+=np.array(pop.i).max()
     except ValueError:
         print('No spikes')
-ntwk.set_plot(plt.gca(), ['bottom'], xlabel='time (ms)', yticks=[])
-ntwk.show()
+mg.set_plot(ax, ['bottom'], xlabel='time (ms)', yticks=[])
+mg.show()
 
+fig, ax = mg.figure(figsize=(5,5))
 for i in range(4):
-    plt.plot(NTWK['VMS'][0][i].t/ntwk.ms, NTWK['VMS'][0][i].V/ntwk.mV)
-ntwk.set_plot(plt.gca(), xlabel='time (ms)', ylabel='Vm (mV)')
-ntwk.show()
+    ax.plot(NTWK['VMS'][0][i].t/ntwk.ms, NTWK['VMS'][0][i].V/ntwk.mV)
+mg.set_plot(ax, xlabel='time (ms)', ylabel='Vm (mV)')
+mg.show()
