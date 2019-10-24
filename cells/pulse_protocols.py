@@ -79,8 +79,8 @@ if __name__=='__main__':
     from graphs.my_graph import graphs
     mg = graphs()
     
-    # from graphs.single_cell_plots import *
-    # response_to_current_pulse(*current_pulse_sim(vars(args)))
+    from graphs.single_cell_plots import *
+    response_to_current_pulse(mg, *current_pulse_sim(vars(args)))
     # VMS, II, SPIKES = [], [], []
     # for amp in [-50, 50, 200]:
     #     args.amp = amp
@@ -91,16 +91,16 @@ if __name__=='__main__':
     # response_to_multiple_current_pulse(t, VMS, II, SPIKES)
     # show()
     
-    for delta in [0., 1., 2., 4.]:
-        args.NRN = 'EIF_deltaV_'+str(delta)
-        VMS, II, SPIKES = [], [], []
-        for amp in [-150, 50, 250]:
-            args.amp = amp
-            t, Vm, I, spikes = current_pulse_sim(vars(args))
-            VMS.append(Vm)
-            II.append(I)
-            SPIKES.append(spikes)
-    fig, ax = mg.response_to_multiple_current_pulse(t, VMS, II, SPIKES)
+    # for delta in [0., 1., 2., 4.]:
+    #     args.NRN = 'EIF_deltaV_'+str(delta)
+    #     VMS, II, SPIKES = [], [], []
+    #     for amp in [-150, 50, 250]:
+    #         args.amp = amp
+    #         t, Vm, I, spikes = current_pulse_sim(vars(args))
+    #         VMS.append(Vm)
+    #         II.append(I)
+    #         SPIKES.append(spikes)
+    # fig, ax = mg.response_to_multiple_current_pulse(t, VMS, II, SPIKES)
     # fig.suptitle('$\delta$=%imV' % delta)
     # fig.savefig(desktop+'fig+%i.svg' % delta)
     mg.show()
