@@ -6,9 +6,6 @@ from theory.spiking_function import firing_rate
 from cells.cell_library import built_up_neuron_params
 from theory.tf import build_up_afferent_synaptic_input
 import numpy as np
-import matplotlib.pylab as plt
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-from graphs.my_graph import set_plot, Brown
 from scipy.integrate import odeint
 
 def input_output(neuron_params, SYN_POPS, RATES, COEFFS, already_SI=False):
@@ -146,6 +143,11 @@ def get_full_statistical_quantities(Model,
 
 if __name__=='__main__':
 
+    sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
+    from graphs.my_graph import graphs
+    mg = graphs()
+
+
     exec(open('../configs/The_Spectrum_of_Asynch_Dyn_2018/model.py').read())
     Model['COEFFS_RecExc'] = np.load('../configs/The_Spectrum_of_Asynch_Dyn_2018/COEFFS_RecExc.npy')
     Model['COEFFS_RecInh'] = np.load('../configs/The_Spectrum_of_Asynch_Dyn_2018/COEFFS_RecInh.npy')
@@ -167,8 +169,8 @@ if __name__=='__main__':
 
     print(get_full_statistical_quantities(Model,
                                           DYN_SYSTEM))
-    from graphs.my_graph import *
-    fig, ax = figure(figsize=(.5,.15))
+    
+    fig, ax = mg.figure()
     ax.set_yscale('log')
-    plot(Y=[X['RecExc'], X['RecInh']], COLORS=[Green, Red], ax=ax, axes_args=dict(yticks=[0.1,1.,10]))
-    show()
+    mg.plot(Y=[X['RecExc'], X['RecInh']], COLORS=[mg.g, mg.r], ax=ax, axes_args=dict(yticks=[0.1,1.,10]))
+    mg.show()
