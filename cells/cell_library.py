@@ -48,13 +48,13 @@ def get_neuron_params(NAME, name='', number=1, SI_units=False, verbose=True):
     if BASE=='LIF':
         params = {'name':name, 'N':number,\
                   'Gl':10., 'Cm':150.,'Trefrac':5.,\
-                  'El':-65., 'Vthre':-50., 'Vreset':-65., 'deltaV':0.,\
+                  'El':-70, 'Vthre':-50., 'Vreset':-70., 'deltaV':0.,\
                   'a':0., 'b': 0., 'tauw':1e9}
     elif BASE=='osciLIF':
         params = {'name':name, 'N':number,\
                   'Gl':10., 'Cm':150.,'Trefrac':5.,\
-                  'El':-65., 'Vthre':-50., 'Vreset':-65., 'deltaV':0.,\
-                  'Ioscill_freq':3., 'Ioscill_amp':10.*15.,
+                  'El':-70., 'Vthre':-50., 'Vreset':-70., 'deltaV':0.,\
+                  'Ioscill_freq':3., 'Ioscill_amp':10.*20.,
                   'a':0., 'b': 0., 'tauw':1e9}
     elif BASE=='LIF2':
         params = {'name':name, 'N':number,\
