@@ -5,7 +5,10 @@ from theory.psp_integrals import F_iPSP, F_iiPSP, F_iiiPSP, F_numTv, F_denomTv
 
 def getting_statistical_properties(params,
                                    SYN_POPS, RATES,
-                                   already_SI=False, with_Isyn=False, with_current_based=False):
+                                   current_input = 0, # in pA of not SI
+                                   already_SI=False,
+                                   with_Isyn=False,
+                                   with_current_based=False):
     """ 
     We first translate those parameters into SI units for a safe calculus
     then we apply the results of the Shotnoise analysis (see above)
@@ -49,7 +52,13 @@ def getting_statistical_properties(params,
         Gtot += Gsyn
         Isyn = RATES2[i]*syn['tau_j']*syn['Q_j']*(1-syn['a_j'])*(syn['E_j']-syn['V0'])
         muV += Gsyn*syn['E_j']+Isyn
-    muV /= Gtot
+
+    if already_SI:
+        muV += current_input # in units of A (SI)
+    else:
+        muV += 1e-12*current_input # in units of A (SI)
+        
+    muV /= Gtot # back to voltage (previously muV was in units of current)
 
     # from this we can get the mean membrane time constant
     if already_SI:

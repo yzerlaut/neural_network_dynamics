@@ -26,6 +26,10 @@ from neural_network_dynamics.analysis.cellular_quantities import get_Vm_fluct_pr
 # for parameter scans
 from neural_network_dynamics.scan.run import run_scan
 from neural_network_dynamics.scan.get import get_scan
+# theoretical module
+import neural_network_dynamics.theory as theory
+from theory import mean_field
+
 
 #########################################################################
 ######## Some quick visualization functions
