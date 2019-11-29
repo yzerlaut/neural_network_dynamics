@@ -14,7 +14,7 @@ from neural_network_dynamics.ntwk_stim.connect_afferent_input import *
 from neural_network_dynamics.ntwk_stim.waveform_library import double_gaussian
 # for saving
 # for this you need the data_analysis folder
-# get it at: bitbucket.org/yzerlaut/data_analysis'
+# get it at: github.com/yzerlaut/data_analysis'
 from neural_network_dynamics.recording.load_and_save import write_as_hdf5
 from data_analysis.IO.hdf5 import load_dict_from_hdf5
 # for plotting
