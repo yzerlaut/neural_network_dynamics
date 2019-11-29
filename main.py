@@ -29,7 +29,8 @@ from neural_network_dynamics.scan.get import get_scan
 # theoretical module
 import neural_network_dynamics.theory as theory
 from theory import mean_field
-
+# from 
+from neural_network_dynamics.single_cell_integration import morpho_analysis
 
 #########################################################################
 ######## Some quick visualization functions
