@@ -43,7 +43,7 @@ def compute_segments(morpho,
                      polar_angle=0, azimuth_angle=np.pi/2., 
                      without_axon=False):
     """
-    BROKEN / USELESS function
+
     """
 
     SEGMENTS = {} # a dictionary storing segment informations
@@ -54,19 +54,37 @@ def compute_segments(morpho,
         if len(somaS)==1:
             soma = somaS[0]
         else:
-            print('/!\ several compartments for soma, took:', soma)
             soma = somaS[0]
+            print('/!\ several compartments for soma, took:', soma)
 
-            
     [x0, y0, z0] = soma.x, soma.y, soma.z
-    SEGMENTS['x'] = np.concatenate([c.x for c in COMP_LIST])
-    SEGMENTS['y'] = np.concatenate([c.y for c in COMP_LIST])
-    SEGMENTS['z'] = np.concatenate([c.z for c in COMP_LIST])
-    SEGMENTS['comp_type'] = np.concatenate([[c.type for i in range(len(c.x))] for c in COMP_LIST])
+    SEGMENTS['x'] = np.concatenate([c.x-x0 for c in COMP_LIST])
+    SEGMENTS['y'] = np.concatenate([c.y-y0 for c in COMP_LIST])
+    SEGMENTS['z'] = np.concatenate([c.z-z0 for c in COMP_LIST])
+    SEGMENTS['comp_type'] = np.concatenate([\
+                        [c.type for i in range(len(c.x))] for c in COMP_LIST])
     SEGMENTS['area'] = np.concatenate([c.area for c in COMP_LIST])
-    SEGMENTS['index'] = np.arange(len(SEGMENTS['x']))
+    SEGMENTS['index'] = np.concatenate([c.indices[:] for c in COMP_LIST])
     
     return SEGMENTS
+
+
+def find_indices_with_conditions(SEGMENTS,
+                                 comp_type = None,
+                                 min_distance_to_soma=0.,
+                                 max_distance_to_soma=1e9):
+
+    condition = np.ones(len(SEGMENTS['x']), dtype=bool)
+
+    if comp_type is not None:
+        condition = (SEGMENTS['comp_type']==comp_type)
+
+    # distances:
+    print(np.sqrt(SEGMENTS['x']**2+SEGMENTS['y']**2+SEGMENTS['z']**2)>=0)
+    condition = condition & (np.sqrt(SEGMENTS['x']**2+SEGMENTS['y']**2+SEGMENTS['z']**2)>=min_distance_to_soma)
+    condition = condition & (np.sqrt(SEGMENTS['x']**2+SEGMENTS['y']**2+SEGMENTS['z']**2)<=max_distance_to_soma)
+    
+    return SEGMENTS['index'][condition]
 
 if __name__=='__main__':
 
@@ -75,12 +93,17 @@ if __name__=='__main__':
                             'Jiang_et_al_2015',
                             'L5pyr-j140408b.CNG.swc')
     morpho = ntwk.Morphology.from_swc_file(filename)
+    
     SEGMENTS = compute_segments(morpho)
-    
-    print(len(SEGMENTS['index']), len(np.unique(SEGMENTS['index'])))
-    
-    # COMP_LIST, INDICES = ntwk.morpho_analysis.get_compartment_list(morpho)
+
     # print(ntwk.morpho_analysis.list_compartment_types(COMP_LIST))
+    print(find_indices_with_conditions(SEGMENTS,\
+                                       min_distance_to_soma=230e-6,
+                                       comp_type='apic'))
+    # print(SEGMENTS['x'][:3], SEGMENTS['y'][:3], SEGMENTS['z'][:3])
+    # print(SEGMENTS['x'][-3:], SEGMENTS['y'][-3:], SEGMENTS['z'][-3:])
+    # print(len(SEGMENTS['index']), len(np.unique(SEGMENTS['index'])))
+    
     # COMP_LIST, INDICES = ntwk.morpho_analysis.get_compartment_list(morpho,
     #                             inclusion_condition='comp.type!="axon"')
     # print(ntwk.morpho_analysis.list_compartment_types(COMP_LIST))
