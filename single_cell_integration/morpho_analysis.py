@@ -40,7 +40,6 @@ def get_compartment_list(morpho,
 
 def compute_segments(morpho,
                      soma_comp=None,
-                     polar_angle=0, azimuth_angle=np.pi/2., 
                      without_axon=False):
     """
 
@@ -61,6 +60,14 @@ def compute_segments(morpho,
     SEGMENTS['x'] = np.concatenate([c.x-x0 for c in COMP_LIST])
     SEGMENTS['y'] = np.concatenate([c.y-y0 for c in COMP_LIST])
     SEGMENTS['z'] = np.concatenate([c.z-z0 for c in COMP_LIST])
+    SEGMENTS['start_x'] = np.concatenate([c.start_x-x0 for c in COMP_LIST])
+    SEGMENTS['start_y'] = np.concatenate([c.start_y-y0 for c in COMP_LIST])
+    SEGMENTS['start_z'] = np.concatenate([c.start_z-z0 for c in COMP_LIST])
+    SEGMENTS['end_x'] = np.concatenate([c.end_x-x0 for c in COMP_LIST])
+    SEGMENTS['end_y'] = np.concatenate([c.end_y-y0 for c in COMP_LIST])
+    SEGMENTS['end_z'] = np.concatenate([c.end_z-z0 for c in COMP_LIST])
+    SEGMENTS['diameter'] = np.concatenate([c.diameter for c in COMP_LIST])
+    SEGMENTS['length'] = np.concatenate([c.length for c in COMP_LIST])
     SEGMENTS['comp_type'] = np.concatenate([\
                         [c.type for i in range(len(c.x))] for c in COMP_LIST])
     SEGMENTS['area'] = np.concatenate([c.area for c in COMP_LIST])
@@ -100,10 +107,11 @@ if __name__=='__main__':
     print(find_indices_with_conditions(SEGMENTS,\
                                        min_distance_to_soma=230e-6,
                                        comp_type='apic'))
-    # print(SEGMENTS['x'][:3], SEGMENTS['y'][:3], SEGMENTS['z'][:3])
+    print(SEGMENTS['start_x'][:3], SEGMENTS['end_x'][:3], SEGMENTS['y'][:3], SEGMENTS['z'][:3])
     # print(SEGMENTS['x'][-3:], SEGMENTS['y'][-3:], SEGMENTS['z'][-3:])
     # print(len(SEGMENTS['index']), len(np.unique(SEGMENTS['index'])))
     
-    # COMP_LIST, INDICES = ntwk.morpho_analysis.get_compartment_list(morpho,
-    #                             inclusion_condition='comp.type!="axon"')
+    COMP_LIST, INDICES = ntwk.morpho_analysis.get_compartment_list(morpho,
+                                inclusion_condition='comp.type!="axon"')
+    print(dir(COMP_LIST[0]))
     # print(ntwk.morpho_analysis.list_compartment_types(COMP_LIST))
