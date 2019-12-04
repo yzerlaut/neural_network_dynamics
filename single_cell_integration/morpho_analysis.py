@@ -47,25 +47,16 @@ def compute_segments(morpho,
 
     SEGMENTS = {} # a dictionary storing segment informations
     COMP_LIST, SEG_INDICES = get_compartment_list(morpho)
-    if soma_comp is None:
-        somaS, _ = ntwk.morpho_analysis.get_compartment_list(morpho,
-                            inclusion_condition='comp.type=="soma"')
-        if len(somaS)==1:
-            soma = somaS[0]
-        else:
-            soma = somaS[0]
-            print('/!\ several compartments for soma, took:', soma)
 
-    [x0, y0, z0] = soma.x, soma.y, soma.z
-    SEGMENTS['x'] = np.concatenate([c.x-x0 for c in COMP_LIST])
-    SEGMENTS['y'] = np.concatenate([c.y-y0 for c in COMP_LIST])
-    SEGMENTS['z'] = np.concatenate([c.z-z0 for c in COMP_LIST])
-    SEGMENTS['start_x'] = np.concatenate([c.start_x-x0 for c in COMP_LIST])
-    SEGMENTS['start_y'] = np.concatenate([c.start_y-y0 for c in COMP_LIST])
-    SEGMENTS['start_z'] = np.concatenate([c.start_z-z0 for c in COMP_LIST])
-    SEGMENTS['end_x'] = np.concatenate([c.end_x-x0 for c in COMP_LIST])
-    SEGMENTS['end_y'] = np.concatenate([c.end_y-y0 for c in COMP_LIST])
-    SEGMENTS['end_z'] = np.concatenate([c.end_z-z0 for c in COMP_LIST])
+    SEGMENTS['x'] = np.concatenate([c.x for c in COMP_LIST])
+    SEGMENTS['y'] = np.concatenate([c.y for c in COMP_LIST])
+    SEGMENTS['z'] = np.concatenate([c.z for c in COMP_LIST])
+    SEGMENTS['start_x'] = np.concatenate([c.start_x for c in COMP_LIST])
+    SEGMENTS['start_y'] = np.concatenate([c.start_y for c in COMP_LIST])
+    SEGMENTS['start_z'] = np.concatenate([c.start_z for c in COMP_LIST])
+    SEGMENTS['end_x'] = np.concatenate([c.end_x for c in COMP_LIST])
+    SEGMENTS['end_y'] = np.concatenate([c.end_y for c in COMP_LIST])
+    SEGMENTS['end_z'] = np.concatenate([c.end_z for c in COMP_LIST])
     SEGMENTS['diameter'] = np.concatenate([c.diameter for c in COMP_LIST])
     SEGMENTS['length'] = np.concatenate([c.length for c in COMP_LIST])
     SEGMENTS['comp_type'] = np.concatenate([\
@@ -75,6 +66,15 @@ def compute_segments(morpho,
     
     return SEGMENTS
 
+def find_somatic_compartment(morpho):
+    somaS, _ = ntwk.morpho_analysis.get_compartment_list(morpho,
+                            inclusion_condition='comp.type=="soma"')
+    if len(somaS)==1:
+        soma = somaS[0]
+    else:
+        soma = somaS[0]
+        print('/!\ several compartments for soma, took:', soma)
+        
 
 def find_indices_with_conditions(SEGMENTS,
                                  comp_type = None,
