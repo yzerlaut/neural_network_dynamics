@@ -1,0 +1,7 @@
+numpy
+scipy
+matplotlib
+svgutils
+argparse
+brian2
+git+https://github.com/yzerlaut/datavyz
