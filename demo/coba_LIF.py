@@ -31,7 +31,7 @@ Model = {
     'p_Exc_Exc':0.02, 'p_Exc_Inh':0.02, 
     'p_Inh_Exc':0.02, 'p_Inh_Inh':0.02, 
     # simulation parameters
-    'dt':0.1, 'tstop': 100., 'SEED':3, # low by default, see later
+    'dt':0.1, 'tstop': 300., 'SEED':3, # low by default, see later
     ## ---------------------------------------------------------------------------------
     # === cellular properties (based on AdExp), population by population ===
     # --> Excitatory population (Exc, recurrent excitation)
@@ -45,20 +45,17 @@ Model = {
 }
 
 if sys.argv[-1]=='plot':
+    
     ## load file
-    data = ntwk.load_dict_from_hdf5('Vogels-Abbott.h5')
+    data = ntwk.load_dict_from_hdf5('coba_LIF_data.h5')
     print('excitatory firing activity: ', 1e3*len(data['iRASTER_Exc'])/data['tstop']/data['N_Exc'])
     print('inhibitory firing activity: ', 1e3*len(data['iRASTER_Inh'])/data['tstop']/data['N_Inh'])
-    ## plot
-    fig, AX = plt.subplots(2)
-    AX[0].plot(data['tRASTER_Exc'], data['iRASTER_Exc'], 'bo', ms=2)
-    AX[0].plot(data['tRASTER_Inh'], -data['iRASTER_Inh'], 'ro', ms=2)
-    ntwk.set_plot(AX[0], [], xticks=[], yticks=[])
-    for v in data['VMS_Exc']:
-        AX[1].plot(np.arange(len(v))*data['dt'], v, 'k-', lw=1)
-    ntwk.set_plot(AX[1], xlabel='time (ms)', ylabel='Vm (mV)')
-    ntwk.show()
     
+    # ## plot
+    fig, _ = ntwk.raster_and_Vm_plot(data, smooth_population_activity=10.)
+    
+    plt.show()
+
 else:
     ## we build and run the simulation
     NTWK = ntwk.build_populations(Model, ['Exc', 'Inh'],
@@ -86,9 +83,9 @@ else:
     # ## ----- Run ----- ##
     # #####################
     network_sim = ntwk.collect_and_run(NTWK, verbose=True)
-    ntwk.write_as_hdf5(NTWK, filename='Vogels-Abbott.h5')
+    ntwk.write_as_hdf5(NTWK, filename='coba_LIF_data.h5')
 
-    print('Results of the simulation are stored as:', 'Vogels-Abbott.h5')
+    print('Results of the simulation are stored as:', 'coba_LIF_data.h5')
     print('--> Run \"python coba_LIF.py plot\" to plot the results')
     
     

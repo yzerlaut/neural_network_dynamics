@@ -28,8 +28,8 @@ Model = {
     'Ee':0., 'Ei': -80.,
     # connectivity parameters
     'p_Exc_Exc':0.05, 'p_Exc_Inh':0.05, 'p_Exc_oscillExc':0.05,
-    'p_Inh_Exc':0.05, 'p_Inh_Inh':0.05, 'p_Inh_oscillExc':0.05,
-    'p_oscillExc_Exc':0.05, 'p_oscillExc_Inh':0.05, 'p_oscillExc_oscillExc':0.05, 
+    'p_Inh_Exc':0.001, 'p_Inh_Inh':0.05, 'p_Inh_oscillExc':0.05,
+    'p_oscillExc_Exc':0.1, 'p_oscillExc_Inh':0.05, 'p_oscillExc_oscillExc':0.05, 
     'p_AffExc_Exc':0.1, 'p_AffExc_Inh':0.1, 'p_AffExc_oscillExc':0.1, 
     # simulation parameters
     'dt':0.1, 'tstop': 1000., 'SEED':3, # low by default, see later
@@ -51,59 +51,59 @@ Model = {
 }
 
 
-NTWK = ntwk.build_populations(Model, ['Exc', 'Inh', 'oscillExc'],
-                              AFFERENT_POPULATIONS=['AffExc'],
-                              with_raster=True,
-                              with_Vm=4,
-                              # with_synaptic_currents=True,
-                              # with_synaptic_conductances=True,
-                              verbose=True)
 
-ntwk.build_up_recurrent_connections(NTWK, SEED=5, verbose=True)
+if sys.argv[-1]=='plot':
+    # ######################
+    # ## ----- Plot ----- ##
+    # ######################
+    
+    ## load file
+    data = ntwk.load_dict_from_hdf5('rhythmic_ntwk_data.h5')
 
-#######################################
-########### AFFERENT INPUTS ###########
-#######################################
+    # ## plot
+    fig, _ = ntwk.raster_and_Vm_plot(data, smooth_population_activity=10.)
+    
+    plt.show()
 
-faff = 0.5
-t_array = ntwk.arange(int(Model['tstop']/Model['dt']))*Model['dt']
-# # # afferent excitation onto cortical excitation and inhibition
-for i, tpop in enumerate(['Exc', 'Inh', 'oscillExc']): # both on excitation and inhibition
-    ntwk.construct_feedforward_input(NTWK, tpop, 'AffExc',
-                                     t_array, faff+0.*t_array,
-                                     verbose=True,
-                                     SEED=int(37*faff+i)%37)
+else:
+
+    NTWK = ntwk.build_populations(Model, ['Exc', 'Inh', 'oscillExc'],
+                                  AFFERENT_POPULATIONS=['AffExc'],
+                                  with_raster=True,
+                                  with_pop_act=True,
+                                  with_Vm=4,
+                                  # with_synaptic_currents=True,
+                                  # with_synaptic_conductances=True,
+                                  verbose=True)
+
+    ntwk.build_up_recurrent_connections(NTWK, SEED=5, verbose=True)
+
+    #######################################
+    ########### AFFERENT INPUTS ###########
+    #######################################
+
+    faff = 0.5
+    t_array = ntwk.arange(int(Model['tstop']/Model['dt']))*Model['dt']
+    # # # afferent excitation onto cortical excitation and inhibition
+    for i, tpop in enumerate(['Exc', 'Inh', 'oscillExc']): # both on excitation and inhibition
+        ntwk.construct_feedforward_input(NTWK, tpop, 'AffExc',
+                                         t_array, faff+0.*t_array,
+                                         verbose=True,
+                                         SEED=int(37*faff+i)%37)
 
 
-################################################################
-## --------------- Initial Condition ------------------------ ##
-################################################################
-ntwk.initialize_to_rest(NTWK)
+    ################################################################
+    ## --------------- Initial Condition ------------------------ ##
+    ################################################################
+    ntwk.initialize_to_rest(NTWK)
 
-#####################
-## ----- Run ----- ##
-#####################
-network_sim = ntwk.collect_and_run(NTWK, verbose=True)
+    #####################
+    ## ----- Run ----- ##
+    #####################
+    network_sim = ntwk.collect_and_run(NTWK, verbose=True)
 
-# ######################
-# ## ----- Plot ----- ##
-# ######################
-from graphs.my_graph import graphs
-mg = graphs()
-fig, ax = mg.figure(figsize=(5,5))
-
-ii=0
-for pop in NTWK['RASTER']:
-    ax.plot(pop.t/ntwk.ms, ii+pop.i, 'o')
-    try:
-        ii+=np.array(pop.i).max()
-    except ValueError:
-        print('No spikes')
-mg.set_plot(ax, ['bottom'], xlabel='time (ms)', yticks=[])
-mg.show()
-
-fig, ax = mg.figure(figsize=(5,5))
-for i in range(4):
-    ax.plot(NTWK['VMS'][2][i].t/ntwk.ms, NTWK['VMS'][2][i].V/ntwk.mV)
-mg.set_plot(ax, xlabel='time (ms)', ylabel='Vm (mV)')
-mg.show()
+    ntwk.write_as_hdf5(NTWK, filename='rhythmic_ntwk_data.h5')
+    print('Results of the simulation are stored as:', 'rhythmic_ntwk_data.h5')
+    print('--> Run \"python rhythmic_ntwk.py plot\" to plot the results')
+    
+    

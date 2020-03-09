@@ -35,65 +35,67 @@ Model = {
     # === cellular properties (based on AdExp), population by population ===
     # --> Excitatory population (Exc, recurrent excitation)
     'Exc_Gl':10., 'Exc_Cm':200.,'Exc_Trefrac':3.,
-    'Exc_El':-60., 'Exc_Vthre':-50., 'Exc_Vreset':-60., 'Exc_delta_v':0.,
+    'Exc_El':-60., 'Exc_Vthre':-50., 'Exc_Vreset':-60., 'Exc_deltaV':0.,
     'Exc_a':0., 'Exc_b': 0., 'Exc_tauw':1e9,
     # --> Inhibitory population (Inh, recurrent inhibition)
     'Inh_Gl':10., 'Inh_Cm':200.,'Inh_Trefrac':3.,
-    'Inh_El':-60., 'Inh_Vthre':-53., 'Inh_Vreset':-60., 'Inh_delta_v':0.,
+    'Inh_El':-60., 'Inh_Vthre':-53., 'Inh_Vreset':-60., 'Inh_deltaV':0.,
     'Inh_a':0., 'Inh_b': 0., 'Inh_tauw':1e9,
 }
 
 
-NTWK = ntwk.build_populations(Model, ['Exc', 'Inh'],
-                              AFFERENT_POPULATIONS=['AffExc'],
-                              with_raster=True, with_Vm=4,
-                              # with_synaptic_currents=True,
-                              # with_synaptic_conductances=True,
-                              verbose=True)
+if sys.argv[-1]=='plot':
+    # ######################
+    # ## ----- Plot ----- ##
+    # ######################
+    
+    ## load file
+    data = ntwk.load_dict_from_hdf5('with_correl_drive_data.h5')
 
-ntwk.build_up_recurrent_connections(NTWK, SEED=5, verbose=True)
+    # ## plot
+    fig, _ = ntwk.raster_and_Vm_plot(data, smooth_population_activity=10.)
+    
+    plt.show()
 
-#######################################
-########### AFFERENT INPUTS ###########
-#######################################
+else:
+    NTWK = ntwk.build_populations(Model, ['Exc', 'Inh'],
+                                  AFFERENT_POPULATIONS=['AffExc'],
+                                  with_raster=True, with_Vm=4,
+                                  # with_synaptic_currents=True,
+                                  # with_synaptic_conductances=True,
+                                  verbose=True)
 
-print('-------------------------------------------------------')
-print('BROKEN SCRIPT, NEED TO UPDATE WRT TO NEW ntwk_stim')
-print('-------------------------------------------------------')
-faff = 1.
-t_array = ntwk.arange(int(Model['tstop']/Model['dt']))*Model['dt']
-# # # afferent excitation onto cortical excitation and inhibition
-for i, tpop in enumerate(['Exc', 'Inh']): # both on excitation and inhibition
-    ntwk.construct_feedforward_input_correlated(NTWK, tpop, 'AffExc',
-                                                t_array, faff+0.*t_array,
-                                                # with_presynaptic_spikes=True,
-                                                verbose=True,
-                                                SEED=int(37*faff+i)%37)
+    ntwk.build_up_recurrent_connections(NTWK, SEED=5, verbose=True)
 
-################################################################
-## --------------- Initial Condition ------------------------ ##
-################################################################
-ntwk.initialize_to_rest(NTWK)
+    #######################################
+    ########### AFFERENT INPUTS ###########
+    #######################################
 
-#####################
-## ----- Run ----- ##
-#####################
-network_sim = ntwk.collect_and_run(NTWK, verbose=True)
+    print('-------------------------------------------------------')
+    print('BROKEN SCRIPT, NEED TO UPDATE WRT TO NEW ntwk_stim')
+    print('-------------------------------------------------------')
+    faff = 1.
+    t_array = ntwk.arange(int(Model['tstop']/Model['dt']))*Model['dt']
+    # # # afferent excitation onto cortical excitation and inhibition
+    for i, tpop in enumerate(['Exc', 'Inh']): # both on excitation and inhibition
+        ntwk.construct_feedforward_input_correlated(NTWK, tpop, 'AffExc',
+                                                    t_array, faff+0.*t_array,
+                                                    # with_presynaptic_spikes=True,
+                                                    verbose=True,
+                                                    SEED=int(37*faff+i)%37)
 
-# ######################
-# ## ----- Plot ----- ##
-# ######################
-ii=0
-for pop in NTWK['RASTER']:
-    plt.plot(pop.t/ntwk.ms, ii+pop.i, 'o')
-    try:
-        ii+=np.array(pop.i).max()
-    except ValueError:
-        print('No spikes')
-ntwk.set_plot(plt.gca(), ['bottom'], xlabel='time (ms)', yticks=[])
-ntwk.show()
+    ################################################################
+    ## --------------- Initial Condition ------------------------ ##
+    ################################################################
+    ntwk.initialize_to_rest(NTWK)
 
-for i in range(4):
-    plt.plot(NTWK['VMS'][0][i].t/ntwk.ms, NTWK['VMS'][0][i].V/ntwk.mV)
-ntwk.set_plot(plt.gca(), xlabel='time (ms)', ylabel='Vm (mV)')
-ntwk.show()
+    #####################
+    ## ----- Run ----- ##
+    #####################
+    network_sim = ntwk.collect_and_run(NTWK, verbose=True)
+
+    ntwk.write_as_hdf5(NTWK, filename='with_correl_drive_data.h5')
+    print('Results of the simulation are stored as:', 'with_correl_drive_data.h5')
+    print('--> Run \"python with_correl_drive.py plot\" to plot the results')
+    
+    

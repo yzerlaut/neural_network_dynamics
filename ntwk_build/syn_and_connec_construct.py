@@ -207,8 +207,10 @@ def get_syn_and_conn_matrix(Model, POPULATIONS,
     
 def build_populations(Model, POPULATIONS,
                       AFFERENT_POPULATIONS=[],
-                      with_raster=False, with_pop_act=False,
-                      with_Vm=0, with_synaptic_currents=False,
+                      with_raster=False,
+                      with_pop_act=False,
+                      with_Vm=0,
+                      with_synaptic_currents=False,
                       with_synaptic_conductances=False,
                       NEURONS=None,
                       verbose=False):

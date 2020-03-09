@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pylab as plt
 import main as ntwk
 
+import datavyz
 
 ################################################################
 ## ------ Construct populations with their equations -------- ##
@@ -50,59 +51,52 @@ Model = {
 }
 
 
-NTWK = ntwk.build_populations(Model, ['Exc', 'Inh', 'DsInh'],
-                              AFFERENT_POPULATIONS=['AffExc'],
-                              with_raster=True,
-                              with_Vm=4,
-                              # with_synaptic_currents=True,
-                              # with_synaptic_conductances=True,
-                              verbose=True)
+if sys.argv[-1]=='plot':
+    # ######################
+    # ## ----- Plot ----- ##
+    # ######################
+    
+    ## load file
+    data = ntwk.load_dict_from_hdf5('3pop_model_data.h5')
 
-ntwk.build_up_recurrent_connections(NTWK, SEED=5, verbose=True)
+    # ## plot
+    fig, _ = ntwk.raster_and_Vm_plot(data, smooth_population_activity=10.)
+    
+    plt.show()
+else:
+    NTWK = ntwk.build_populations(Model, ['Exc', 'Inh', 'DsInh'],
+                                  AFFERENT_POPULATIONS=['AffExc'],
+                                  with_raster=True,
+                                  with_Vm=4,
+                                  # with_synaptic_currents=True,
+                                  # with_synaptic_conductances=True,
+                                  verbose=True)
 
-#######################################
-########### AFFERENT INPUTS ###########
-#######################################
+    ntwk.build_up_recurrent_connections(NTWK, SEED=5, verbose=True)
 
-faff = 1.
-t_array = ntwk.arange(int(Model['tstop']/Model['dt']))*Model['dt']
-# # # afferent excitation onto cortical excitation and inhibition
-for i, tpop in enumerate(['Exc', 'Inh', 'DsInh']): # both on excitation and inhibition
-    ntwk.construct_feedforward_input(NTWK, tpop, 'AffExc',
-                                     t_array, faff+0.*t_array,
-                                     verbose=True,
-                                     SEED=int(37*faff+i)%37)
+    #######################################
+    ########### AFFERENT INPUTS ###########
+    #######################################
 
+    faff = 1.
+    t_array = ntwk.arange(int(Model['tstop']/Model['dt']))*Model['dt']
+    # # # afferent excitation onto cortical excitation and inhibition
+    for i, tpop in enumerate(['Exc', 'Inh', 'DsInh']): # both on excitation and inhibition
+        ntwk.construct_feedforward_input(NTWK, tpop, 'AffExc',
+                                         t_array, faff+0.*t_array,
+                                         verbose=True,
+                                         SEED=int(37*faff+i)%37)
 
-################################################################
-## --------------- Initial Condition ------------------------ ##
-################################################################
-ntwk.initialize_to_rest(NTWK)
+    ################################################################
+    ## --------------- Initial Condition ------------------------ ##
+    ################################################################
+    ntwk.initialize_to_rest(NTWK)
 
-#####################
-## ----- Run ----- ##
-#####################
-network_sim = ntwk.collect_and_run(NTWK, verbose=True)
+    #####################
+    ## ----- Run ----- ##
+    #####################
+    network_sim = ntwk.collect_and_run(NTWK, verbose=True)
 
-# ######################
-# ## ----- Plot ----- ##
-# ######################
-from graphs.my_graph import graphs
-mg = graphs()
-fig, ax = mg.figure(figsize=(5,5))
-
-ii=0
-for pop in NTWK['RASTER']:
-    ax.plot(pop.t/ntwk.ms, ii+pop.i, 'o')
-    try:
-        ii+=np.array(pop.i).max()
-    except ValueError:
-        print('No spikes')
-mg.set_plot(ax, ['bottom'], xlabel='time (ms)', yticks=[])
-mg.show()
-
-fig, ax = mg.figure(figsize=(5,5))
-for i in range(4):
-    ax.plot(NTWK['VMS'][0][i].t/ntwk.ms, NTWK['VMS'][0][i].V/ntwk.mV)
-mg.set_plot(ax, xlabel='time (ms)', ylabel='Vm (mV)')
-mg.show()
+    ntwk.write_as_hdf5(NTWK, filename='3pop_model_data.h5')
+    print('Results of the simulation are stored as:', '3pop_model_data.h5')
+    print('--> Run \"python 3pop_model.py plot\" to plot the results')

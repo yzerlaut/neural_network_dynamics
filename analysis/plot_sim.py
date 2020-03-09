@@ -1,9 +1,15 @@
-import numpy as np
-import matplotlib.pylab as plt
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-from graphs.my_graph import *
+
 from PIL import Image # BITMAP (png, jpg, ...)
+import numpy as np
+import matplotlib.pylab as plt
+
+from scipy.ndimage.filters import gaussian_filter1d
+def gaussian_smoothing(signal, idt_sbsmpl=10):
+    return gaussian_filter1d(signal, idt_sbsmpl)
+
+from datavyz.main import graph_env as dtvz_graph_env
 
 B, O, G, R, Purple, Brown, Pink, Grey,\
     Kaki, Cyan = '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',\
@@ -24,12 +30,91 @@ def find_num_of_key(data,pop_key):
     i0 = np.argwhere(np.array(pops)==pop_key)[0][0]
     return i0
 
+
+def raster_and_Vm_plot(data,
+                       POP_KEYS = None,
+                       COLORS = None,
+                       tzoom=[0, np.inf],
+                       smooth_population_activity=0.,
+                       graph_env='manuscript'):
+
+    AE = [[[4,2]]] # axes extent
+    if POP_KEYS is None:
+        POP_KEYS = find_pop_keys(data)
+        for pop in POP_KEYS:
+            if ('VMS_%s' % pop) in data:
+                AE.append([[4,1]])
+
+    tzoom=[np.max([tzoom[0], 0.]), np.min([tzoom[1], data['tstop']])]
+
+    ge = dtvz_graph_env(graph_env)
+    
+    if COLORS is None:
+        COLORS = ge.colors
+
+    fig, AX = ge.figure(axes_extents=AE, hspace=0.5, right = 5.)
+
+    try:
+        ax = AX[0]
+    except TypeError:
+        ax = AX
+    
+    if 'POP_ACT_'+POP_KEYS[0] in data:
+        # means we also plot firing rate
+        ax2 = AX[0].twinx()
+        t = np.arange(len(data['POP_ACT_'+POP_KEYS[0]]))*data['dt']
+        firing_rate_plot = True
+    else:
+        firing_rate_plot = False
+        
+    n=0
+    for i, tpop in enumerate(POP_KEYS):
+
+        cond = (data['tRASTER_%s' % tpop]>tzoom[0]) & (data['tRASTER_%s' % tpop]<tzoom[1])
+        AX[0].plot(data['tRASTER_%s' % tpop][cond], n+data['iRASTER_%s' % tpop][cond],
+                   'o', ms=1, c=COLORS[i], alpha=.5)
+        AX[0].plot(tzoom[1]*np.ones(2), [n,n+data['N_%s' % tpop]], 'w.', ms=0.01)
+
+        if firing_rate_plot:
+            cond = (t>tzoom[0]) & (t<tzoom[1])
+            if smooth_population_activity>0:
+                ax2.plot(t[cond],
+                         gaussian_smoothing(data['POP_ACT_'+tpop][cond], int(smooth_population_activity/data['dt'])),
+                         color=COLORS[i], lw=2)
+            else:
+                ax2.plot(t[cond], data['POP_ACT_'+tpop][cond], color=COLORS[i], lw=2)
+
+        try:
+            for v in data['VMS_%s' % tpop]:
+                AX[i+1].plot(np.arange(len(v))*data['dt'], v, '-', lw=1, c=COLORS[i])
+        except KeyError:
+            pass
+        
+        n += data['N_%s' % tpop]
+        ge.annotate(AX[i+1], ' %s' % tpop, (1.,.5), xycoords='axes fraction',
+                    color=COLORS[i], bold=True, fontsize=ge.FONTSIZE+2)
+
+    if firing_rate_plot:
+        ge.set_plot(ax2, ['right'], ylabel='inst. Firing Rate (Hz)')
+        
+    ge.set_plot(AX[0], xlim=tzoom, ylabel='neuron ID',
+                xticks_labels=[], yticks=[0,n], ylim=[0,n])
+
+    if len(AX)>1:
+        for ax in AX[1:-1]:
+            ge.set_plot(ax, ylabel='Vm (mV)', xlim=tzoom, xticks_labels=[])
+        ge.set_plot(AX[-1], xlabel='time (ms)', ylabel='Vm (mV)', xlim=tzoom)
+    
+    return fig, AX
+
+    
 ######################################
 #### RASTER PLOT
 ######################################
 def raster(data,
            POP_KEYS = None, COLORS=None,
-           NMAXS = None, tzoom=[0, np.inf],
+           NMAXS = None,
+           tzoom=[0, np.inf],
            Nnrn=500, Tbar=50,
            ms=1, ax=None):
 

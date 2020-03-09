@@ -1,8 +1,12 @@
 import numpy as np
 from itertools import combinations # for cross correlations
 from scipy.stats import skew
+# for smoothing
+from scipy.ndimage.filters import gaussian_filter1d
+
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
+
 try:
     from data_analysis.processing.signanalysis import get_acf_time
 except ImportError:
@@ -11,6 +15,19 @@ except ImportError:
     print('get it at: bitbucket.org/yzerlaut/data_analysis')
     print('---------------------------------------------------------------')
 
+
+def gaussian_smoothing(signal, idt_sbsmpl=10):
+    return gaussian_filter1d(signal, idt_sbsmpl)
+
+
+def smooth_population_activity(rate_array, dt, Tsmoothing):
+    if Tsmoothing>2*dt:
+        return gaussian_smoothing(rate_array, int(Tsmoothing/dt))
+    else:
+        print('/!\ SMOOTHING AT THAT TIME SCALE UNPOSSIBLE, dt is %s and Tsmoothing is %s' % (dt, Tsmoothing))
+        return rate_array
+
+    
     
 def get_CV_spiking(data, pop='Exc'):
     """see Kumar et al. 2008"""

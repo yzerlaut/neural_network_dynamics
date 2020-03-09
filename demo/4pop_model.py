@@ -53,57 +53,52 @@ Model = {
     'DsInh_a':0., 'DsInh_b': 0., 'DsInh_tauw':1e9,
 }
 
-NTWK = ntwk.build_populations(Model, ['Thal', 'Exc', 'Inh', 'DsInh'],
-                              AFFERENT_POPULATIONS=['AffExc'],
-                              with_raster=True, with_Vm=4,
-                              # with_synaptic_currents=True,
-                              # with_synaptic_conductances=True,
-                              verbose=True)
+if sys.argv[-1]=='plot':
+    # ######################
+    # ## ----- Plot ----- ##
+    # ######################
+    
+    ## load file
+    data = ntwk.load_dict_from_hdf5('4pop_model_data.h5')
 
-ntwk.build_up_recurrent_connections(NTWK, SEED=5, verbose=True)
+    # ## plot
+    fig, _ = ntwk.raster_and_Vm_plot(data, smooth_population_activity=10.)
+    
+    plt.show()
+else:
+    NTWK = ntwk.build_populations(Model, ['Thal', 'Exc', 'Inh', 'DsInh'],
+                                  AFFERENT_POPULATIONS=['AffExc'],
+                                  with_raster=True, with_Vm=4,
+                                  # with_synaptic_currents=True,
+                                  # with_synaptic_conductances=True,
+                                  verbose=True)
 
-#######################################
-########### AFFERENT INPUTS ###########
-#######################################
+    ntwk.build_up_recurrent_connections(NTWK, SEED=5, verbose=True)
 
-faff = 1.
-t_array = ntwk.arange(int(Model['tstop']/Model['dt']))*Model['dt']
-# # # afferent excitation onto thalamic excitation
-ntwk.construct_feedforward_input(NTWK, 'Thal', 'AffExc',
-                                     t_array, faff+0.*t_array,
-                                     verbose=True,
-                                     SEED=int(38*faff)%37)
+    #######################################
+    ########### AFFERENT INPUTS ###########
+    #######################################
+
+    faff = 1.
+    t_array = ntwk.arange(int(Model['tstop']/Model['dt']))*Model['dt']
+    # # # afferent excitation onto thalamic excitation
+    ntwk.construct_feedforward_input(NTWK, 'Thal', 'AffExc',
+                                         t_array, faff+0.*t_array,
+                                         verbose=True,
+                                         SEED=int(38*faff)%37)
 
 
-################################################################
-## --------------- Initial Condition ------------------------ ##
-################################################################
-ntwk.initialize_to_rest(NTWK)
+    ################################################################
+    ## --------------- Initial Condition ------------------------ ##
+    ################################################################
+    ntwk.initialize_to_rest(NTWK)
 
-#####################
-## ----- Run ----- ##
-#####################
-network_sim = ntwk.collect_and_run(NTWK, verbose=True)
+    #####################
+    ## ----- Run ----- ##
+    #####################
+    network_sim = ntwk.collect_and_run(NTWK, verbose=True)
 
-# ######################
-# ## ----- Plot ----- ##
-# ######################
-from graphs.my_graph import graphs
-mg = graphs()
-fig, ax = mg.figure(figsize=(5,5))
+    ntwk.write_as_hdf5(NTWK, filename='4pop_model_data.h5')
+    print('Results of the simulation are stored as:', '4pop_model_data.h5')
+    print('--> Run \"python 4pop_model.py plot\" to plot the results')
 
-ii=0
-for pop in NTWK['RASTER']:
-    ax.plot(pop.t/ntwk.ms, ii+pop.i, 'o')
-    try:
-        ii+=np.array(pop.i).max()
-    except ValueError:
-        print('No spikes')
-mg.set_plot(ax, ['bottom'], xlabel='time (ms)', yticks=[])
-mg.show()
-
-fig, ax = mg.figure(figsize=(5,5))
-for i in range(4):
-    ax.plot(NTWK['VMS'][0][i].t/ntwk.ms, NTWK['VMS'][0][i].V/ntwk.mV)
-mg.set_plot(ax, xlabel='time (ms)', ylabel='Vm (mV)')
-mg.show()
