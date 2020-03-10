@@ -1,14 +1,8 @@
 import numpy as np
 import sys, pathlib
 import brian2, os
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-try:
-    from data_analysis.IO.hdf5 import save_dict_to_hdf5
-except ImportError:
-    print('---------------------------------------------------------------')
-    print('you need the data_analysis folder')
-    print('get it at: bitbucket.org/yzerlaut/data_analysis')
-    print('---------------------------------------------------------------')
+
+from analyz.IO import hdf5
 
 def write_as_hdf5(NTWK, filename='data.h5',
                   KEY_NOT_TO_RECORD=[]):
@@ -56,5 +50,5 @@ def write_as_hdf5(NTWK, filename='data.h5',
             data['iRASTER_PRE'+str(jj)] = np.array(NTWK['iRASTER_PRE'][jj], dtype=np.int)
             data['tRASTER_PRE'+str(jj)] = np.array(NTWK['tRASTER_PRE'][jj]/brian2.ms, dtype=np.float)
             
-    save_dict_to_hdf5(data, filename)
+    hdf5.save_dict_to_hdf5(data, filename)
     
