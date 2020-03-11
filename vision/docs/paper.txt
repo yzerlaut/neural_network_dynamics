@@ -1,0 +1,195 @@
+Title: \qquad \quad Modeling the Early Visual System in Mice\newline From Screen Display to Layer 4 network activity in V1
+Authors: Y.Z.$^{1}$
+Short Title: A Model of the Early Visual System
+Short Authors: Y.Z.
+Affiliations: {1} ICM Paris, France
+Correspondence: yann.zerlaut@icm-institute.org
+
+* Abstract
+
+\begin{itemize}
+\item We build a minimal model of the early visual system in mouse
+\item The model relies on considering the visual pathway up to Layer 4 as a set of gabor filters randomly sampling the visual space 
+\item Single cell receptive fields vary randomly in: 1) spatial location, 2) spatial frequency, 3) spatial extent, 4) excentricity
+\item Filters define simple and complex cells
+\item Linear-Nonlinear-Poisson (LNP) model translate gabor filtering of visual stimuli into action potentials in Layer 4.
+\item We study the response to various visual stimuli: drifting gratings, dense noise, natural images, natural movies, ...
+\item We generate sample electrophysiological traces
+\item We generate sample traces of Ca$^{2+}$ imaging experiments in response to experimental characterizations
+\end{itemize}
+
+* Results
+
+*** Physical and biological setting
+
+The physical (visual space) and biological (neuronal space) setting is represented on Figure {geometry}.
+
+[[Figure {geometry} around here]]
+
+*** Gabor filters
+
+A gabor filter is paramterized by:
+\begin{itemize}
+\item $\vec{x_0}$ a center position in the 2 dimensional visual space on the screen 
+\item $\theta$ the orientation of the gabor filter 
+\item $f$ the spatial frequency
+\item $\Psi$ the spatial phase
+\item $\alpha$ the spatial extent of the filter
+\item $\beta$ the filter's excentricity (i.e. the factor shrinking the spatial extent in the non-prefered orientation direction)
+\end{itemize}
+
+Defining the vector $\vec{u}$ as the unitary vector of orientation
+$\theta$ and the vector $\vec{v}$ as the unitary vector perpendicular
+to $\vec{v}$, And it is defined by:
+
+\begin{equation}
+\label{eq:gabor}
+G(\vec{x}) = \cos\Big( 2 \pi f (\vec{x}-\vec{x_0}) \cdot \vec{u} + \Phi \Big) \,
+         e^{\frac{\big((\vec{x}-\vec{x_0}) \cdot \vec{u}\big)^2 +
+                   \beta \big((\vec{x}-\vec{x_0}) \cdot \vec{v}\big)^2}{2 \, \alpha^2}}
+\end{equation}
+
+We vary those factors independently in Figure {gabor}.
+
+
+[[Figure {gabor} around here]]
+
+*** slkjdhfsdkjfh
+
+* Figures
+
+*** Physical and biological spaces considered in the model.
+#+options : {'label':'geometry', 'extent':'singlecolumn', 'file':'docs/drawing.png'}
+The model aims at describing the transformation between luminescence values and neuronal activity in the visual cortex.
+
+*** Gabor filters
+#+options : {'label':'gabor', 'extent':'singlecolumn', 'width':.7, 'file':'docs/gabor.png'}
+From a standard configuration in *a* defined by: a center $\vec{x_0}$=(2,2), an orientation $\theta$=$0^{o}$, a spatial frequency $f$=1, a spatial extent $\sigma$=0.5, an excentricity $\beta$=1, we vary the parameters of the Gabor function in *b*-*i* (see the annotation in plots for the variations from *a*).
+
+*** A two column figure where the legend wraps around the figure.
+#+options : {'label':'Fig3', 'extent':'doublecolumn', 'wrapfig':True, 'width':.52, 'height':9, 'hrule_bottom':True, 'file':os.path.expanduser("~")+'/work/graphs/output/fig.png'}
+(a) Lorem ipsumdolor sit amet in *B* and *C*, consectetuer adipiscing elit. Duisfringilla tristique neque. Sed interdum libero utmetus. Pellentesque placerat. Nam rutrum auguea leo. Morbi sed elit sit amet ante lobortis sollici-tudin. Praesent blandit blandit mauris.
+(b) Praesentlectus tellus, aliquet aliquam, luctus a, egestas a,turpis. Mauris lacinia lorem sit amet ipsum. 
+(c) Nuncquis urna dictum turpis accumsan semper. Lorem ipsum dolor sit amet, consectetuer adipisc ing elit. Etiam lobortis facilisis sem. Nullam nec mi et neque pharetra sollicitudin. Praesent imperdiet mi nec ante. Donec ullamcorper,felis non sodales commodo, lectus velit ultrices augue, a dignissim nibh lectus placerat pede. Vivamus nunc nunc, molestie ut, ultricies vel, semper in, velit.
+
+* Tables
+
+*** Caption for the first table
+#+options : {'label':'Tab1', 'extent':'singlecolumn'}
+Subcaption for the first table
+| Name    |    Phone | Age |
+|---------+----------+-----|
+| Peter   | {blabla} |  17 |
+| Anna    |     4321 |  25 |
+| Patrick |     4321 |  25 |
+\begin{tabular}{l|r|r}
+Name & Phone & Age\\
+\hline
+Peter & {blabla} & 17\\
+\hline
+Anna & 4321 & 25\\
+Patrick & 4321 & 25\\
+\hline
+\end{tabular}
+
+*** Caption for the second table
+#+options : {'label':'Tab2', 'extent':'doublecolumn'}
+Subcaption for the second table
+| model   | \(P_0\)(mV) | \(P_\mu\)(mV)             | \(P_\sigma\)(mV) | \(P_\tau\)(mV) |
+|---------+-------------+---------------------------+------------------+----------------|
+| simple  | 8           | 9                         |                4 |            387 |
+|---------+-------------+---------------------------+------------------+----------------|
+| complex | \(\pi/d^4\) | \(\frac{\pi}{\sqrt{28}}\) |               23 |              3 |
+|---------+-------------+---------------------------+------------------+----------------|
+| none    | 0           | 0                         |                0 |              0 |
+|---------+-------------+---------------------------+------------------+----------------|
+\begin{center}
+\begin{tabular}{lrrrr}
+model & \(P_0\)(mV) & \(P_\mu\)(mV) & \(P_\sigma\)(mV) & \(P_\tau\)(mV)\\
+\hline
+simple & 8 & 9 & 4 & 387\\
+\hline
+complex & \(\pi/d^4\) & \(\frac{\pi}{\sqrt{28}}\) & 23 & 3\\
+\hline
+none & 0 & 0 & 0 & 0\\
+\hline
+\end{tabular}
+\end{center}
+
+* Supplementary
+** Supplementary Text
+*** Section talking abour first supplementary result
+
+Lorem ipsum dolor sit amet, consectetuer adipisc-
+ing elit. Etiam lobortis facilisis sem. Nullam nec
+mi et neque pharetra sollicitudin. Praesent im-
+perdiet mi nec ante. Donec ullamcorper, felis non
+sodales commodo, lectus velit ultrices augue, a dig-
+nissim nibh lectus placerat pede. Vivamus nunc
+nunc, molestie ut, ultricies vel, semper in, velit.
+Ut porttitor. Praesent in sapien. Lorem ipsum
+dolor sit amet, consectetuer adipiscing elit. Duis
+fringilla tristique neque. Sed interdum libero ut
+metus. Pellentesque placerat. Nam rutrum augue
+a leo. Morbi sed elit sit amet ante lobortis sollici-
+tudin. Praesent blandit blandit mauris. Praesent
+lectus tellus, aliquet aliquam, luctus a, egestas a,
+turpis. Mauris lacinia lorem sit amet ipsum. Nunc
+quis urna dictum turpis accumsan semper.
+
+\begin{equation}
+\left\{
+\begin{split}
+& \frac{\partial^2 d}{\partial t ^2} = -x^3 \\
+& \sum_{x} 1/x^2 \rightarrow y
+\end{split}
+\right.
+\end{equation}
+
+** Supplementary Figures
+
+*** Caption for first supplementary figure.
+#+options : {'label':'Fig1', 'extent':'singlecolumn', 'file':'/Users/yzerlaut/work/graphs/fig2.png'}
+(a) Generate the figure with : \url{python_code/script.py} Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Etiam lobortis facilisis sem. (b) Nullam necmi et neque pharetra sollicitudin. Praesent im-perdiet mi nec ante. Donec ullamcorper, felis nonsodales commodo, lectus velit ultrices augue, a dig-nissim nibh lectus placerat pede. Vivamus nuncnunc, molestie ut, ultricies vel, semper in, velit.Ut porttitor. Praesent in sapien. (c) Lorem ipsumdolor sit amet, consectetuer adipiscing elit. Duisfringilla tristique neque. Sed interdum libero utmetus. Pellentesque placerat. Nam rutrum auguea leo. Morbi sed elit sit amet ante lobortis sollici-tudin. Praesent blandit blandit mauris. Praesentlectus tellus, aliquet aliquam, luctus a, egestas a,turpis. Mauris lacinia lorem sit amet ipsum. Nuncquis urna dictum turpis accumsan semper.
+
+** Supplementary Tables
+
+*** Caption for the first supplementary table
+#+options : {'label':'sTab1', 'extent':'singlecolumn'}
+\begin{tabular}{lrr}
+Name & Phone & Age\\
+\hline
+Peter & \{blabla\} & 17\\
+Anna & 4321 & 25\\
+Patrick & 4321 & 25\\
+\end{tabular}
+
+# | Name    |    Phone | Age |
+# |---------+----------+-----|
+# | Peter   | {blabla} |  17 |
+# | Anna    |     4321 |  25 |
+# | Patrick |     4321 |  25 |
+
+* Key Points
+
+\item writing scientific papers 
+\item using meta-anaysis file for paper results
+\item different styles of paper formatting
+* Notes /not exported/
+
+** Constructing tables
+| Name    | Phone | Age |
+|---------+-------+-----|
+| Peter   |  1234 |  17 |
+| Anna    |  4321 |  25 |
+| Patrick |  4321 |  25 |
+
+
+*** Caption for second figure.
+#+options : {'label':'Fig2', 'sidecap':(.5,.02,.4), 'extent':'doublecolumn', 'file':'/Users/yzerlaut/work/graphs/fig2.png'}
+(a) Generate the figure with : =python code/script.py= Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Etiam lobortis facilisis sem. (b) Nullam necmi et neque pharetra sollicitudin. Praesent im-perdiet mi nec ante. Donec ullamcorper, felis nonsodales commodo, lectus velit ultrices augue, a dig-nissim nibh lectus placerat pede. Vivamus nuncnunc, molestie ut, ultricies vel, semper in, velit.Ut porttitor. Praesent in sapien. (C) Lorem ipsumdolor sit amet, consectetuer adipiscing elit. Duisfringilla tristique neque. Sed interdum libero utmetus. Pellentesque placerat. Nam rutrum auguea leo. Morbi sed elit sit amet ante lobortis sollici-tudin. Praesent blandit blandit mauris. Praesentlectus tellus, aliquet aliquam, luctus a, egestas a,turpis. Mauris lacinia lorem sit amet ipsum. Nuncquis urna dictum turpis accumsan semper.
+
+*** Caption for third figure.
+#+options : {'scale':1., 'label':'Fig3', 'extent':'doublecolumn', 'file':'/Users/yzerlaut/work/graphs/fig.png'}
+(A) Lorem ipsumdolor sit amet in *B* and *C*, consectetuer adipiscing elit. Duisfringilla tristique neque. Sed interdum libero utmetus. Pellentesque placerat. Nam rutrum auguea leo. Morbi sed elit sit amet ante lobortis sollici-tudin. Praesent blandit blandit mauris. (B) Praesentlectus tellus, aliquet aliquam, luctus a, egestas a,turpis. Mauris lacinia lorem sit amet ipsum. (C) Nuncquis urna dictum turpis accumsan semper.
+
