@@ -18,7 +18,7 @@ Correspondence: yann.zerlaut@icm-institute.org
 \item We generate sample traces of Ca$^{2+}$ imaging experiments in response to experimental characterizations
 \end{itemize}
 
-* Results
+* Methods
 
 *** Physical and biological setting
 
@@ -54,9 +54,8 @@ We vary those factors independently in Figure {gabor}.
 
 [[Figure {gabor} around here]]
 
-*** Stimuli
 
-**** Drifting gratings
+*** Drifting gratings stimuli
 
 Following Stringer et al. (2019).
 
@@ -69,7 +68,7 @@ Following Stringer et al. (2019).
 
 [[Figure {gratings} around here]]
 
-**** Sparse noise
+*** Sparse noise stimuli
 
 Following Stringer et al. (2019).
 
@@ -79,6 +78,7 @@ Following Stringer et al. (2019).
 \item update every 200ms
 \end{itemize}
 
+[[Figure {SN} around here]]
 
 * Figures
 
@@ -93,6 +93,10 @@ From a standard configuration in *a* defined by: a center $\vec{x_0}$=(2,2), an 
 *** Gratings stimuli
 #+options : {'label':'gratings', 'extent':'doublecolumn', 'file':'gratings.png', 'wrapfig':True, 'width':.75}
 Example of a set of 6 different gratings separated by 30$^o$ each.
+
+*** Gratings stimuli
+#+options : {'label':'SN', 'extent':'doublecolumn', 'file':'sparse-noise.png', 'wrapfig':True, 'width':.75}
+Six realisations of the sparse noise stimulus.
 
 
 * Tables
