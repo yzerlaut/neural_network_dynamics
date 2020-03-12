@@ -46,10 +46,10 @@ for i in range(N):
               psi=CELLS['psi'][i])+0.5
     Z += z/N
     
-ge.twoD_plot(x.flatten(), y.flatten(), z.flatten(), vmin=0, vmax=1, colormap=ge.binary,
+ge.twoD_plot(x.flatten(), y.flatten(), Z.flatten(), vmin=0, vmax=1, colormap=ge.binary,
              ax=ax)
 
-ge.show()
-#fig.savefig('fig.png')
+# ge.show()
+fig.savefig('fig.png')
 
 
