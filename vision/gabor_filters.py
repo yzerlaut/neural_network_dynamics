@@ -91,7 +91,7 @@ if __name__=='__main__':
     z = gabor(x, y, x0=2 ,y0=2, size=0.25)
     ge.twoD_plot(x.flatten(), y.flatten(), z.flatten()+0.5, vmin=0, vmax=1, colormap=ge.binary,
                  ax=AX[2][1])
-    ge.annotate(AX[2][1], r'$\size$=0.25', (0.5, 1.05), ha='center')
+    ge.annotate(AX[2][1], r'$\sigma$=0.25', (0.5, 1.05), ha='center')
     # expanded
     z = gabor(x, y, x0=2 ,y0=2, size=1., freq=0.5)
     ge.twoD_plot(x.flatten(), y.flatten(), z.flatten()+0.5, vmin=0, vmax=1, colormap=ge.binary,

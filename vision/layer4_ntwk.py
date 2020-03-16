@@ -8,7 +8,8 @@ from vision.gabor_filters import gabor
 
 N=5 # picking 10 cells
 
-ge = graph_env('visual_stim')
+# ge = graph_env('visual_stim')
+ge = graph_env()
 
 fig, ax = ge.figure()
 
@@ -49,7 +50,7 @@ for i in range(N):
 ge.twoD_plot(x.flatten(), y.flatten(), Z.flatten(), vmin=0, vmax=1, colormap=ge.binary,
              ax=ax)
 
-# ge.show()
+ge.show()
 fig.savefig('fig.png')
 
 
