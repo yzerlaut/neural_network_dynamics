@@ -111,7 +111,7 @@ if sys.argv[-1]=='natural-images':
                         wspace=.3, hspace=.4,
                         top=0.5, left=0.1, right=0.5, bottom=0.)
     
-    ge2 = graph_env('visual_stim')
+    ge = graph_env('visual_stim')
     
     DIR = '/home/yann/Pictures/Imagenet/'
     files = os.listdir(DIR)
@@ -128,7 +128,7 @@ if sys.argv[-1]=='natural-images':
         
         ge.image(new_img.reshape(img.shape), ax=ax)
 
-ge2.show()
+ge.show()
 fig.savefig('fig.png')
 
 
