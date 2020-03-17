@@ -3,11 +3,30 @@ import numpy as np
 from datavyz.main import graph_env
 from datavyz.images import load
 
-
 import itertools, string, sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 
 from vision.gabor_filters import gabor
+from vision.earlyVis_model import params0
+
+
+class visual_stimuli:
+
+    def __init__(self,
+                 params=None,
+                 graph_env_key='visual_stim'):
+
+        if params is not None:
+            self.params = params
+        else:
+            self.params = params0 # above params by default
+
+        self.setup_screen()
+        
+        self.ge = graph_env(graph_env_key)
+
+
+        
 
 ge = graph_env('manuscript')
 
