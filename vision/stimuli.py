@@ -106,13 +106,6 @@ if sys.argv[-1]=='gaussian-blob':
 
 if sys.argv[-1]=='natural-images':
 
-    fig, AX = ge.figure(axes=(1,6),
-                        figsize=(.8,.8),
-                        wspace=.3, hspace=.4,
-                        top=0.5, left=0.1, right=0.5, bottom=0.)
-    
-    ge = graph_env('visual_stim')
-    
     DIR = '/home/yann/Pictures/Imagenet/'
     files = os.listdir(DIR)
     for i, ax in enumerate(np.array(AX).flatten()):
@@ -122,12 +115,36 @@ if sys.argv[-1]=='natural-images':
         
         cumsum = np.cumsum(np.histogram(flat, bins=np.arange(1001))[0])
 
-        print(len(cumsum), flat.max())
         norm_cs = np.concatenate([(cumsum-cumsum.min())/(cumsum.max()-cumsum.min())*1000, [1]])
         new_img = np.array([norm_cs[f]/1000. for f in flat])
         
         ge.image(new_img.reshape(img.shape), ax=ax)
 
+if sys.argv[-1]=='natural-images-sem':
+
+    DIR = '/home/yann/Pictures/Imagenet/'
+    files = os.listdir(DIR)
+
+    for i, ax in enumerate(np.array(AX).flatten()):
+
+        img = load(os.path.join(DIR, files[i]))
+        flat = np.array(1000*img.flatten(), dtype=int)
+        
+        cumsum = np.cumsum(np.histogram(flat, bins=np.arange(1001))[0])
+
+        norm_cs = np.concatenate([(cumsum-cumsum.min())/(cumsum.max()-cumsum.min())*1000, [1]])
+        new_img = np.array([norm_cs[f]/1000. for f in flat])
+
+        ge.image(new_img.reshape(img.shape), ax=ax)
+        
+    Npoints = 10
+    RDM_traj = [img.shape[0]*np.random.uniform(0.15, 0.85, size=Npoints),
+                img.shape[1]*np.random.uniform(0.15, 0.85, size=Npoints)]
+    print(RDM_traj)
+    for i, ax in enumerate(np.array(AX).flatten()):
+        print(ax.get_xlim(), ax.get_ylim())
+        ax.plot(RDM_traj[1], RDM_traj[0], lw=1, color=ge.red)
+        
 ge.show()
 fig.savefig('fig.png')
 
