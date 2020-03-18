@@ -14,6 +14,7 @@ params0 = {
     'screen_width':16./9.*30, # degree
     'screen_height':30.,
     'screen_dpd':5, # dot per degree (dpd)
+    'screen_refresh_rate':30., #in Hz
     # receptive fields
     'rf_fraction':.4, # fraction of visual space covered by the cells, fraction of the screen 
     'rf_size':[0.2, 0.5], # degrees
@@ -39,9 +40,15 @@ params0 = {
 
 class earlyVis_model:
     """
-
-
+    A model of the early visual system
+    from luminance in the visual space to spikes in layer IV pyramidal cells in V1
+    Steps:
+    - linear sptial filtering (Gabor filters)
+    - temporal filtering (delay and adaptation)
+    - non-linear transformation (to get firing rates)
+    - Poisson process transofrmation to get spikes
     """
+    
     def __init__(self,
                  params=None,
                  graph_env_key='visual_stim'):
@@ -56,7 +63,6 @@ class earlyVis_model:
         
         self.ge = graph_env(graph_env_key)
 
-        
         
     def setup_screen(self):
 
@@ -186,7 +192,7 @@ class earlyVis_model:
             z = self.cell_gabor(i)
             Z += z
 
-        self.screen_plot(0.5-Z)
+        self.screen_plot(Z+0.5)
 
     ################################
     ### CONVOLUTION ################
@@ -269,14 +275,11 @@ class earlyVis_model:
         return SPIKES
 
         
-    
-model = earlyVis_model()
-
-model.draw_cell_RF_properties(3, clustered_features=False)
-
-# model.plot_RF_properties()
-
-# model.ge.show()
+if __name__=='__main__':
+    model = earlyVis_model()
+    model.draw_cell_RF_properties(3, clustered_features=False)
+    model.plot_RF_properties()
+    model.ge.show()
 
 
 
