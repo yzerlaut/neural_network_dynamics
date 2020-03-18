@@ -1,5 +1,6 @@
 import os, sys
 import numpy as np
+from scipy.interpolate import RectBivariateSpline, interp2d
 
 import itertools, string, sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
@@ -9,8 +10,14 @@ from datavyz.images import load
 from analyz.signal_library.classical_functions import gaussian_2d
 
 from vision.gabor_filters import gabor
-from vision.earlyVis_model import params0
 
+screen_params0 = {
+    # units of the visual field is degree
+    'screen_width':16./9.*30, # degree
+    'screen_height':30.,
+    'screen_dpd':8, # dot per degree (dpd)
+    'screen_refresh_rate':30., #in Hz
+}
 
 stim_params0 = {
     # drifting and static gratings
@@ -31,9 +38,59 @@ stim_params0 = {
     'blob_amplitude':1.,
     'blob_rise_time':1.,
     'blob_time':2.5,
-    #
+    # natural images
+    'NI_directory':'/home/yann/Pictures/Imagenet/',
 }
 
+def img_after_hist_normalization(img):
+    """
+    for NATURAL IMAGES:
+    histogram normalization to get comparable images
+    """
+    flat = np.array(1000*img.flatten(), dtype=int)
+
+    cumsum = np.cumsum(np.histogram(flat, bins=np.arange(1001))[0])
+
+    norm_cs = np.concatenate([(cumsum-cumsum.min())/(cumsum.max()-cumsum.min())*1000, [1]])
+    new_img = np.array([norm_cs[f]/1000. for f in flat])
+
+    return new_img.reshape(img.shape)
+
+def adapt_to_screen_resolution(img, SCREEN):
+
+    old_X = np.linspace(0, SCREEN['width'], img.shape[0])
+    old_Y = np.linspace(0, SCREEN['height'], img.shape[1])
+    
+    new_X = np.linspace(0, SCREEN['width'], SCREEN['Xd_max'])
+    new_Y = np.linspace(0, SCREEN['height'], SCREEN['Yd_max'])
+
+    new_img = np.zeros((SCREEN['Xd_max'], SCREEN['Yd_max']))
+
+    print('Adapting image to chosen screen resolution [...]')
+    for i in range(len(new_X)):
+        
+        # find x location for interpol
+        ix = np.arange(len(old_X)-1)[(old_X[1:]>=new_X[i]) & (old_X[:-1]<=new_X[i])]
+        xinterp = old_X[min([ix[0], len(old_X)-2]):min([ix[0]+2, len(old_X)-1])]
+        
+        for j in range(len(new_Y)):
+
+            iy = np.arange(len(old_Y)-1)[(old_Y[1:]>=new_Y[j]) & (old_Y[:-1]<=new_Y[j])]
+            yinterp = old_Y[min([iy[0], len(old_Y)-2]):min([iy[0]+2, len(old_Y)-1])]
+
+            zinterp = img[min([ix[0], len(old_X)-2]):min([ix[0]+2, len(old_X)-1]), min([iy[0], len(old_Y)-2]):min([iy[0]+2, len(old_Y)-1])]
+
+            if zinterp.shape!=(2,2):
+                new_img[i,j] = img[ix[0],iy[0]]
+            else:
+                # make linear interpol around those points
+                spline_approx = interp2d(xinterp, yinterp,zinterp)
+                # build pixel value based on this approx
+                new_img[i,j] = spline_approx(new_X[i], new_Y[j])
+    print('[ok] -> Image adapted')
+    return new_img
+    
+    
 def setup_screen(params):
     """
     calculate the quantities in degrees and in dots to handle screen display
@@ -95,20 +152,20 @@ class visual_stimulus:
     def __init__(self,
                  stimulus_key='drifting-grating',
                  stimulus_params=None,
-                 params=None,
+                 screen_params=None,
                  graph_env_key='visual_stim'):
 
-        if params is not None:
-            self.params = params
+        if screen_params is not None:
+            self.screen_params = screen_params
         else:
-            self.params = params0 # above params by default
+            self.screen_params = screen_params0 # above params by default
 
         if stimulus_params is not None:
             self.stimulus_params = stimulus_params
         else:
             self.stimulus_params = stim_params0
             
-        self.SCREEN = setup_screen(self.params)
+        self.SCREEN = setup_screen(self.screen_params)
         
         self.ge = graph_env(graph_env_key)
 
@@ -124,6 +181,10 @@ class visual_stimulus:
             self.gaussian_blob_static()
         elif stimulus_key=='gaussian-blob-appearance':
             self.gaussian_blob_appearance()
+        elif stimulus_key=='natural-images':
+            self.natural_images()
+        else: # static grating by default
+            self.static_grating()
 
 
     def initialize_screen_time_axis(self):
@@ -155,7 +216,6 @@ class visual_stimulus:
                            self.ge,
                            self.SCREEN,
                            ax=ax)
-
 
     ###################################################################
     ################### SET OF DIFFERENT STIMULI ######################
@@ -277,59 +337,16 @@ class visual_stimulus:
     def natural_images(self, image_number=3):
         
         self.initialize_static()
+        stim_params = self.stimulus_params
+
         
+        filename = os.listdir(stim_params['NI_directory'])[image_number]
+        img = load(os.path.join(stim_params['NI_directory'], filename))
 
-    #     for i, ax in enumerate(np.array(AX).flatten()):
-
-    #         plot(x, y, z/z.max(), ax)
-
-
-    # if sys.argv[-1]=='natural-images':
-
-    #     DIR = '/home/yann/Pictures/Imagenet/'
-    #     files = os.listdir(DIR)
-    #     for i, ax in enumerate(np.array(AX).flatten()):
-
-    #         img = load(os.path.join(DIR, files[i]))
-    #         flat = np.array(1000*img.flatten(), dtype=int)
-
-    #         cumsum = np.cumsum(np.histogram(flat, bins=np.arange(1001))[0])
-
-    #         norm_cs = np.concatenate([(cumsum-cumsum.min())/(cumsum.max()-cumsum.min())*1000, [1]])
-    #         new_img = np.array([norm_cs[f]/1000. for f in flat])
-
-    #         ge.image(new_img.reshape(img.shape), ax=ax)
-
-    # if sys.argv[-1]=='natural-images-sem':
-
-    #     DIR = '/home/yann/Pictures/Imagenet/'
-    #     files = os.listdir(DIR)
-
-    #     for i, ax in enumerate(np.array(AX).flatten()):
-
-    #         img = load(os.path.join(DIR, files[i]))
-    #         flat = np.array(1000*img.flatten(), dtype=int)
-
-    #         cumsum = np.cumsum(np.histogram(flat, bins=np.arange(1001))[0])
-
-    #         norm_cs = np.concatenate([(cumsum-cumsum.min())/(cumsum.max()-cumsum.min())*1000, [1]])
-    #         new_img = np.array([norm_cs[f]/1000. for f in flat])
-
-    #         ge.image(new_img.reshape(img.shape), ax=ax)
-
-    #     Npoints = 10
-    #     RDM_traj = [img.shape[0]*np.random.uniform(0.15, 0.85, size=Npoints),
-    #                 img.shape[1]*np.random.uniform(0.15, 0.85, size=Npoints)]
-    #     print(RDM_traj)
-    #     for i, ax in enumerate(np.array(AX).flatten()):
-    #         print(ax.get_xlim(), ax.get_ylim())
-    #         ax.plot(RDM_traj[1], RDM_traj[0], lw=1, color=ge.red)
-
-    # ge.show()
-    # fig.savefig('fig.png')
-
-
-    
+        rescaled_img = adapt_to_screen_resolution(img, self.SCREEN)
+        rescaled_img = img_after_hist_normalization(rescaled_img)
+        self.full_array[0,:,:] = rescaled_img
+        
 
 if __name__=='__main__':
 

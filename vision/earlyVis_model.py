@@ -5,16 +5,12 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 
 from datavyz.main import graph_env
 from vision.gabor_filters import gabor
+from vision.stimuli import setup_screen, screen_plot, screen_params0
 
 
 params0 = {
     #
     'Ncells':100,
-    # units of the visual field is degree
-    'screen_width':16./9.*30, # degree
-    'screen_height':30.,
-    'screen_dpd':5, # dot per degree (dpd)
-    'screen_refresh_rate':30., #in Hz
     # receptive fields
     'rf_fraction':.4, # fraction of visual space covered by the cells, fraction of the screen 
     'rf_size':[0.2, 0.5], # degrees
@@ -51,6 +47,7 @@ class earlyVis_model:
     
     def __init__(self,
                  params=None,
+                 screen_params=None,
                  graph_env_key='visual_stim'):
         
         if params is not None:
@@ -58,37 +55,28 @@ class earlyVis_model:
         else:
             self.params = params0 # above params by default
 
-        self.setup_screen()
+        if screen_params is not None:
+            self.screen_params = screen_params
+        else:
+            self.screen_params = screen_params0 # from stimuli.py
+            
+        self.SCREEN = setup_screen(self.screen_params)
+        
         self.setup_RF_props()
         
         self.ge = graph_env(graph_env_key)
 
         
-    def setup_screen(self):
-
-        SCREEN = {}
-        # in dots
-        SCREEN['Xd_max'] = int(self.params['screen_width']*self.params['screen_dpd'])
-        SCREEN['Yd_max'] = int(self.params['screen_height']*self.params['screen_dpd'])
-        SCREEN['xd_1d'], SCREEN['yd_1d'] = np.arange(SCREEN['Xd_max']), np.arange(SCREEN['Yd_max'])
-        SCREEN['xd_2d'], SCREEN['yd_2d'] = np.meshgrid(SCREEN['xd_1d'], SCREEN['yd_1d'], indexing='ij')
-        # in degrees
-        SCREEN['x_1d'] = SCREEN['xd_1d']/self.params['screen_dpd']
-        SCREEN['y_1d'] = SCREEN['yd_1d']/self.params['screen_dpd']
-        SCREEN['x_2d'], SCREEN['y_2d'] = np.meshgrid(SCREEN['x_1d'], SCREEN['y_1d'], indexing='ij')
-        self.SCREEN = SCREEN
-
-
     def setup_RF_props(self):
 
         # range of x-positions for the cellular RFs
-        min_x0 = self.params['screen_width']*self.params['rf_fraction']/2.+\
+        min_x0 = self.SCREEN['width']*self.params['rf_fraction']/2.+\
                     self.params['convolve_extent_factor']*self.params['rf_size'][1]
-        max_x0 = self.params['screen_width']-min_x0
+        max_x0 = self.SCREEN['width']-min_x0
         # range of y-positions for the cellular RFs
-        min_y0 = self.params['screen_height']*self.params['rf_fraction']/2.+\
+        min_y0 = self.SCREEN['height']*self.params['rf_fraction']/2.+\
                     self.params['convolve_extent_factor']*self.params['rf_size'][1]
-        max_y0 = self.params['screen_height']-min_y0
+        max_y0 = self.SCREEN['height']-min_y0
                                                        
         self.RF_PROPS = {
             'x0':[min_x0, max_x0],
@@ -100,30 +88,8 @@ class earlyVis_model:
             'psi':self.params['rf_psi']
         }
         
-    def screen_plot(self, array,
-                    ax=None,
-                    Ybar_label='',
-                    Xbar_label='10$^o$'):
-        if ax is None:
-            fig, ax = self.ge.figure()
-        else:
-            fig = None
-        self.ge.twoD_plot(self.SCREEN['x_2d'].flatten(),
-                          self.SCREEN['y_2d'].flatten(),
-                          array.flatten(),
-                          vmin=0, vmax=1,
-                          colormap=self.ge.binary,
-                          ax=ax)
-        self.ge.draw_bar_scales(ax,
-                                Xbar=10., Ybar_label=Ybar_label,
-                                Ybar=10., Xbar_label=Xbar_label,
-                                xyLoc=(-0.02*self.params['screen_width'],
-                                       1.02*self.params['screen_height']),
-                                loc='left-top')
-        ax.axis('equal')
-        ax.axis('off')
-        return fig, ax
-        
+    def screen_plot(self, array, **args):
+        screen_plot(array, self.ge, self.SCREEN, **args)
 
     def draw_cell_RF_properties(self, seed,
                                 clustered_features=True,
