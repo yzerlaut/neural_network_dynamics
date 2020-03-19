@@ -5,12 +5,12 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 
 from datavyz.main import graph_env
 from vision.gabor_filters import gabor
-from vision.stimuli import setup_screen, screen_plot, screen_params0
-
+from vision.stimuli import setup_screen, screen_plot, screen_params0, stim_params0, visual_stimulus
+from vision.virtual_eye_movement import virtual_eye_movement, vem_params0
 
 params0 = {
     #
-    'Ncells':100,
+    'Ncells':2,
     # receptive fields
     'rf_fraction':.4, # fraction of visual space covered by the cells, fraction of the screen 
     'rf_size':[0.2, 0.5], # degrees
@@ -29,10 +29,12 @@ params0 = {
     # # virtual eye movement
     'duration_distance_slope':1.9e-3, # degree/s
     'duration_distance_shift':63e-3, # s
-    # numerical simulations
+    # simulation params
     'dt':10e-3,
-    'tstop':1.,
+    'tstop':1,
 }
+
+full_params0 = {**params0, **screen_params0, **stim_params0, **vem_params0}
 
 class earlyVis_model:
     """
@@ -47,25 +49,44 @@ class earlyVis_model:
     
     def __init__(self,
                  params=None,
-                 screen_params=None,
                  graph_env_key='visual_stim'):
         
         if params is not None:
             self.params = params
         else:
-            self.params = params0 # above params by default
+            self.params = full_params0 # above params by default
 
-        if screen_params is not None:
-            self.screen_params = screen_params
-        else:
-            self.screen_params = screen_params0 # from stimuli.py
-            
-        self.SCREEN = setup_screen(self.screen_params)
+        self.SCREEN = setup_screen(self.params)
         
         self.setup_RF_props()
+
+        self.visual_stim = None
+        self.dt_screen = 1./self.params['screen_refresh_rate']
+        self.t_screen = np.arange(int(self.params['tstop']/self.dt_screen))*self.dt_screen
+        
+        self.eye_movement = None
         
         self.ge = graph_env(graph_env_key)
+        
+        self.t = np.arange(int(self.params['tstop']/self.params['dt']))*self.params['dt']
 
+        
+    def init_visual_stim(self, stimulus_key='', seed=1):
+        """ all parameters have to be lumped in self.params """
+        self.visual_stim = visual_stimulus(stimulus_key,
+                                           stimulus_params=self.params,
+                                           screen_params=self.params)
+
+    def init_eye_movement(self, eye_movement_key, seed=1):
+        """ all parameters have to be lumped in self.params """
+        boundary_extent_limit = max(self.params['rf_size'])*self.params['convolve_extent_factor']
+        self.eye_movement = virtual_eye_movement(eye_movement_key,
+                                                 self.t_screen,
+                                                 params=self.params,
+                                                 boundary_extent_limit=boundary_extent_limit,
+                                                 seed=seed,
+                                                 screen_params=self.params)
+        
         
     def setup_RF_props(self):
 
@@ -87,10 +108,12 @@ class earlyVis_model:
             'theta':self.params['rf_theta'],
             'psi':self.params['rf_psi']
         }
+
         
     def screen_plot(self, array, **args):
-        screen_plot(array, self.ge, self.SCREEN, **args)
+        screen_plot(self.ge, array, self.SCREEN, **args)
 
+        
     def draw_cell_RF_properties(self, seed,
                                 clustered_features=True,
                                 n_clustering=5):
@@ -140,7 +163,10 @@ class earlyVis_model:
                 norm_factor = 1.
 
 
-            return gb/norm_factor, cond_x, cond_y
+            if norm_factor>0:
+                return gb/norm_factor, cond_x, cond_y
+            else:
+                return 0, cond_x, cond_y
 
         else:
             if normalized:
@@ -148,7 +174,10 @@ class earlyVis_model:
             else:
                 norm_factor = 1.
 
-            return gb/norm_factor
+            if norm_factor>0:
+                return gb/norm_factor
+            else:
+                return 0
                 
     def plot_RF_properties(self):
         
@@ -183,21 +212,64 @@ class earlyVis_model:
 
         iterator = itertools.product(self.SCREEN['xd_1d'][cond_x], self.SCREEN['yd_1d'][cond_y])
 
-        if array.shape==gb.shape:
-            tot = 0
-            for i, j in iterator:
-                tot += gb[i,j]*array[i,j]
-        elif array[0, :, :].shape==gb.shape:
-            tot = np.zeros(array.shape[0])
-            for it in len(tot):
-                for i, j in iterator:
-                    tot[it] += gb[i,j]*array[it, i, j]
-        else:
-            print('uable to match array shape')
-            tot=None
-
+        tot = 0
+        for i, j in iterator:
+            tot += gb[i,j]*array[i,j]
         return tot
+    
+        # if array.shape==gb.shape:
+        #     tot = 0
+        #     for i, j in iterator:
+        #         tot += gb[i,j]*array[i,j]
+        # elif array[0, :, :].shape==gb.shape:
+        #     tot = np.zeros(array.shape[0])
+        #     for it in len(tot):
+        #         for i, j in iterator:
+        #             tot[it] += gb[i,j]*array[it, i, j]
+        # else:
+        #     print('unable to match array shape')
+        #     tot=None
+        # return tot
 
+    def RF_filtering(self, icell_range='all'):
+        """
+        needs to pass visual_stim and eye_movement objects from stimli.py and virtual_eye_movement.py
+
+        based on t_screen, no need to have it faster that this
+        """
+        if icell_range is 'all':
+            icell_range = np.arange(self.params['Ncells'], dtype=int)
+            
+        RF_filtered = np.zeros((len(icell_range), len(self.t_screen)))
+        
+        if (self.visual_stim is None) or (self.eye_movement is None):
+            print("""
+            /!\ Need to instantiate "visual_stim" and "eye_movement" to get a RF response
+                     --> returning null activity
+            """)
+        else: #
+            print('[...] Performing RF filtering of the visual input')
+            for it, tt in enumerate(self.t_screen):
+                vis = self.visual_stim.get(tt)
+                em_x, em_y = self.eye_movement.x[it], self.eye_movement.y[it]
+                for icell in icell_range:
+                    RF_filtered[icell, it] = self.convol_func_gabor_restricted(vis, icell, em_x, em_y)
+                
+        return RF_filtered
+
+    def save_RF_filtered_data(self, filename, RF_filtered):
+
+        data = self.params
+        data['CELLS'] = self.CELLS
+        data['t_screen'] = self.t_screen
+        data['RF_filtered'] = RF_filtered
+
+        if '.npz' not in filename:
+            np.savez(filename+'.npz', **data)
+        else:
+            np.savez(filename, **data)
+
+        
     #################################
     ### LNP MODEL IMPLEMENTATION ####
     #################################
@@ -242,9 +314,31 @@ class earlyVis_model:
 
         
 if __name__=='__main__':
-    model = earlyVis_model()
-    model.draw_cell_RF_properties(3, clustered_features=False)
-    model.plot_RF_properties()
+
+    model = earlyVis_model(graph_env_key='manuscript')
+    
+    # model.draw_cell_RF_properties(3, clustered_features=False)
+
+    # model.init_visual_stim('drifting-grating')
+    # model.init_eye_movement('saccadic')
+
+    # RF = model.RF_filtering()
+    # model.save_RF_filtered_data('data.npz', RF)
+
+    data = np.load('data.npz')
+    
+    # # model.plot_RF_properties()
+    # model.ge.plot(data['t_screen'], Y=data['RF_filtered'], fig_args={'figsize':(3,1)})
+
+    from scipy.interpolate import interp1d
+    new_t = np.linspace(data['t_screen'][0], data['t_screen'][-1], 1000)
+    def extrapolate_RF_trace(trace, old_t, new_t):
+        interp = interp1d(old_t, trace, kind='quadratic')
+        return interp(new_t)
+    RF2 = [extrapolate_RF_trace(rf, data['t_screen'], new_t) for rf in data['RF_filtered']]
+    fig, ax = model.ge.figure(figsize=(3,1))
+    model.ge.plot(data['t_screen'], Y=data['RF_filtered'], ax=ax)
+    model.ge.plot(new_t, Y=RF2, ax=ax)
     model.ge.show()
 
 

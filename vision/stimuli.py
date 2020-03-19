@@ -5,7 +5,6 @@ from scipy.interpolate import RectBivariateSpline, interp2d
 import itertools, string, sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 
-from datavyz.main import graph_env
 from datavyz.images import load
 from analyz.signal_library.classical_functions import gaussian_2d
 
@@ -25,8 +24,8 @@ stim_params0 = {
     'cycle_per_second':2.,
     'spatial_freq':0.2,
     'static':False,
-    't0':0, # in seconds
-    'tstop':5, # in seconds
+    'stim_tstart':0, # in seconds
+    'stim_tend':5, # in seconds
     # sparse noise
     'noise_mean_refresh_time':0.5, # in s
     'noise_rdm_jitter_refresh_time':0.2, # in s
@@ -47,6 +46,7 @@ def img_after_hist_normalization(img):
     for NATURAL IMAGES:
     histogram normalization to get comparable images
     """
+    print('2) Performing histogram normalization [...]')
     flat = np.array(1000*img.flatten(), dtype=int)
 
     cumsum = np.cumsum(np.histogram(flat, bins=np.arange(1001))[0])
@@ -58,6 +58,8 @@ def img_after_hist_normalization(img):
 
 def adapt_to_screen_resolution(img, SCREEN):
 
+    print('1) Adapting image to chosen screen resolution [...]')
+    
     old_X = np.linspace(0, SCREEN['width'], img.shape[0])
     old_Y = np.linspace(0, SCREEN['height'], img.shape[1])
     
@@ -66,29 +68,9 @@ def adapt_to_screen_resolution(img, SCREEN):
 
     new_img = np.zeros((SCREEN['Xd_max'], SCREEN['Yd_max']))
 
-    print('Adapting image to chosen screen resolution [...]')
-    for i in range(len(new_X)):
-        
-        # find x location for interpol
-        ix = np.arange(len(old_X)-1)[(old_X[1:]>=new_X[i]) & (old_X[:-1]<=new_X[i])]
-        xinterp = old_X[min([ix[0], len(old_X)-2]):min([ix[0]+2, len(old_X)-1])]
-        
-        for j in range(len(new_Y)):
-
-            iy = np.arange(len(old_Y)-1)[(old_Y[1:]>=new_Y[j]) & (old_Y[:-1]<=new_Y[j])]
-            yinterp = old_Y[min([iy[0], len(old_Y)-2]):min([iy[0]+2, len(old_Y)-1])]
-
-            zinterp = img[min([ix[0], len(old_X)-2]):min([ix[0]+2, len(old_X)-1]), min([iy[0], len(old_Y)-2]):min([iy[0]+2, len(old_Y)-1])]
-
-            if zinterp.shape!=(2,2):
-                new_img[i,j] = img[ix[0],iy[0]]
-            else:
-                # make linear interpol around those points
-                spline_approx = interp2d(xinterp, yinterp,zinterp)
-                # build pixel value based on this approx
-                new_img[i,j] = spline_approx(new_X[i], new_Y[j])
-    print('[ok] -> Image adapted')
-    return new_img
+    spline_approx = interp2d(old_X, old_Y, img.T, kind='linear')
+    
+    return spline_approx(new_X, new_Y).T
     
     
 def setup_screen(params):
@@ -116,8 +98,8 @@ def setup_screen(params):
     
     return SCREEN
 
-def screen_plot(array,
-                graph_env,
+def screen_plot(graph_env,
+                array,
                 SCREEN,
                 ax=None,
                 Ybar_label='',
@@ -133,6 +115,7 @@ def screen_plot(array,
     graph_env.matrix(array,
                      colormap=graph_env.binary_r,
                      bar_legend=None,
+                     vmin=0, vmax=1,
                      ax=ax)
     
     graph_env.draw_bar_scales(ax,
@@ -150,10 +133,11 @@ def screen_plot(array,
 class visual_stimulus:
 
     def __init__(self,
-                 stimulus_key='drifting-grating',
+                 stimulus_key='',
                  stimulus_params=None,
                  screen_params=None,
-                 graph_env_key='visual_stim'):
+                 stim_number=1,
+                 seed=1):
 
         if screen_params is not None:
             self.screen_params = screen_params
@@ -167,8 +151,6 @@ class visual_stimulus:
             
         self.SCREEN = setup_screen(self.screen_params)
         
-        self.ge = graph_env(graph_env_key)
-
         self.initialize_screen_time_axis()
         
         if stimulus_key=='grating':
@@ -176,23 +158,29 @@ class visual_stimulus:
         elif stimulus_key=='drifting-grating':
             self.drifting_grating()
         elif stimulus_key=='sparse-noise':
-            self.sparse_noise()
+            self.sparse_noise(seed=seed)
         elif stimulus_key=='gaussian-blob':
             self.gaussian_blob_static()
         elif stimulus_key=='gaussian-blob-appearance':
             self.gaussian_blob_appearance()
         elif stimulus_key=='natural-images':
-            self.natural_images()
-        else: # static grating by default
-            self.static_grating()
+            self.natural_images(image_number=stim_number)
+        elif stimulus_key=='black_screen': # grey screen by default
+            self.black_screen()
+        elif stimulus_key=='grey_screen': # grey screen by default
+            self.grey_screen()
+        elif stimulus_key=='white_screen': # grey screen by default
+            self.white_screen()
+        else: # grey screen by default
+            self.grey_screen()
 
 
     def initialize_screen_time_axis(self):
         """
         initialize time array based on refresh rate
         """
-        self.t0 = self.stimulus_params['t0']
-        self.tstop = self.stimulus_params['tstop']
+        self.t0 = self.stimulus_params['stim_tstart']
+        self.tstop = self.stimulus_params['stim_tend']
         self.iTmax = int((self.tstop-self.t0)*self.SCREEN['refresh_rate'])+1
         self.screen_time_axis = self.t0+np.arange(self.iTmax)/self.SCREEN['refresh_rate']
 
@@ -208,14 +196,11 @@ class visual_stimulus:
         """
         return self.full_array[self.from_time_to_array_index(t), :, :]
     
-    def screen_plot(self, array,
+    def screen_plot(self, array, ge,
                     ax=None,
                     Ybar_label='',
                     Xbar_label='10$^o$'):
-        return screen_plot(array,
-                           self.ge,
-                           self.SCREEN,
-                           ax=ax)
+        return screen_plot(array, ge, self.SCREEN, ax=ax)
 
     ###################################################################
     ################### SET OF DIFFERENT STIMULI ######################
@@ -229,6 +214,18 @@ class visual_stimulus:
         self.stimulus_params['static'] = True
         self.full_array = np.zeros((1, self.SCREEN['Xd_max'], self.SCREEN['Yd_max']))
     
+    def grey_screen(self):
+        self.initialize_static()
+        self.full_array[0,:,:] = 0.*self.SCREEN['x_2d']+0.5
+
+    def black_screen(self):
+        self.initialize_static()
+        self.full_array[0,:,:] = 0.*self.SCREEN['x_2d']
+
+    def white_screen(self):
+        self.initialize_static()
+        self.full_array[0,:,:] = 0.*self.SCREEN['x_2d']+1.
+        
     def drifting_grating(self):
 
         self.initialize_dynamic()
@@ -339,7 +336,7 @@ class visual_stimulus:
         self.initialize_static()
         stim_params = self.stimulus_params
 
-        
+       
         filename = os.listdir(stim_params['NI_directory'])[image_number]
         img = load(os.path.join(stim_params['NI_directory'], filename))
 
@@ -351,18 +348,22 @@ class visual_stimulus:
 if __name__=='__main__':
 
     
+    from datavyz.main import graph_env
+    
     stim = visual_stimulus(sys.argv[-1])
 
+    ge = graph_env('visual_stim')
+
     if stim.stimulus_params['static']:
-        stim.screen_plot(stim.full_array[0,:,:])
+        stim.screen_plot(ge, stim.full_array[0,:,:])
     else:
-        stim.ge.movie(stim.full_array[::10,:,:],
-                      time=stim.screen_time_axis[::10],
-                      cmap=stim.ge.binary_r,
-                      vmin=0, vmax=1,
-                      annotation_text='t=%.2fs')
+        ge.movie(stim.full_array[::10,:,:],
+                 time=stim.screen_time_axis[::10],
+                 cmap=ge.binary_r,
+                 vmin=0, vmax=1,
+                 annotation_text='t=%.2fs')
     
-    stim.ge.show()
+    ge.show()
     
 
 
