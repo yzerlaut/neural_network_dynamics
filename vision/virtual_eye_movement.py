@@ -59,7 +59,7 @@ class virtual_eye_movement:
         self.t = t
 
         if eye_movement_key is 'saccadic':
-            self.init_saccadic_eye_movement()
+            self.init_saccadic_eye_movement(seed+3)
         else:
             self.init_fixed_gaze_at_center()
 
@@ -67,8 +67,9 @@ class virtual_eye_movement:
     def init_fixed_gaze_at_center(self):
         self.x = 0*self.t+self.SCREEN['width']/2.
         self.y = 0*self.t+self.SCREEN['height']/2.
+        self.events = []
 
-    def init_saccadic_eye_movement(self):
+    def init_saccadic_eye_movement(self, seed=1):
         """
         saccadic eve movement limited by the RF boundaries
         """
@@ -77,6 +78,8 @@ class virtual_eye_movement:
         self.events = [50e-3]
         self.x = 0*self.t+self.SCREEN['width']/2.
         self.y = 0*self.t+self.SCREEN['height']/2.
+
+        np.random.seed(seed)
 
         while self.events[-1]<self.t[-1]:
             self.X.append(np.random.uniform(self.boundary_extent_limit,\

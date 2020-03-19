@@ -14,7 +14,7 @@ screen_params0 = {
     # units of the visual field is degree
     'screen_width':16./9.*30, # degree
     'screen_height':30.,
-    'screen_dpd':8, # dot per degree (dpd)
+    'screen_dpd':10, # dot per degree (dpd)
     'screen_refresh_rate':30., #in Hz
 }
 
@@ -24,7 +24,7 @@ stim_params0 = {
     'cycle_per_second':2.,
     'spatial_freq':0.2,
     'static':False,
-    'stim_tstart':0, # in seconds
+    'stim_tstart':0.2, # in seconds
     'stim_tend':5, # in seconds
     # sparse noise
     'noise_mean_refresh_time':0.5, # in s
@@ -185,8 +185,10 @@ class visual_stimulus:
         self.screen_time_axis = self.t0+np.arange(self.iTmax)/self.SCREEN['refresh_rate']
 
     def from_time_to_array_index(self, t):
-        if self.stimulus_params['static']:
-            return 0
+        if (t<=self.t0):
+             return 0
+        elif self.stimulus_params['static']:
+            return 1
         else:
             return int((t-self.t0)*self.SCREEN['refresh_rate'])
     
@@ -208,23 +210,23 @@ class visual_stimulus:
 
     def initialize_dynamic(self):
         self.stimulus_params['static'] = False
-        self.full_array = np.zeros((len(self.screen_time_axis), self.SCREEN['Xd_max'], self.SCREEN['Yd_max']))
+        self.full_array = np.zeros((len(self.screen_time_axis)+1, self.SCREEN['Xd_max'], self.SCREEN['Yd_max']))
                                    
     def initialize_static(self):
         self.stimulus_params['static'] = True
-        self.full_array = np.zeros((1, self.SCREEN['Xd_max'], self.SCREEN['Yd_max']))
+        self.full_array = np.zeros((2, self.SCREEN['Xd_max'], self.SCREEN['Yd_max']))
     
     def grey_screen(self):
         self.initialize_static()
-        self.full_array[0,:,:] = 0.*self.SCREEN['x_2d']+0.5
+        self.full_array[1,:,:] = 0.*self.SCREEN['x_2d']+0.5
 
     def black_screen(self):
         self.initialize_static()
-        self.full_array[0,:,:] = 0.*self.SCREEN['x_2d']
+        self.full_array[1,:,:] = 0.*self.SCREEN['x_2d']
 
     def white_screen(self):
         self.initialize_static()
-        self.full_array[0,:,:] = 0.*self.SCREEN['x_2d']+1.
+        self.full_array[1,:,:] = 0.*self.SCREEN['x_2d']+1.
         
     def drifting_grating(self):
 
@@ -241,9 +243,8 @@ class visual_stimulus:
         
         for it, t in enumerate(self.screen_time_axis):
             
-            self.full_array[it,:,:] = np.cos(2*np.pi*stim_params['spatial_freq']*x_theta+2.*np.pi*stim_params['cycle_per_second']*t)+.5
+            self.full_array[it+1,:,:] = .5*(1-np.cos(2*np.pi*stim_params['spatial_freq']*x_theta+2.*np.pi*stim_params['cycle_per_second']*(t-self.t0)))
 
-            # plot(x, y, Z, ax, Xbar_label='10$^o$   $\\theta$='+str(int(theta*180/np.pi))+'$^o$')
 
     def static_grating(self):
 
@@ -257,7 +258,7 @@ class visual_stimulus:
         x_theta = (self.SCREEN['x_2d']-self.SCREEN['x_center']) * np.cos(stim_params['theta']) + (self.SCREEN['y_2d']-self.SCREEN['y_center']) * np.sin(stim_params['theta'])
         y_theta = -(self.SCREEN['x_2d']-self.SCREEN['x_center']) * np.sin(stim_params['theta']) + (self.SCREEN['y_2d']-self.SCREEN['y_center']) * np.cos(stim_params['theta'])
 
-        self.full_array[0,:,:] = np.sin(2*np.pi*stim_params['spatial_freq']*x_theta)+.5
+        self.full_array[0,:,:] = .5*(1-np.cos(2*np.pi*stim_params['spatial_freq']*x_theta))
 
             
     def sparse_noise(self, seed=0):
@@ -310,7 +311,7 @@ class visual_stimulus:
         spatial *= stim_params['blob_amplitude']/spatial.max()
 
 
-        self.full_array[0,:,:] = spatial
+        self.full_array[1,:,:] = spatial
 
         
     def gaussian_blob_appearance(self):
@@ -327,7 +328,7 @@ class visual_stimulus:
         temporal /= temporal.max()
 
         for i, t in enumerate(self.screen_time_axis):
-            self.full_array[i,:,:] = temporal[i]*spatial
+            self.full_array[i+1,:,:] = temporal[i]*spatial
 
         print(self.full_array.max())    
     
