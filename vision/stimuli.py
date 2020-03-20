@@ -27,10 +27,14 @@ stim_params0 = {
     'stim_tstart':0.2, # in seconds
     'stim_tend':5, # in seconds
     # sparse noise
-    'noise_mean_refresh_time':0.5, # in s
-    'noise_rdm_jitter_refresh_time':0.2, # in s
-    'square_size':5., # in degrees
-    'sparseness':0.05,
+    'SN_noise_mean_refresh_time':0.5, # in s
+    'SN_noise_rdm_jitter_refresh_time':0.2, # in s
+    'SN_square_size':5., # in degrees
+    'SN_sparseness':0.05,
+    # sparse noise
+    'DN_noise_mean_refresh_time':0.5, # in s
+    'DN_noise_rdm_jitter_refresh_time':0.2, # in s
+    'DN_square_size':1., # in degrees
     # gaussian blob & appearance
     'blob_center':[25.,15.],
     'blob_size':[2.,2.],
@@ -98,37 +102,6 @@ def setup_screen(params):
     
     return SCREEN
 
-def screen_plot(graph_env,
-                array,
-                SCREEN,
-                ax=None,
-                Ybar_label='',
-                Xbar_label='10$^o$'):
-    """
-    plotting screeen display within a graph_env
-    """
-    if ax is None:
-        fig, ax = graph_env.figure()
-    else:
-        fig = None
-        
-    graph_env.matrix(array,
-                     colormap=graph_env.binary_r,
-                     bar_legend=None,
-                     vmin=0, vmax=1,
-                     ax=ax)
-    
-    graph_env.draw_bar_scales(ax,
-                              Xbar=10.*SCREEN['dpd'], Ybar_label=Ybar_label,
-                              Ybar=10.*SCREEN['dpd'], Xbar_label=Xbar_label,
-                              xyLoc=(-0.02*SCREEN['Xd_max'],
-                                     1.02*SCREEN['Yd_max']),
-                              loc='left-top')
-    
-    ax.axis('equal')
-    ax.axis('off')
-    return fig, ax
-
 
 class visual_stimulus:
 
@@ -159,6 +132,8 @@ class visual_stimulus:
             self.drifting_grating()
         elif stimulus_key=='sparse-noise':
             self.sparse_noise(seed=seed)
+        elif stimulus_key=='dense-noise':
+            self.dense_noise(seed=seed)
         elif stimulus_key=='gaussian-blob':
             self.gaussian_blob_static()
         elif stimulus_key=='gaussian-blob-appearance':
@@ -198,12 +173,6 @@ class visual_stimulus:
         """
         return self.full_array[self.from_time_to_array_index(t), :, :]
     
-    def screen_plot(self, array, ge,
-                    ax=None,
-                    Ybar_label='',
-                    Xbar_label='10$^o$'):
-        return screen_plot(array, ge, self.SCREEN, ax=ax)
-
     ###################################################################
     ################### SET OF DIFFERENT STIMULI ######################
     ###################################################################
@@ -268,31 +237,31 @@ class visual_stimulus:
                                    
         stim_params = self.stimulus_params
         
-        for key in ['square_size', 'sparseness', 'noise_mean_refresh_time', 'noise_rdm_jitter_refresh_time']:
+        for key in ['SN_square_size', 'SN_sparseness', 'SN_noise_mean_refresh_time', 'SN_noise_rdm_jitter_refresh_time']:
             if key not in stim_params:
                 raise Exception
 
             
-        Nx = np.floor(self.SCREEN['width']/stim_params['square_size'])
-        Ny = np.floor(self.SCREEN['height']/stim_params['square_size'])
+        Nx = np.floor(self.SCREEN['width']/stim_params['SN_square_size'])
+        Ny = np.floor(self.SCREEN['height']/stim_params['SN_square_size'])
 
         Ntot_square = Nx*Ny
-        nshift = int((self.tstop-self.t0)/stim_params['noise_mean_refresh_time'])+10
-        events = np.cumsum(np.abs(stim_params['noise_mean_refresh_time']+\
-                                  np.random.randn(nshift)*stim_params['noise_rdm_jitter_refresh_time']))
+        nshift = int((self.tstop-self.t0)/stim_params['SN_noise_mean_refresh_time'])+10
+        events = np.cumsum(np.abs(stim_params['SN_noise_mean_refresh_time']+\
+                                  np.random.randn(nshift)*stim_params['SN_noise_rdm_jitter_refresh_time']))
         events = np.concatenate([[self.t0], self.t0+events[events<self.tstop], [self.tstop]]) # restrict to stim
 
         x, y = self.SCREEN['x_2d'], self.SCREEN['y_2d']
         for t1, t2 in zip(events[:-1], events[1:]):
             
-            Loc = np.random.choice(np.arange(Ntot_square), int(stim_params['sparseness']*Ntot_square), replace=False)
-            Val = np.random.choice([0, 1], int(stim_params['sparseness']*Ntot_square))
+            Loc = np.random.choice(np.arange(Ntot_square), int(stim_params['SN_sparseness']*Ntot_square), replace=False)
+            Val = np.random.choice([0, 1], int(stim_params['SN_sparseness']*Ntot_square))
 
             Z = 0.5+0.*x
             
             for r, v in zip(Loc, Val):
-                x0, y0 = (r % Nx)*stim_params['square_size'], int(r / Nx)*stim_params['square_size']
-                cond = (x>=x0) & (x<x0+stim_params['square_size']) & (y>=y0) & (y<y0+stim_params['square_size'])
+                x0, y0 = (r % Nx)*stim_params['SN_square_size'], int(r / Nx)*stim_params['SN_square_size']
+                cond = (x>=x0) & (x<x0+stim_params['SN_square_size']) & (y>=y0) & (y<y0+stim_params['SN_square_size'])
                 Z[cond] = v
 
             it1 = self.from_time_to_array_index(t1)
@@ -300,6 +269,49 @@ class visual_stimulus:
 
             self.full_array[it1:it2,:,:] = Z
 
+
+    def dense_noise(self, seed=0):
+
+        self.initialize_dynamic()
+        np.random.seed(seed)
+                                   
+        stim_params = self.stimulus_params
+        
+        for key in ['DN_square_size', 'DN_noise_mean_refresh_time', 'DN_noise_rdm_jitter_refresh_time']:
+            if key not in stim_params:
+
+                print('-----------------------------')
+                print(' /!\\ PARAMETER MISSING ! /!\\')
+                raise Exception
+
+            
+        Nx = np.floor(self.SCREEN['width']/stim_params['DN_square_size'])
+        Ny = np.floor(self.SCREEN['height']/stim_params['DN_square_size'])
+
+        Ntot_square = Nx*Ny
+        nshift = int((self.tstop-self.t0)/stim_params['DN_noise_mean_refresh_time'])+10
+        events = np.cumsum(np.abs(stim_params['DN_noise_mean_refresh_time']+\
+                                  np.random.randn(nshift)*stim_params['DN_noise_rdm_jitter_refresh_time']))
+        events = np.concatenate([[self.t0], self.t0+events[events<self.tstop], [self.tstop]]) # restrict to stim
+
+        x, y = self.SCREEN['x_2d'], self.SCREEN['y_2d']
+        for t1, t2 in zip(events[:-1], events[1:]):
+            
+            Loc = np.arange(int(Ntot_square))
+            Val = np.random.choice([0, 1], int(Ntot_square))
+
+            Z = 0.5+0.*x
+            
+            for r, v in zip(Loc, Val):
+                x0, y0 = (r % Nx)*stim_params['DN_square_size'], int(r / Nx)*stim_params['DN_square_size']
+                cond = (x>=x0) & (x<x0+stim_params['DN_square_size']) & (y>=y0) & (y<y0+stim_params['DN_square_size'])
+                Z[cond] = v
+
+            it1 = self.from_time_to_array_index(t1)
+            it2 = self.from_time_to_array_index(t2)
+
+            self.full_array[it1:it2,:,:] = Z
+            
     def gaussian_blob_static(self, seed=0):
 
         self.initialize_static()
@@ -349,22 +361,18 @@ class visual_stimulus:
 if __name__=='__main__':
 
     
-    from datavyz.main import graph_env
+    from plots import plot
     
     stim = visual_stimulus(sys.argv[-1])
-
-    ge = graph_env('visual_stim')
-
-    if stim.stimulus_params['static']:
-        stim.screen_plot(ge, stim.full_array[0,:,:])
-    else:
-        ge.movie(stim.full_array[::10,:,:],
-                 time=stim.screen_time_axis[::10],
-                 cmap=ge.binary_r,
-                 vmin=0, vmax=1,
-                 annotation_text='t=%.2fs')
     
-    ge.show()
+    stim_plot= plot(stimulus=stim, graph_env_key='visual_stim')
+    
+    if stim.stimulus_params['static']:
+        stim_plot.screen_plot(stim.full_array[0,:,:])
+    else:
+        stim_plot.screen_movie(stim)
+    
+    stim_plot.show()
     
 
 

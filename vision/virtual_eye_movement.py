@@ -6,7 +6,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 
 from datavyz.main import graph_env
 
-from vision.stimuli import setup_screen, screen_plot, screen_params0
+from vision.stimuli import setup_screen, screen_params0
 
 vem_params0 = {
     'saccade_duration_distance_slope':1.9e-3, # degree/s
