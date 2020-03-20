@@ -203,7 +203,8 @@ class earlyVis_model:
         for i, spk in enumerate(self.SPIKES):
             AX[-1][0].scatter(spk, i*np.ones(len(spk)), s=3, color=self.ge.brown)
         self.ge.set_plot(AX[-1][0], ylabel='cell ID', xlabel='time (s)')
-            
+
+        return fig
         
     def draw_cell_RF_properties(self, seed,
                                 clustered_features=True,
@@ -458,11 +459,12 @@ if __name__=='__main__':
     # model.full_process('drifting-grating', 'saccadic', seed=3)
     # model.full_process('drifting-grating', '', seed=3)
     
-    # model.half_process1('drifting-grating', '', seed=3)
-    # model.save_RF_filtered_data('data.npz')
+    model.half_process1('sparse-noise', 'saccadic', seed=3)
+    model.save_RF_filtered_data('data.npz')
     
     model.load_RF_filtered_data('data.npz')
     model.half_process2()
     
-    model.protocol_plot()
+    fig = model.protocol_plot()
+    fig.savefig('docs/fig2.png')
     model.ge.show()

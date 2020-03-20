@@ -9,10 +9,12 @@ Correspondence: yann.zerlaut@icm-institute.org
 
 \begin{itemize}
 \item We build a minimal model of the early visual system in mouse
-\item The model relies on considering the visual pathway up to Layer 4 as a set of gabor filters randomly sampling the visual space 
+\item We add a virtual saccadic eye movement to model the active exploration of the visual space in awake mouse
+\item The model relies on considering the visual pathway up to Layer 4 as a set of gabor filters randomly sampling the visual space
 \item Single cell receptive fields vary randomly in: 1) spatial location, 2) spatial frequency, 3) spatial extent, 4) excentricity
 \item Filters define simple and complex cells
-\item Linear-Nonlinear-Poisson (LNP) model translate gabor filtering of visual stimuli into action potentials in Layer 4.
+\item Temporal filtering implements delay and adaptation in the early visual system
+\item Linear-Nonlinear-Poisson (LNP) model translate spatial and temporal filtering of visual stimuli into action potentials in Layer 4.
 \item We study the response to various visual stimuli: drifting gratings, dense noise, natural images, natural movies, ...
 \item We generate sample electrophysiological traces
 \item We generate sample traces of Ca$^{2+}$ imaging experiments in response to experimental characterizations
@@ -54,6 +56,9 @@ We vary those factors independently in Figure {gabor}.
 
 [[Figure {gabor} around here]]
 
+*** Saccadic eye movement
+
+Adapted from Baudot et al. (2013).
 
 *** Drifting gratings stimuli
 
@@ -80,6 +85,11 @@ Following Stringer et al. (2019).
 
 [[Figure {SN} around here]]
 
+[[Figure {DG} around here]]
+
+[[Figure {SN-SEM} around here]]
+
+
 * Figures
 
 *** Physical and biological spaces considered in the model.
@@ -94,9 +104,17 @@ From a standard configuration in *a* defined by: a center $\vec{x_0}$=(2,2), an 
 #+options : {'label':'gratings', 'extent':'doublecolumn', 'file':'gratings.png', 'wrapfig':True, 'width':.75}
 Example of a set of 6 different gratings separated by 30$^o$ each.
 
-*** Gratings stimuli
+*** Sparse noise stimuli
 #+options : {'label':'SN', 'extent':'doublecolumn', 'file':'sparse-noise.png', 'wrapfig':True, 'width':.75}
 Six realisations of the sparse noise stimulus.
+
+*** Response to drifting gratings
+#+options : {'label':'DG', 'extent':'doublecolumn', 'file':'fig1.png'}
+Showing three cells.
+
+*** Response to sparse noise with saccadic eye movement
+#+options : {'label':'SN-SEM', 'extent':'doublecolumn', 'file':'fig2.png'}
+Showing three cells.
 
 
 * Tables
