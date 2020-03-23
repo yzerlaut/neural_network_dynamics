@@ -140,8 +140,8 @@ $f$={freq}
     gabor_plot(ge, new_parameters, AX[5][1], title='$\\psi$=$\pi$/4')
     new_parameters['psi'] = np.pi/2.
     gabor_plot(ge, new_parameters, AX[5][2], title='$\\psi$=$\pi$/2')
-    new_parameters['psi'] = 3*np.pi/4.
-    gabor_plot(ge, new_parameters, AX[5][3], title='$\\psi$=3$\pi$/4')
+    new_parameters['psi'] = 7*np.pi/4.
+    gabor_plot(ge, new_parameters, AX[5][3], title='$\\psi$=7$\pi$/4')
     new_parameters = params.copy()
 
     # beta
