@@ -60,7 +60,7 @@ Individual cells have a spatial dependency to visual inputs model by Gabor filte
 \item $\theta$ the orientation of the gabor filter 
 \item $f$ the spatial frequency
 \item $\Psi$ the spatial phase
-\item $\alpha$ the spatial extent of the filter
+\item $\sigma$ the spatial extent of the filter
 \item $\beta$ the filter's excentricity (i.e. the factor shrinking the spatial extent in the non-prefered orientation direction)
 \end{itemize}
 
@@ -74,14 +74,22 @@ to $\vec{v}$, And it is defined by:
 \label{eq:gabor}
 G(\vec{x}) = \cos\Big( 2 \pi f (\vec{x}-\vec{x_0}) \cdot \vec{u} + \Phi \Big) \,
          e^{\frac{\big((\vec{x}-\vec{x_0}) \cdot \vec{u}\big)^2 +
-                   \beta \big((\vec{x}-\vec{x_0}) \cdot \vec{v}\big)^2}{2 \, \alpha^2}}
+                   \beta \big((\vec{x}-\vec{x_0}) \cdot \vec{v}\big)^2}{2 \, \sigma^2}}
 \end{equation}
 
 We vary those factors independently in Figure {gabor}.
 
-*** Distribution of receptive field over cells
+*** Distribution of receptive field properties over cells
 
-Random:
+For the {Ncells} neurons of our population we draw their properties from random distribution. We use the characterization of Stinger et al. (2019) as an estimate for the distribution of Gabor filter properties.
+
+
+
+[[Figure {cell-props} around here]]
+
+
+As no particular correlation structure between parameters was reported, the features are hypothesized uncorrelated and we draw them independently. 
+
 
 *** Saccadic eye movement
 
@@ -124,7 +132,11 @@ The model aims at describing the transformation between luminescence values on t
 
 *** Gabor filter parametrization.
 #+options : {'label':'gabor', 'extent':'singlecolumn', 'file':'figs/gabor.png'}
-From a standard configuration in *a* defined by: a center $\vec{x_0}$=(2,2), an orientation $\theta$=$0^{o}$, a spatial frequency $f$=1, a spatial extent $\sigma$=0.5, an excentricity $\beta$=1, we vary the parameters of the Gabor function in *b*-*i* (see the annotation in plots for the variations from *a*). 
+From a standard configuration (top left panel, see parameters), we vary the center $\vec{x_0}$, the orientation $\theta$, the spatial frequency $f$, the spatial extent $\sigma$, the spatial phase $\psi$ and the excentricity $\beta$.
+
+*** Receptive field properties over cells
+#+options : {'label':'cell-props', 'extent':'doublecolumn', 'file':'figs/cell-props.png'}
+Distribution of the Gabor filters properties over the {Ncells} of the model. From left to right: the horizontal position of the center $\vec{x_0}$, the vertical position of the center $\vec{x_0}$, the orientation $\theta$, the spatial frequency $f$, the spatial extent $\sigma$, the spatial phase $\psi$ and the excentricity $\beta$. Note the bimodal distribution of the spatial phase $\psi$ parameter.
 
 *** Gratings stimuli
 #+options : {'label':'gratings', 'extent':'doublecolumn', 'file':'figs/gratings.png', 'wrapfig':True, 'width':.75}

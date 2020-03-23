@@ -21,11 +21,11 @@ params0 = {
     # receptive fields
     'clustered_features':True,
     'rf_fraction':.4, # fraction of visual space covered by the cells, fraction of the screen 
-    'rf_size':[0.2, 0.5], # degrees
-    'rf_freq':[0.6, 1.], # cycle per degrees
-    'rf_beta':[1., 2.],
-    'rf_theta':[0., np.pi/2.],
-    'rf_psi':[0., np.pi],
+    'rf_size':[2., 10.], # degrees
+    'rf_freq':[0.02, 0.12], # cycle per degrees
+    'rf_beta':[0.8, 2.5],
+    'rf_theta':[0., np.pi],
+    'rf_psi':[0., 2*np.pi], 'rf_psi_peak1':np.pi, 'rf_psi_peak2':3*np.pi/2, 'rf_psi_Dwidth':np.pi/4,
     'convolve_extent_factor':2., # limit the convolution to thisfactor*rf-width to make comput faster
     # temporal filtering
     'tau_adapt':500e-3,
@@ -142,7 +142,7 @@ class earlyVis_model:
 
             if clustered_features:
                 self.CELLS[key] = np.random.choice(np.linspace(vstart, vend, n_clustering),
-                                              int(self.Ncells))
+                                                   int(self.Ncells))
             else:
                 self.CELLS[key] = np.random.uniform(vstart, vend, size=int(self.Ncells))
 
