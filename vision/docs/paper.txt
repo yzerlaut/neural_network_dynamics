@@ -10,35 +10,61 @@ Correspondence: yann.zerlaut@icm-institute.org
 \begin{itemize}
 \item We build a minimal model of the early visual system in mouse
 \item We add a virtual saccadic eye movement to model the active exploration of the visual space in awake mouse
-\item The model relies on considering the visual pathway up to Layer 4 as a set of gabor filters randomly sampling the visual space
-\item Single cell receptive fields vary randomly in: 1) spatial location, 2) spatial frequency, 3) spatial extent, 4) excentricity
-\item Filters define simple and complex cells
+\item The model relies on considering the visual pathway up to Layer 4 as a set of gabor filters randomly sampling the visual space. Only simple cells considered.
+\item Single cell receptive fields vary randomly in: 1) spatial location, 2) spatial frequency, 3) spatial extent, 4) excentricity, 5) spatial phase.
 \item Temporal filtering implements delay and adaptation in the early visual system
 \item Linear-Nonlinear-Poisson (LNP) model translate spatial and temporal filtering of visual stimuli into action potentials in Layer 4.
-\item We study the response to various visual stimuli: drifting gratings, dense noise, natural images, natural movies, ...
-\item We generate sample electrophysiological traces
-\item We generate sample traces of Ca$^{2+}$ imaging experiments in response to experimental characterizations
+\item We analyze the response of the model to various visual stimuli: static gratings, drifting gratings, sparse noise, dense noise, natural images.
 \end{itemize}
 
 * Methods
 
 *** Physical and biological setting
 
-The physical (visual space) and biological (neuronal space) setting is represented on Figure {geometry}.
+The physical (visual space) and biological (neuronal space) settings are depicted on Figure {geometry}. 
+
+The visual space considered by the model corresponds to the monocular field of a given eye (e.g. left eye on Figure {geometry}) in the visual system of the mouse. 
+
+The visual space is therefore described by the following parameters:
+
+\begin{center}
+\begin{tabular}{c|c|c}
+\textbf{Name} & \textbf{Symbol} & \textbf{Value}\\
+\hline
+Angular width of the visual field & $w_{vf}$ & {width_VF}\(^{o}\)\\
+Angular height of the visual field & $h_{vf}$ & {height_VF}\(^{o}\)\\
+Field center from antero-posterior axis & $c_{vf}$ & {center_VF}\(^{o}\)
+\end{tabular}
+\end{center}
 
 [[Figure {geometry} around here]]
 
-*** Gabor filters
+The neuronal space considered by the model corresponds to the Layer IV network contralateral to the visual space (i.e. right hemisphere on the schematic of Figure {geometry}). Rough estimates of cell densities give $\sim$1000 pyramidal cells in layer IV per 0.2mm$^2$ of cortex (from Makram et al. (2015), density of cells in layer IV is 177.10$^3$neurons/mm$^3$, layer IV height is 200$\mu$m and about half of the cells are pyramidal cells). 
 
-A gabor filter is paramterized by:
+This network is therefore described by the following parameters:
+\begin{center}
+\begin{tabular}{c|c|c}
+\textbf{Name} & \textbf{Symbol} & \textbf{Value} \\
+\hline
+Cell number of Layer IV population & $N^{L4}_{cells}$ & {Ncells} \\
+Area of Layer IV population covered & $A^{L4}_{cells}$ & $\sim${Area_cells}mm$^2$
+\end{tabular}
+\end{center}
+
+*** Gabor filters for the visual receptive fields
+
+Individual cells have a spatial dependency to visual inputs model by Gabor filters. A gabor filter is parametrized by the following quantities:
+
 \begin{itemize}
-\item $\vec{x_0}$ a center position in the 2 dimensional visual space on the screen 
+\item $\vec{x}_{0}$ a center position in the 2 dimensional visual space (in degrees from the center of the visual spaces)
 \item $\theta$ the orientation of the gabor filter 
 \item $f$ the spatial frequency
 \item $\Psi$ the spatial phase
 \item $\alpha$ the spatial extent of the filter
 \item $\beta$ the filter's excentricity (i.e. the factor shrinking the spatial extent in the non-prefered orientation direction)
 \end{itemize}
+
+[[Figure {gabor} around here]]
 
 Defining the vector $\vec{u}$ as the unitary vector of orientation
 $\theta$ and the vector $\vec{v}$ as the unitary vector perpendicular
@@ -53,8 +79,9 @@ G(\vec{x}) = \cos\Big( 2 \pi f (\vec{x}-\vec{x_0}) \cdot \vec{u} + \Phi \Big) \,
 
 We vary those factors independently in Figure {gabor}.
 
+*** Distribution of receptive field over cells
 
-[[Figure {gabor} around here]]
+Random:
 
 *** Saccadic eye movement
 
@@ -89,23 +116,22 @@ Following Stringer et al. (2019).
 
 [[Figure {SN-SEM} around here]]
 
-
 * Figures
 
 *** Physical and biological spaces considered in the model.
-#+options : {'label':'geometry', 'extent':'singlecolumn', 'file':'drawing.png'}
-The model aims at describing the transformation between luminescence values and neuronal activity in the visual cortex.
+#+options : {'label':'geometry', 'extent':'singlecolumn', 'file':'figs/drawing.png'}
+The model aims at describing the transformation between luminescence values on the screen and neuronal activity in the Layer 4 of the visual cortex.
 
-*** Gabor filters
-#+options : {'label':'gabor', 'extent':'singlecolumn', 'width':.7, 'file':'gabor.png'}
-From a standard configuration in *a* defined by: a center $\vec{x_0}$=(2,2), an orientation $\theta$=$0^{o}$, a spatial frequency $f$=1, a spatial extent $\sigma$=0.5, an excentricity $\beta$=1, we vary the parameters of the Gabor function in *b*-*i* (see the annotation in plots for the variations from *a*).
+*** Gabor filter parametrization.
+#+options : {'label':'gabor', 'extent':'singlecolumn', 'file':'figs/gabor.png'}
+From a standard configuration in *a* defined by: a center $\vec{x_0}$=(2,2), an orientation $\theta$=$0^{o}$, a spatial frequency $f$=1, a spatial extent $\sigma$=0.5, an excentricity $\beta$=1, we vary the parameters of the Gabor function in *b*-*i* (see the annotation in plots for the variations from *a*). 
 
 *** Gratings stimuli
-#+options : {'label':'gratings', 'extent':'doublecolumn', 'file':'gratings.png', 'wrapfig':True, 'width':.75}
+#+options : {'label':'gratings', 'extent':'doublecolumn', 'file':'figs/gratings.png', 'wrapfig':True, 'width':.75}
 Example of a set of 6 different gratings separated by 30$^o$ each.
 
 *** Sparse noise stimuli
-#+options : {'label':'SN', 'extent':'doublecolumn', 'file':'sparse-noise.png', 'wrapfig':True, 'width':.75}
+#+options : {'label':'SN', 'extent':'doublecolumn', 'file':'figs/sparse-noise.png', 'wrapfig':True, 'width':.75}
 Six realisations of the sparse noise stimulus.
 
 *** Response to drifting gratings
@@ -116,26 +142,25 @@ Showing three cells.
 #+options : {'label':'SN-SEM', 'extent':'doublecolumn', 'file':'fig2.png'}
 Showing three cells.
 
-
 * Tables
 
-*** Caption for the first table
-#+options : {'label':'Tab1', 'extent':'singlecolumn'}
-Subcaption for the first table
-| Name    |    Phone | Age |
-|---------+----------+-----|
-| Peter   | {blabla} |  17 |
-| Anna    |     4321 |  25 |
-| Patrick |     4321 |  25 |
-\begin{tabular}{l|r|r}
-Name & Phone & Age\\
+*** Parameters of the visual and neuronal space considered.
+#+options : {'label':'space', 'extent':'singlecolumn'}
+Associated to Figure {geometry}.
+| Name                                    | Symbol   | Value | Unit   |
+|-----------------------------------------+----------+-------+--------|
+| Extent of visual field                  | $w_{VF}$ |  50   | $^{o}$ |
+| Center angle from antero-posterior axis | $c_{VF}$ |  45   | $^{o}$ |
+| Distance between screen and eye         | $d_{SE}$ |  20   | cm     |
+\begin{center}
+\begin{tabular}{c|c|c|c}
+Name & Symbol & Value & Unit\\
 \hline
-Peter & {blabla} & 17\\
-\hline
-Anna & 4321 & 25\\
-Patrick & 4321 & 25\\
-\hline
+Angular width of visual field & $w_{VF}$ & 50 & \(^{o}\)\\
+Field center from antero-posterior axis & $c_{VF}$ & 45 & \(^{o}\)\\
+Distance between screen and eye & \(d_{SE}\) & 20 & cm
 \end{tabular}
+\end{center}
 
 *** Caption for the second table
 #+options : {'label':'Tab2', 'extent':'doublecolumn'}
@@ -162,3 +187,8 @@ none & 0 & 0 & 0 & 0\\
 \end{center}
 
 
+
+* ksjdfhskfhj
+
+# \item We generate sample electrophysiological traces
+# \item We generate sample traces of Ca$^{2+}$ imaging experiments in response to experimental characterizations

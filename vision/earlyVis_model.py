@@ -11,8 +11,13 @@ from vision.stimuli import setup_screen, screen_params0, stim_params0, visual_st
 from vision.virtual_eye_movement import virtual_eye_movement, vem_params0
 
 params0 = {
-    #
-    'Ncells':4,
+    # visual space props
+    'width_VF':50, # degree, Angular width of the visual field
+    'height_VF':30, # degree, Angular height of the visual field
+    'center_VF':45, # degree, Field center from antero-posterior axis
+    # neuronal space props
+    'Ncells':1000,
+    'Area_cells':0.1,
     # receptive fields
     'clustered_features':True,
     'rf_fraction':.4, # fraction of visual space covered by the cells, fraction of the screen 
@@ -38,6 +43,7 @@ params0 = {
 }
 
 full_params0 = {**params0, **screen_params0, **stim_params0, **vem_params0}
+np.savez('docs/params.npz', **full_params0)
 
 class earlyVis_model:
     """
