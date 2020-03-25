@@ -37,7 +37,7 @@ params0 = {
     'NL_baseline':0.5,
     'NL_slope_Hz_per_Null':20.,
     # # virtual eye movement
-    'duration_distance_slope':1.9e-3, # degree/s
+    'duration_distance_slope':1.9e-3, # s/degree
     'duration_distance_shift':63e-3, # s
     # simulation params
     'dt':10e-3,

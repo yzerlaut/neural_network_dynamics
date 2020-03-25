@@ -146,14 +146,14 @@ Eye-movements are classically decomposed into intermittent ballistic movements, 
 Here, we restrict our model of the retinal flow to the large-amplitude saccadic movement and neglect the high-frequency microsaccades. The large amplitude saccades was modelled as a trajectory between randomly picked positions within the modelled field of view of the animal (see Figure {geometry}). The intersaccadic intervals were then calculated using a linear approximation of the relationship established for saccadic and head gaze movements in the freely behaving cat (Collewijn, 1977). The relationship between sacccade amplitude ($A_S$) and saccade duration $D_S$ was:
 
 \begin{equation}
-D_S = \alpha_{DA} \cdot A_S + D_S^{min}
+D_S = \Gamma_{DA} \cdot A_S + D_S^{min}
 \end{equation}
 where $D_S$ is expressed in ms and $A_s$ in steradian degrees ($^o$) of visual angle, with the parameters:
 \begin{center}
 \begin{tabular}{c|c|c}
 \textbf{Name} & \textbf{Symbol} & \textbf{Value} \\
 \hline
-Duration-Amplitude slope of saccades & \alpha_{DA} & {saccade_duration_distance_slope}$^o$/s \\
+Duration-Amplitude slope of saccades & \Gamma_{DA} & {saccade_duration_distance_slope}s/$^o$ \\
 Minimum saccadde duration  & D_S^{min} & {saccade_duration_distance_shift}s
 \end{tabular}
 \end{center}
@@ -162,19 +162,63 @@ An example of a saccadic eye movement is shown in Figure {SEM-model}.
 
 *** Set of visual stimuli
 
-[[Figure {stimuli} around here]]
+[[Figure {static-stimuli} around here]]
 
-To feed the model, we implemented a set of visual stimuli classically used in visual neuroscience. We provide a graphical illustration of those stimuli in Figure {stimuli} as well as a description below with their parameters:
+[[Figure {dynamic-stimuli} around here]]
+
+To feed the model, we implemented a set of visual stimuli classically used in visual neuroscience. We provide a graphical illustration of those stimuli in Figure {static-stimuli} and Figure {dynamic-stimuli} as well as a description below with their parameters.
+
+We implement two classes of stimuli: 1) static stimuli, i.e. stimuli where the visual contant is fixed over time (though possibly with a delayed onset to have the ability to analyze stimulus-evoked activity) and 2) dynamic stimuli, the content displayed in the visual space is changing over time.
+
+*** Static stimuli
+
+The list of implemented static stimuli is the following:
 
 \begin{enumerate}
 
-\item \underline{Static gratings}
+\item \underline{gratings}
       \begin{itemize}
       \item \bf full-field, static \normalfont
       \item spatial frequency was 0.05 cycles per degree
       \item 0.5s each
       \item evenly spaced in terms of directions (if 5 gratings)
       \end{itemize}
+
+\item \underline{center gratings}
+      \begin{itemize}
+      \item \bf full-field, static \normalfont
+      \item spatial frequency was 0.05 cycles per degree
+      \item 0.5s each
+      \item evenly spaced in terms of directions (if 5 gratings)
+      \end{itemize}
+
+\item \underline{surround gratings}
+      \begin{itemize}
+      \item \bf full-field, static \normalfont
+      \item spatial frequency was 0.05 cycles per degree
+      \item 0.5s each
+      \item evenly spaced in terms of directions (if 5 gratings)
+      \end{itemize}
+
+\item \underline{white screen}
+      \begin{itemize}
+      \item \bf full-field \normalfont, norm luminance set to 1
+      \end{itemize}
+\item \underline{dark screen}
+      \begin{itemize}
+      \item \bf full-field \normalfont, norm luminance set to 0
+      \end{itemize}
+\item \underline{grey screen}
+      \begin{itemize}
+      \item \bf full-field \normalfont, norm luminance set to 0.5
+      \end{itemize}
+\end{enumerate}
+
+*** Dynamic stimuli
+
+The list of implemented static stimuli is the following:
+
+\begin{enumerate}
 
 \item \underline{Drifting gratings}
       \begin{itemize}
@@ -199,7 +243,6 @@ To feed the model, we implemented a set of visual stimuli classically used in vi
       \item squares of size 5$^o$
       \item update every 200ms
       \end{itemize}
-
 \end{enumerate}
 
 * Figures
@@ -227,8 +270,12 @@ On the top plot, we show an example input signal designed for illustration purpo
 #+options : {'label':'SEM-model', 'extent':'singlecolumn', 'file':'figs/SEM-model.png', 'page_position':'t!'}
 Showing the SEM on the image (top plot, the color gradient codes for time) together with its horizontal (x) and vertical (y) projection over time (bottom plots, same color code as top plot). The thin dashed line correspond to the center of the visual field.
 
-*** Bank of stimuli.
-#+options : {'label':'stimuli', 'extent':'doublecolumn', 'file':'figs/stimuli.png'}
+*** Static stimuli.
+#+options : {'label':'static-stimuli', 'extent':'doublecolumn', 'file':'figs/static-stimuli.png'}
+Example of a set of 6 different gratings separated by 30$^o$ each.
+
+*** Dynamic stimuli.
+#+options : {'label':'dynamic-stimuli', 'extent':'doublecolumn', 'file':'figs/static-stimuli.png'}
 Example of a set of 6 different gratings separated by 30$^o$ each.
 
 *** Response to drifting gratings

@@ -19,13 +19,14 @@ screen_params0 = {
 }
 
 stim_params0 = {
+    'stim_tstart':0.2, # in seconds
+    'stim_tend':5, # in seconds
+    'lumin_value_at_init':0.5, # grey screen in pre-screen
     # drifting and static gratings
     'theta':np.pi/6.,
     'cycle_per_second':2.,
     'spatial_freq':0.2,
     'static':False,
-    'stim_tstart':0.2, # in seconds
-    'stim_tend':5, # in seconds
     # sparse noise
     'SN_noise_mean_refresh_time':0.5, # in s
     'SN_noise_rdm_jitter_refresh_time':0.2, # in s
@@ -126,8 +127,16 @@ class visual_stimulus:
         
         self.initialize_screen_time_axis()
         
-        if stimulus_key=='grating':
-            self.static_grating()
+        if stimulus_key=='static-full-field-grating':
+            self.static_full_field_grating()
+        elif stimulus_key=='static-center-grating':
+            self.static_center_grating()
+        elif stimulus_key=='static-surround-grating':
+            self.static_surround_grating()
+        elif stimulus_key=='static-center-surround-grating':
+            self.static_center_surround_grating()
+        elif stimulus_key=='natural-images':
+            self.natural_images(image_number=stim_number)
         elif stimulus_key=='drifting-grating':
             self.drifting_grating()
         elif stimulus_key=='sparse-noise':
@@ -138,8 +147,6 @@ class visual_stimulus:
             self.gaussian_blob_static()
         elif stimulus_key=='gaussian-blob-appearance':
             self.gaussian_blob_appearance()
-        elif stimulus_key=='natural-images':
-            self.natural_images(image_number=stim_number)
         elif stimulus_key=='black-screen': # grey screen by default
             self.black_screen()
         elif stimulus_key=='grey-screen': # grey screen by default
@@ -177,14 +184,89 @@ class visual_stimulus:
     ################### SET OF DIFFERENT STIMULI ######################
     ###################################################################
 
+    # dynamic
     def initialize_dynamic(self):
         self.stimulus_params['static'] = False
-        self.full_array = np.zeros((len(self.screen_time_axis)+1, self.SCREEN['Xd_max'], self.SCREEN['Yd_max']))
-                                   
+        # index [0,:,:] is pre-stim, [1:,:,:] is stim
+        self.full_array = np.ones((len(self.screen_time_axis)+1,
+                                    self.SCREEN['Xd_max'],
+                                    self.SCREEN['Yd_max']))*self.stimulus_params['lumin_value_at_init']
+
+    # static
     def initialize_static(self):
+
         self.stimulus_params['static'] = True
-        self.full_array = np.zeros((2, self.SCREEN['Xd_max'], self.SCREEN['Yd_max']))
+        # index [0,:,:] is pre-stim, [1,:,:] is stim
+        self.full_array = np.ones((2, self.SCREEN['Xd_max'],
+                                   self.SCREEN['Yd_max']))*self.stimulus_params['lumin_value_at_init']
+
+        
+    # list of static stimuli:    
     
+    def static_full_field_grating(self,
+                                  spatial_freq = 0.07,
+                                  theta = np.pi/6.):
+
+        self.initialize_static()
+        
+        x_theta = (self.SCREEN['x_2d']-self.SCREEN['x_center']) * np.cos(theta) + (self.SCREEN['y_2d']-self.SCREEN['y_center']) * np.sin(theta)
+        y_theta = -(self.SCREEN['x_2d']-self.SCREEN['x_center']) * np.sin(theta) + (self.SCREEN['y_2d']-self.SCREEN['y_center']) * np.cos(theta)
+
+        self.full_array[1,:,:] = .5*(1-np.cos(2*np.pi*spatial_freq*x_theta))
+
+    def static_center_grating(self,
+                              center=(40, 20),
+                              radius=10,
+                              spatial_freq = 0.07,
+                              theta = np.pi/6.):
+
+        self.initialize_static()
+        
+        x_theta = (self.SCREEN['x_2d']-center[0]) * np.cos(theta) + (self.SCREEN['y_2d']-center[1]) * np.sin(theta)
+        y_theta = -(self.SCREEN['x_2d']-center[0]) * np.sin(theta) + (self.SCREEN['y_2d']-center[1]) * np.cos(theta)
+
+        cond = ((x_theta**2+y_theta**2)<radius**2)
+        self.full_array[1,:,:][cond] = .5*(1-np.cos(2*np.pi*spatial_freq*x_theta[cond]))
+
+    def static_surround_grating(self,
+                                center=(40, 20),
+                                radius1=10,
+                                radius2=20,
+                                spatial_freq = 0.07,
+                                theta = np.pi/6.):
+
+        self.initialize_static()
+        
+        x_theta = (self.SCREEN['x_2d']-center[0]) * np.cos(theta) + (self.SCREEN['y_2d']-center[1]) * np.sin(theta)
+        y_theta = -(self.SCREEN['x_2d']-center[0]) * np.sin(theta) + (self.SCREEN['y_2d']-center[1]) * np.cos(theta)
+
+        cond = ((x_theta**2+y_theta**2)>=radius1**2) & ((x_theta**2+y_theta**2)<=radius2**2)
+        self.full_array[1,:,:][cond] = .5*(1-np.cos(2*np.pi*spatial_freq*x_theta[cond]))
+
+    def static_center_surround_grating(self,
+                                       center=(40, 20),
+                                       radius1=10,
+                                       radius2=20,
+                                       spatial_freq = 0.07,
+                                       theta1 = 0,
+                                       theta2 = np.pi/2.):
+
+        self.initialize_static()
+        
+        x_theta1 = (self.SCREEN['x_2d']-center[0]) * np.cos(theta1) + (self.SCREEN['y_2d']-center[1]) * np.sin(theta1)
+        y_theta1 = -(self.SCREEN['x_2d']-center[0]) * np.sin(theta1) + (self.SCREEN['y_2d']-center[1]) * np.cos(theta1)
+
+        cond1 = ((x_theta1**2+y_theta1**2)<=radius1**2)
+        self.full_array[1,:,:][cond1] = .5*(1-np.cos(2*np.pi*spatial_freq*x_theta1[cond1]))
+
+        x_theta2 = (self.SCREEN['x_2d']-center[0]) * np.cos(theta2) + (self.SCREEN['y_2d']-center[1]) * np.sin(theta2)
+        y_theta2 = -(self.SCREEN['x_2d']-center[0]) * np.sin(theta2) + (self.SCREEN['y_2d']-center[1]) * np.cos(theta2)
+
+        cond2 = ((x_theta2**2+y_theta2**2)>=radius1**2) & ((x_theta2**2+y_theta2**2)<=radius2**2)
+        
+        self.full_array[1,:,:][cond2] = .5*(1-np.cos(2*np.pi*spatial_freq*x_theta2[cond2]))
+        
+        
     def grey_screen(self):
         self.initialize_static()
         self.full_array[1,:,:] = 0.*self.SCREEN['x_2d']+0.5
@@ -215,21 +297,6 @@ class visual_stimulus:
             self.full_array[it+1,:,:] = .5*(1-np.cos(2*np.pi*stim_params['spatial_freq']*x_theta+2.*np.pi*stim_params['cycle_per_second']*(t-self.t0)))
 
 
-    def static_grating(self):
-
-        self.initialize_static()
-        stim_params = self.stimulus_params
-        
-        for key in ['spatial_freq', 'theta']:
-            if key not in stim_params:
-                raise Exception
-        
-        x_theta = (self.SCREEN['x_2d']-self.SCREEN['x_center']) * np.cos(stim_params['theta']) + (self.SCREEN['y_2d']-self.SCREEN['y_center']) * np.sin(stim_params['theta'])
-        y_theta = -(self.SCREEN['x_2d']-self.SCREEN['x_center']) * np.sin(stim_params['theta']) + (self.SCREEN['y_2d']-self.SCREEN['y_center']) * np.cos(stim_params['theta'])
-
-        self.full_array[0,:,:] = .5*(1-np.cos(2*np.pi*stim_params['spatial_freq']*x_theta))
-
-            
     def sparse_noise(self, seed=0):
 
         self.initialize_dynamic()
@@ -348,14 +415,13 @@ class visual_stimulus:
         
         self.initialize_static()
         stim_params = self.stimulus_params
-
        
         filename = os.listdir(stim_params['NI_directory'])[image_number]
         img = load(os.path.join(stim_params['NI_directory'], filename))
 
         rescaled_img = adapt_to_screen_resolution(img, self.SCREEN)
         rescaled_img = img_after_hist_normalization(rescaled_img)
-        self.full_array[0,:,:] = rescaled_img
+        self.full_array[1,:,:] = rescaled_img
         
 
 if __name__=='__main__':
@@ -367,10 +433,11 @@ if __name__=='__main__':
     
     stim_plot= plot(stimulus=stim, graph_env_key='visual_stim')
     
-    if stim.stimulus_params['static']:
-        stim_plot.screen_plot(stim.full_array[0,:,:])
-    else:
-        stim_plot.screen_movie(stim)
+    stim_plot.screen_movie(stim)
+    # if stim.stimulus_params['static']:
+    #     stim_plot.screen_plot(stim.full_array[0,:,:])
+    # else:
+    #     stim_plot.screen_movie(stim)
     
     stim_plot.show()
     

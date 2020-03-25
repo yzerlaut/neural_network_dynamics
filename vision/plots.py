@@ -40,6 +40,7 @@ class plot:
                     vmin=0, vmax=1,
                     Ybar_label='',
                     figsize=(1.,1.),
+                    with_scale_bar=True,
                     Xbar_label='10$^o$'):
         """
         plotting screeen display within a graph_env
@@ -56,25 +57,31 @@ class plot:
                          vmin=vmin, vmax=vmax,
                          ax=ax)
 
-        self.ge.draw_bar_scales(ax,
+        if with_scale_bar:
+            self.ge.draw_bar_scales(ax,
                                 Xbar=10.*self.SCREEN['dpd'], Ybar_label=Ybar_label,
                                 Ybar=10.*self.SCREEN['dpd'], Xbar_label=Xbar_label,
                                 xyLoc=(-0.02*self.SCREEN['Xd_max'],
                                        1.02*self.SCREEN['Yd_max']),
                                 loc='left-top')
-
         ax.axis('equal')
         ax.axis('off')
         return fig, ax
 
     def screen_movie(self, stim,
                      vmin=0, vmax=1,
-                     subsampling=10):
+                     subsampling=2):
 
-        return self.ge.movie(stim.full_array[::subsampling,:,:],
+        if stim.stimulus_params['static']:
+            full_array = np.array([stim.get(tt) for tt in stim.screen_time_axis[::subsampling]])
+        else:
+            full_array = stim.full_array[::subsampling,:,:]
+        
+        return self.ge.movie(full_array,
                              time=stim.screen_time_axis[::subsampling],
                              cmap=self.ge.binary_r,
                              vmin=vmin, vmax=vmax,
+                             aspect='equal',
                              annotation_text='t=%.2fs')
         
 
