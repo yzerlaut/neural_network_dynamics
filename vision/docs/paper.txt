@@ -162,11 +162,11 @@ An example of a saccadic eye movement is shown in Figure {SEM-model}.
 
 [[Figure {static-stimuli} around here]]
 
-[[Figure {dynamic-stimuli} around here]]
-
 To feed the model, we implemented a set of visual stimuli classically used in visual neuroscience. We provide a graphical illustration of those stimuli in Figure {static-stimuli} and Figure {dynamic-stimuli} as well as a description below with their parameters.
 
 We implement two classes of stimuli: 1) static stimuli, i.e. stimuli where the visual contant is fixed over time (though possibly with a delayed onset to have the ability to analyze stimulus-evoked activity) and 2) dynamic stimuli, the content displayed in the visual space is changing over time.
+
+[[Figure {dynamic-stimuli} around here]]
 
 *** Static stimuli
 
@@ -174,72 +174,70 @@ The list of implemented static stimuli is the following:
 
 \begin{enumerate}
 
-\item \underline{full-field gratings}
-      Parameters:
+\item \underline{full-field gratings}, parameterized by:
       \begin{itemize}
       \item $f$: spatial frequency of the (default value: 0.07 cycles/$^o$)
-      \item $\theta$ orientation of the grating (default value: $\pi$/6)
-      \item $c$ contrast (default value: 1)
+      \item $\theta$: orientation of the grating (default value: $\pi$/6)
+      \item $c$: contrast (default value: 1)
+      \item $\Psi$: spatial phase of the grating (default value: $\pi$, meaning maximum luminance at $\vec{x}$=[0,0])
       \end{itemize}
 
-\item \underline{center gratings}
+\item \underline{center gratings}, parameterized by:
       \begin{itemize}
-      \item grating parameters: $f$, $\theta$, $c$
+      \item grating parameters for the center: $f_c$, $\theta_c$, $c_c$, $\Psi_c$
       \item center position $\vec{x_c}$
-      \item center radius $r_c$
+      \item center radius $r_c$ (default value: 7$^o$)
       \end{itemize}
 
-\item \underline{surround gratings}
+\item \underline{surround gratings}, parameterized by:
       \begin{itemize}
-      \item grating parameters: $f$, $\theta$, $c$
-      \item center position $\vec{x_c}$
-      \item center radius $r_c$
-      \item surround radius $s_c$
+      \item grating parameters for the surround: $f_s$, $\theta_s$, $c_s$, $\Psi_s$
+      \item center parameters: $\vec{x_c}$, $r_c$
+      \item surround radius $r_s$ (i.e. outer radius of the surround region, default value: 15$^o$)
       \end{itemize}
 
-\item \underline{white screen}
+\item \underline{center-surround gratings}, parameterized by:
       \begin{itemize}
-      \item \bf full-field \normalfont, norm luminance set to 1
+      \item grating parameters in the center: $f$_c, $\theta_c$, $c_c$, $\Psi_c$
+      \item grating parameters in the surround: $f_s$, $\theta_s$, $c_s$, $\Psi_s$
+      \item center and surround parameters: $\vec{x_c}$, $r_c$, $r_s$
       \end{itemize}
-\item \underline{dark screen}
+
+\item \underline{natural images}, obtained by:
       \begin{itemize}
-      \item \bf full-field \normalfont, norm luminance set to 0
-      \end{itemize}
-\item \underline{grey screen}
-      \begin{itemize}
-      \item \bf full-field \normalfont, norm luminance set to 0.5
+      \item taking samples with references "mouse", "snake", "mushrooms", "cats" from the ImageNet database
+      \item converting to grey scale and resampled to match the screen resolution in the model
+      \item normalizing luminance with histogram-normalization of the grey-scale pixel content to obtain comparable images in terms of luminance.
       \end{itemize}
 \end{enumerate}
 
+Additional static stimuli are the presentation of white screen (full-field with luminance set to 1), grey screen (full-field with luminance set to 0.5) and black screen (full-field with luminance set to 0).
+
 *** Dynamic stimuli
 
-The list of implemented static stimuli is the following:
+The list of implemented dynamic stimuli is the following:
 
 \begin{enumerate}
 
-\item \underline{Drifting gratings}
+\item \underline{full-field drifting gratings}, parameterized by:
       \begin{itemize}
-      \item \bf full-field, dynamic \normalfont
-      \item spatial frequency was 0.05 cycles per degree
-      \item 0.5s each
-      \item evenly spaced in terms of directions (if 5 gratings)
+      \item grating parameters: $f, $\theta, $c, $\Psi
+      \item a drifting speed: 
       \end{itemize}
 
-\item \underline{Center gratings}
+\item \underline{sparse noise}, parameterized by:
       \begin{itemize}
-      \item narrow-field, static
-      \item spatial frequency was 0.05 cycles per degree
-      \item 0.5s each
-      \item evenly spaced in terms of directions (if 5 gratings)
+      \item $\Gamma_{SN}$ the sparseness value, it quantifies how much of the viual space is covered by non-neutral (i.e. non-gray) visual content (default value: {SN_sparseness})
+      \item $\sigma_{SN}$ size of the sparse noise squares (default value: {SN_square_size}$^o$)
+      \item A mean delay $D_{SN}$ and a jitter $J_{SN}$ to randomize over time the refresh of the sparse noise realization (default values: $D_{SN}$={SN_noise_mean_refresh_time}s, $J_{SN}$={SN_noise_rdm_jitter_refresh_time}s)
       \end{itemize}
 
-\item \underline{Sparse noise}
-      Following Stringer et al. (2019).
+\item \underline{dense noise}, parameterized by:
       \begin{itemize}
-      \item 5$\%$ of the screen space is not neutral (i.e. not gray, either white or black)
-      \item squares of size 5$^o$
-      \item update every 200ms
+      \item $\sigma_{DN}$ size of the sparse noise squares (default value: {DN_square_size}$^o$)
+      \item A mean delay $D_{DN}$ and a jitter $J_{DN}$ to randomize over time the refresh of the sparse noise realization (default values: $D_{DN}$={DN_noise_mean_refresh_time}s, $J_{DN}$={DN_noise_rdm_jitter_refresh_time}s)
       \end{itemize}
+
 \end{enumerate}
 
 * Figures
@@ -267,13 +265,13 @@ On the top plot, we show an example input signal designed for illustration purpo
 #+options : {'label':'SEM-model', 'extent':'singlecolumn', 'file':'figs/SEM-model.png', 'page_position':'t!'}
 Showing the SEM on the image (top plot, the color gradient codes for time) together with its horizontal (x) and vertical (y) projection over time (bottom plots, same color code as top plot). The thin dashed line correspond to the center of the visual field.
 
-*** Static stimuli.
+*** Set of static stimuli.
 #+options : {'label':'static-stimuli', 'extent':'doublecolumn', 'file':'figs/static-stimuli.png', 'page_position':'t!'}
-Example of a set of 6 different gratings separated by 30$^o$ each.
+Showing various examples for each stimulus type (corresponding to different parameters, see annotations and main text).
 
-*** Dynamic stimuli.
-#+options : {'label':'dynamic-stimuli', 'extent':'doublecolumn', 'file':'figs/static-stimuli.png', 'page_position':'htb!'}
-Example of a set of 6 different gratings separated by 30$^o$ each.
+*** Set of dynamic stimuli.
+#+options : {'label':'dynamic-stimuli', 'extent':'doublecolumn', 'file':'figs/dynamic-stimuli.png', 'page_position':'htb!'}
+Showing a single example of each stimulus type, each panel is a temporal snapshot of the stimulus (see time annotation at the top of each plot).
 
 *** Response to drifting gratings
 #+options : {'label':'DG', 'extent':'doublecolumn', 'file':'fig1.png'}

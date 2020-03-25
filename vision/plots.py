@@ -232,7 +232,32 @@ class plot:
         
         return fig, AX
         
-        
+
+    def show_visual_stim_snapshots(self, visual_stim, set_of_times, set_of_axes,
+                                   with_time_annotation=False,
+                                   add_SEM=False):
+
+        for i, t, ax in zip(range(len(set_of_times)), set_of_times, set_of_axes):
+            if ax is set_of_axes[0] and with_time_annotation:
+                self.screen_plot(visual_stim.get(t), Xbar_label='10$^o$  t=%.1fs' % t, ax=ax)
+            elif ax is set_of_axes[0]:
+                self.screen_plot(visual_stim.get(t), Xbar_label='10$^o$', ax=ax)
+            elif with_time_annotation:
+                self.screen_plot(visual_stim.get(t), Xbar_label='     t=%.1fs' % t, ax=ax)
+            else:
+                self.screen_plot(visual_stim.get(t), with_scale_bar=False, ax=ax)
+                
+            if add_SEM:
+                its=np.argmin((t-visual_stim.dt_screen)**2)[0]
+                self.ge.multicolored_line(self.model.EM['x']*self.model.params['screen_dpd'],
+                                          self.model.EM['y']*self.model.params['screen_dpd'],
+                                          np.linspace(0, 1, len(self.model.EM['x'])),
+                                          ax=ax, lw=0.5)
+                ax.scatter([self.model.EM['x'][its]*self.model.params['screen_dpd']],
+                           [self.model.EM['y'][its]*self.model.params['screen_dpd']],
+                           alpha=1, s=10,
+                           color=self.ge.cool(np.linspace(0, 1, len(self.model.EM['x']))[its]))
+
     def protocol_plot(self, cell_plot=3):
 
         if type(cell_plot) in (list, np.ndarray, np.array):
