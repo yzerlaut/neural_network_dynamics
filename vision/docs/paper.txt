@@ -1,5 +1,5 @@
 Title: \qquad \quad Modeling the Early Visual System in Mice\newline From Screen Display to Layer 4 network activity in V1
-Authors: Yann Zerlaut$^{1}$
+Authors: Yann Zerlaut$^{1,*}$
 Short Title: A Model of the Early Visual System
 Short Authors: Y. Zerlaut
 Affiliations: {1} ICM Brain and Spine institute, Paris, France.
@@ -33,8 +33,8 @@ The visual space is therefore described by the following parameters:
 \begin{tabular}{c|c|c}
 \textbf{Name} & \textbf{Symbol} & \textbf{Value}\\
 \hline
-Angular width of the visual field & $w_{vf}$ & {width_VF}\(^{o}\)\\
 Angular height of the visual field & $h_{vf}$ & {height_VF}\(^{o}\)\\
+Angular width of the visual field & $w_{vf}$ & {width_VF}\(^{o}\)\\
 Field center from antero-posterior axis & $c_{vf}$ & {center_VF}\(^{o}\)
 \end{tabular}
 \end{center}
@@ -137,24 +137,56 @@ The different steps of the transformation are illustrated on Figure {LNP-model}.
 
 *** Saccadic eye movement
 
-
 [[Figure {SEM-model} around here]]
 
-Adapted from Baudot et al. (2013).
+The eye movement model is adapted from Baudot et al. (2013). 
 
-Following Baudot et al. (2013), the saccade amplitudes and intersaccadic intervals were chosen randomly from the distribution established for saccadic and head gaze movements in the freely behaving cat (Collewijn, 1977). An estimate of the duration of the saccade (D S ) was made by using the best linear fit between saccadic amplitude (A s ) and duration:
+Eye-movements are classically decomposed into intermittent ballistic movements, i.e. saccades, of large but variable amplitude, separated by fixation episodes. During fixation, the mean position of the eye drifts slowly in time, with superimposed very low amplitude tremors at high frequency (40–100 Hz range) as well as microsaccades (Baudot et al., 2013). 
+
+Here, we restrict our model of the retinal flow to the large-amplitude saccadic movement and neglect the high-frequency microsaccades. The large amplitude saccades was modelled as a trajectory between randomly picked positions within the modelled field of view of the animal (see Figure {geometry}). The intersaccadic intervals were then calculated using a linear approximation of the relationship established for saccadic and head gaze movements in the freely behaving cat (Collewijn, 1977). The relationship between sacccade amplitude ($A_S$) and saccade duration $D_S$ was:
+
 \begin{equation}
-D_S = 1.9 × A_S + 63
+D_S = \alpha_{DA} \cdot A_S + D_S^{min}
 \end{equation}
-where $D_S$ is expressed in ms and $A_s$ in steradian degrees ($^o$) of visual angle.
+where $D_S$ is expressed in ms and $A_s$ in steradian degrees ($^o$) of visual angle, with the parameters:
+\begin{center}
+\begin{tabular}{c|c|c}
+\textbf{Name} & \textbf{Symbol} & \textbf{Value} \\
+\hline
+Duration-Amplitude slope of saccades & \alpha_{DA} & {saccade_duration_distance_slope}$^o$/s \\
+Minimum saccadde duration  & D_S^{min} & {saccade_duration_distance_shift}s
+\end{tabular}
+\end{center}
+
+An example of a saccadic eye movement is shown in Figure {SEM-model}.
 
 *** Set of visual stimuli
 
+[[Figure {stimuli} around here]]
+
+To feed the model, we implemented a set of visual stimuli classically used in visual neuroscience. We provide a graphical illustration of those stimuli in Figure {stimuli} as well as a description below with their parameters:
+
 \begin{enumerate}
 
-\item \underline{Drifting gratings stimuli}
+\item \underline{Static gratings}
       \begin{itemize}
-      \item full-field 
+      \item \bf full-field, static \normalfont
+      \item spatial frequency was 0.05 cycles per degree
+      \item 0.5s each
+      \item evenly spaced in terms of directions (if 5 gratings)
+      \end{itemize}
+
+\item \underline{Drifting gratings}
+      \begin{itemize}
+      \item \bf full-field, dynamic \normalfont
+      \item spatial frequency was 0.05 cycles per degree
+      \item 0.5s each
+      \item evenly spaced in terms of directions (if 5 gratings)
+      \end{itemize}
+
+\item \underline{Center gratings}
+      \begin{itemize}
+      \item narrow-field, static
       \item spatial frequency was 0.05 cycles per degree
       \item 0.5s each
       \item evenly spaced in terms of directions (if 5 gratings)
@@ -192,8 +224,8 @@ On the top plot, we show the weighted sum (weighted as 1/$N_{cells}$) of the Gab
 #+options : {'label':'LNP-model', 'extent':'singlecolumn', 'file':'figs/LNP-model.png', 'page_position':'t!'}
 On the top plot, we show an example input signal designed for illustration purpose (i.e. the signal that would come from the spatial filtering through the cell-specific Gabor filters). Below we show the resulting "processed signal", i.e. the signal after being non-linearly processed (through the threshold-linear function) and temporally filtered (through delay and adaptation). Below is the transformation into rate by using the slope factor and by adding the baseline rate. At the bottom we show the Poisson process transformation of the rate signal (shown for 10 different realisation of the random process).
 *** Modeling saccadic eye movement (SEM).
-#+options : {'label':'SEM-model', 'extent':'singlecolumn', 'file':'figs/SEM-model.png', 'page_position':'b!'}
-Showing the SEM on the image (left plot, time-color coded) together with its horizontal and vertical projection over time (right plot).
+#+options : {'label':'SEM-model', 'extent':'singlecolumn', 'file':'figs/SEM-model.png', 'page_position':'t!'}
+Showing the SEM on the image (top plot, the color gradient codes for time) together with its horizontal (x) and vertical (y) projection over time (bottom plots, same color code as top plot). The thin dashed line correspond to the center of the visual field.
 
 *** Bank of stimuli.
 #+options : {'label':'stimuli', 'extent':'doublecolumn', 'file':'figs/stimuli.png'}

@@ -12,8 +12,8 @@ from vision.virtual_eye_movement import virtual_eye_movement, vem_params0
 
 params0 = {
     # visual space props
-    'width_VF':50, # degree, Angular width of the visual field
     'height_VF':40, # degree, Angular height of the visual field
+    'width_VF':int(round(10*16./9.*40,0)/10), # degree, Angular width of the visual field
     'center_VF':45, # degree, Field center from antero-posterior axis
     # neuronal space props
     'Ncells':100,
