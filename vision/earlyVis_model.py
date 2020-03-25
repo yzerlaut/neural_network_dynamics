@@ -13,27 +13,29 @@ from vision.virtual_eye_movement import virtual_eye_movement, vem_params0
 params0 = {
     # visual space props
     'width_VF':50, # degree, Angular width of the visual field
-    'height_VF':30, # degree, Angular height of the visual field
+    'height_VF':40, # degree, Angular height of the visual field
     'center_VF':45, # degree, Field center from antero-posterior axis
     # neuronal space props
-    'Ncells':1000,
-    'Area_cells':0.1,
+    'Ncells':100,
+    'Area_cells': np.round(np.sqrt(100/177e3/0.2),2),#sqrt(Ncell/177e3/Height_L4),177e3->Markram (2015)
     # receptive fields
     'clustered_features':True,
     'rf_fraction':.4, # fraction of visual space covered by the cells, fraction of the screen 
-    'rf_size':[2., 10.], # degrees
+    'rf_x0':[20, 70.], # degrees
+    'rf_y0':[20, 30.], # degrees
+    'rf_size':[2., 8.], # degrees
     'rf_freq':[0.02, 0.12], # cycle per degrees
     'rf_beta':[0.8, 2.5],
     'rf_theta':[0., np.pi],
     'rf_psi':[0., 2*np.pi], 'rf_psi_peak1':np.pi, 'rf_psi_peak2':3*np.pi/2, 'rf_psi_Dwidth':np.pi/4,
-    'convolve_extent_factor':2., # limit the convolution to thisfactor*rf-width to make comput faster
+    'convolve_extent_factor':1.5, # limit the convolution to thisfactor*rf-width to make comput faster
     # temporal filtering
     'tau_adapt':500e-3,
     'tau_delay':30e-3,
     'fraction_adapt':0.2,
     # non-linear amplification
-    'NL_threshold':0.1,
-    'NL_slope_Hz_per_Null':10.,
+    'NL_baseline':0.5,
+    'NL_slope_Hz_per_Null':20.,
     # # virtual eye movement
     'duration_distance_slope':1.9e-3, # degree/s
     'duration_distance_shift':63e-3, # s
@@ -110,17 +112,27 @@ class earlyVis_model:
     def setup_RF_props(self):
 
         # range of x-positions for the cellular RFs
-        min_x0 = self.SCREEN['width']*self.params['rf_fraction']/2.+\
-                    self.params['convolve_extent_factor']*self.params['rf_size'][1]
+        # min_x0 = self.SCREEN['width']*self.params['rf_fraction']/2.+\
+        #             self.params['convolve_extent_factor']*self.params['rf_size'][1]
+        min_x0 = self.params['convolve_extent_factor']*self.params['rf_size'][1]
         max_x0 = self.SCREEN['width']-min_x0
+        if (min_x0>self.params['rf_x0'][0]) or (max_x0<self.params['rf_x0'][1]):
+            print('--------------------------------------------------------------------------')
+            print('/!\ x0 bounds (%.1f, %.1f) do not allow to perform the convolution on the full screen !' % (self.params['rf_x0'][0], self.params['rf_x0'][1]))
+            print('/!\ x0 bounds do not allow to perform the convolution on the full screen !')
+            print(' you should provide a value range within than:', (min_x0, max_x0))
         # range of y-positions for the cellular RFs
-        min_y0 = self.SCREEN['height']*self.params['rf_fraction']/2.+\
-                    self.params['convolve_extent_factor']*self.params['rf_size'][1]
+        min_y0 = self.params['convolve_extent_factor']*self.params['rf_size'][1]
         max_y0 = self.SCREEN['height']-min_y0
+        if (min_y0>self.params['rf_y0'][0]) or (max_y0<self.params['rf_y0'][1]):
+            print('--------------------------------------------------------------------------')
+            print('/!\ y0 bounds (%.1f, %.1f) do not allow to perform the convolution on the full screen !' % (self.params['rf_y0'][0], self.params['rf_y0'][1]))
+            print('/!\ y0 bounds do not allow to perform the convolution on the full screen !')
+            print(' you should provide a value range within than:', (min_y0, max_y0))
                                                        
         self.RF_PROPS = {
-            'x0':[min_x0, max_x0],
-            'y0':[min_y0, max_y0],
+            'x0':self.params['rf_x0'],
+            'y0':self.params['rf_y0'],
             'size':self.params['rf_size'],
             'freq':self.params['rf_freq'],
             'beta':self.params['rf_beta'],
@@ -132,7 +144,7 @@ class earlyVis_model:
         
     def draw_cell_RF_properties(self, seed,
                                 clustered_features=True,
-                                n_clustering=5):
+                                n_clustering=10):
 
         np.random.seed(int(seed))
         
@@ -273,7 +285,8 @@ class earlyVis_model:
         r[i+1= r[i]+dt/tau_delay*(-r[i]+s[i]-a[i])
         a[i]+dt/tau_adapt*((1-fraction_adapt)/fraction_adapt*r[i]-a[i])
         """
-        return [r+dt/self.params['tau_delay']*(s-r-a),
+        # return [r+dt/self.params['tau_delay']*((np.sign(s)+1)*s/2.)-r-a,
+        return [r+dt/self.params['tau_delay']*((np.sign(s)+1)*s/2.-r-a),
                 a+dt/self.params['tau_adapt']*((1-self.params['fraction_adapt'])/self.params['fraction_adapt']*r-a)]
 
     def temporal_filtering(self, t, input_signal):
@@ -286,10 +299,7 @@ class earlyVis_model:
 
 
     def compute_rates(self, x):
-        y = x.copy()
-        cond = (x<=self.params['NL_threshold'])
-        y[cond] = self.params['NL_threshold']
-        return self.params['NL_slope_Hz_per_Null']*y
+        return self.params['NL_baseline']+self.params['NL_slope_Hz_per_Null']*x
  
     def Poisson_process_transform(self, seed=0):
         """

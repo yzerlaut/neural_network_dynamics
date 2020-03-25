@@ -12,8 +12,8 @@ from vision.gabor_filters import gabor
 
 screen_params0 = {
     # units of the visual field is degree
-    'screen_width':16./9.*30, # degree
-    'screen_height':30.,
+    'screen_width':16./9.*50, # degree
+    'screen_height':50.,
     'screen_dpd':10, # dot per degree (dpd)
     'screen_refresh_rate':30., #in Hz
 }
@@ -140,11 +140,11 @@ class visual_stimulus:
             self.gaussian_blob_appearance()
         elif stimulus_key=='natural-images':
             self.natural_images(image_number=stim_number)
-        elif stimulus_key=='black_screen': # grey screen by default
+        elif stimulus_key=='black-screen': # grey screen by default
             self.black_screen()
-        elif stimulus_key=='grey_screen': # grey screen by default
+        elif stimulus_key=='grey-screen': # grey screen by default
             self.grey_screen()
-        elif stimulus_key=='white_screen': # grey screen by default
+        elif stimulus_key=='white-screen': # grey screen by default
             self.white_screen()
         else: # grey screen by default
             self.grey_screen()
