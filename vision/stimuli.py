@@ -205,6 +205,7 @@ class visual_stimulus:
     
     def static_full_field_grating(self,
                                   spatial_freq = 0.07,
+                                  contrast=1.,
                                   theta = np.pi/6.):
 
         self.initialize_static()
@@ -212,11 +213,12 @@ class visual_stimulus:
         x_theta = (self.SCREEN['x_2d']-self.SCREEN['x_center']) * np.cos(theta) + (self.SCREEN['y_2d']-self.SCREEN['y_center']) * np.sin(theta)
         y_theta = -(self.SCREEN['x_2d']-self.SCREEN['x_center']) * np.sin(theta) + (self.SCREEN['y_2d']-self.SCREEN['y_center']) * np.cos(theta)
 
-        self.full_array[1,:,:] = .5*(1-np.cos(2*np.pi*spatial_freq*x_theta))
+        self.full_array[1,:,:] = 0.5-contrast*np.cos(2*np.pi*spatial_freq*x_theta)/2.
 
     def static_center_grating(self,
                               center=(40, 20),
                               radius=10,
+                              contrast=1.,
                               spatial_freq = 0.07,
                               theta = np.pi/6.):
 
@@ -226,12 +228,13 @@ class visual_stimulus:
         y_theta = -(self.SCREEN['x_2d']-center[0]) * np.sin(theta) + (self.SCREEN['y_2d']-center[1]) * np.cos(theta)
 
         cond = ((x_theta**2+y_theta**2)<radius**2)
-        self.full_array[1,:,:][cond] = .5*(1-np.cos(2*np.pi*spatial_freq*x_theta[cond]))
+        self.full_array[1,:,:][cond] = 0.5-contrast*np.cos(2*np.pi*spatial_freq*x_theta[cond])/2.
 
     def static_surround_grating(self,
                                 center=(40, 20),
                                 radius1=10,
                                 radius2=20,
+                                contrast=1.,
                                 spatial_freq = 0.07,
                                 theta = np.pi/6.):
 
@@ -241,12 +244,14 @@ class visual_stimulus:
         y_theta = -(self.SCREEN['x_2d']-center[0]) * np.sin(theta) + (self.SCREEN['y_2d']-center[1]) * np.cos(theta)
 
         cond = ((x_theta**2+y_theta**2)>=radius1**2) & ((x_theta**2+y_theta**2)<=radius2**2)
-        self.full_array[1,:,:][cond] = .5*(1-np.cos(2*np.pi*spatial_freq*x_theta[cond]))
+        self.full_array[1,:,:][cond] = 0.5-contrast*np.cos(2*np.pi*spatial_freq*x_theta[cond])/2.
 
     def static_center_surround_grating(self,
                                        center=(40, 20),
                                        radius1=10,
                                        radius2=20,
+                                       contrast1=1.,
+                                       contrast2=1.,
                                        spatial_freq = 0.07,
                                        theta1 = 0,
                                        theta2 = np.pi/2.):
@@ -257,14 +262,15 @@ class visual_stimulus:
         y_theta1 = -(self.SCREEN['x_2d']-center[0]) * np.sin(theta1) + (self.SCREEN['y_2d']-center[1]) * np.cos(theta1)
 
         cond1 = ((x_theta1**2+y_theta1**2)<=radius1**2)
-        self.full_array[1,:,:][cond1] = .5*(1-np.cos(2*np.pi*spatial_freq*x_theta1[cond1]))
+        self.full_array[1,:,:][cond1] = 0.5-contrast1*np.cos(2*np.pi*spatial_freq*x_theta1[cond1])/2.
 
         x_theta2 = (self.SCREEN['x_2d']-center[0]) * np.cos(theta2) + (self.SCREEN['y_2d']-center[1]) * np.sin(theta2)
         y_theta2 = -(self.SCREEN['x_2d']-center[0]) * np.sin(theta2) + (self.SCREEN['y_2d']-center[1]) * np.cos(theta2)
 
         cond2 = ((x_theta2**2+y_theta2**2)>=radius1**2) & ((x_theta2**2+y_theta2**2)<=radius2**2)
         
-        self.full_array[1,:,:][cond2] = .5*(1-np.cos(2*np.pi*spatial_freq*x_theta2[cond2]))
+        self.full_array[1,:,:][cond2] = 0.5-contrast2*np.cos(2*np.pi*spatial_freq*x_theta2[cond2])/2.
+
         
         
     def grey_screen(self):

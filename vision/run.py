@@ -20,50 +20,56 @@ if (Runcase==11) or (Runcase is 'model-doc') or (Runcase is 'all'):
     fig, AX = ps.ge.figure(axes=(5,6), figsize=(.9,.7), wspace=0.2, hspace=0.2, left=1.5, bottom=0., top=0.4, right=0.1)
 
     # full-field gratings
-    params = ' ($f$, $\\theta$)'
-    ps.ge.annotate(AX[0][0], 'Full-field\nGratings\n%s' % params, (-0.55,0.5), va='center', ha='center')
+    params = ' ($f$, $c$, $\\theta$)'
+    ps.ge.annotate(AX[0][0], 'full-field\ngratings\n%s' % params, (-0.55,0.5), va='center', ha='center')
     ps.screen_plot(stim.full_array[1,:,:], ax=AX[0][0])
-    for i, f, theta in zip(range(6),
-                           [0.1, 0.1, 0.1, 0.2, 0.02, 0.02],
-                           [np.pi/6., np.pi/2., 3*np.pi/4., 3*np.pi/4., 3*np.pi/4., np.pi/8.]):
-        stim.static_full_field_grating(theta=theta, spatial_freq=f)
+    for i, f, theta, c in zip(range(6),
+                              [0.1, 0.1, 0.1, 0.2, 0.02, 0.02],
+                              [np.pi/6., np.pi/2., 3*np.pi/4., 3*np.pi/4., 3*np.pi/4., np.pi/8.],
+                              [1, 0.5, 1, 0.7, 1, 0.1]):
+        stim.static_full_field_grating(theta=theta, spatial_freq=f, contrast=c)
         ps.screen_plot(stim.full_array[1,:,:], ax=AX[0][i], with_scale_bar=np.invert(bool(i)))
 
     # center gratings
-    params = r'($f$, $\theta_c$, $\vec{x_c}$, $r_c$)'
+    params = r'($f$, $c_c$, $\theta_c$, $\vec{x_c}$, $r_c$)'
     ps.ge.annotate(AX[1][0], 'Center\nGratings\n%s' % params, (-0.55,0.5), va='center', ha='center')
-    for i, f, theta, center, s in zip(range(6),
+    for i, f, theta, center, s, c in zip(range(6),
                                       [0.1, 0.1, 0.1, 0.2, 0.1, 0.1],
                                       [np.pi/6., np.pi/2., 3*np.pi/4., 3*np.pi/4., 3*np.pi/4., np.pi/8.],
                                       [(40,20),(20,20),(40,20),(50,40),(20,40),(40,30)],
-                                      [10,10,10,10,5,20]):
-        stim.static_center_grating(theta=theta, spatial_freq=f, center=center, radius=s)
+                                      [10,10,10,10,5,20],
+                                      [1, 0.5, 1, 0.7, 1, 0.2]):
+        stim.static_center_grating(theta=theta, spatial_freq=f, center=center, radius=s, contrast=c)
         ps.screen_plot(stim.full_array[1,:,:], ax=AX[1][i], with_scale_bar=np.invert(bool(i)))
 
     # surround gratings
-    params = r'($f$, $\theta_s$, $\vec{x_c}$, $r_c$, $r_s$)'
+    params = r'($f$, $c_s$, $\theta_s$, $\vec{x_c}$, $r_c$, $r_s$)'
     ps.ge.annotate(AX[2][0], 'Surround\nGratings\n%s' % params, (-0.55,0.5), va='center', ha='center')
     # ps.screen_plot(stim.full_array[1,:,:], ax=AX[2][0])
-    for i, f, theta, center, r1, r2 in zip(range(6),
-                                           [0.1, 0.1, 0.1, 0.2, 0.1, 0.1],
-                                           [np.pi/6., np.pi/2., 3*np.pi/4., 3*np.pi/4., 3*np.pi/4., np.pi/8.],
+    for i, f, c, theta, center, r1, r2 in zip(range(6),
+                                              [0.1, 0.1, 0.1, 0.2, 0.1, 0.1],
+                                              [1,1,0.5,1,1,1],
+                                              [np.pi/6., np.pi/2., 3*np.pi/4., 3*np.pi/4., 3*np.pi/4., np.pi/8.],
                                            [(40,20),(20,20),(40,20),(50,40),(20,40),(40,30)],
                                            [10,10,10,3,5,20],
                                            [20,25,30,8,25,25]):
-        stim.static_surround_grating(theta=theta, spatial_freq=f, center=center, radius1=r1, radius2=r2)
+        stim.static_surround_grating(theta=theta, spatial_freq=f, center=center, radius1=r1, radius2=r2, contrast=c)
         ps.screen_plot(stim.full_array[1,:,:], ax=AX[2][i], with_scale_bar=np.invert(bool(i)))
 
     # # center-surround gratings
-    params = r'($f$, $\theta_c$,, $\theta_s$, $\vec{x_c}$, $r_c$, $r_s$)'
+    params = r'($f$,$c_c$,$c_s$,$\theta_c$,$\theta_s$,$\vec{x_c}$,$r_c$,$r_s$)'
     ps.ge.annotate(AX[3][0], 'Center-Surround\nGratings\n%s' % params, (-0.55,0.5), va='center', ha='center')
-    for i, f, theta1, theta2, center, r1, r2 in zip(range(6),
+    for i, f, c1, c2, theta1, theta2, center, r1, r2 in zip(range(6),
                                            [0.1, 0.1, 0.1, 0.2, 0.1, 0.1],
+                                           [1, 0.5, 1, 0.7, 1, 0.2],
+                                           [1,1,0.5,1,1,1],
                                            [np.pi/6., np.pi/2., 3*np.pi/4., 3*np.pi/4., 3*np.pi/4., np.pi/8.],
                                            [np.pi/2., np.pi/4., 3*np.pi/4, np.pi/4., np.pi/4., np.pi],
                                            [(40,20),(20,20),(40,20),(50,40),(20,40),(40,30)],
                                            [10,10,10,3,5,20],
                                            [20,25,30,8,25,25]):
         stim.static_center_surround_grating(theta1=theta1, theta2=theta2,
+                                            contrast1=c1, contrast2=c2,
                                             spatial_freq=f, center=center,
                                             radius1=r1, radius2=r2)
         ps.screen_plot(stim.full_array[1,:,:], ax=AX[3][i], with_scale_bar=np.invert(bool(i)))

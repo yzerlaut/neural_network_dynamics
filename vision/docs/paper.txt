@@ -9,12 +9,10 @@ Correspondence: yann.zerlaut@icm-institute.org
 
 \begin{itemize}
 \item We build a minimal model of the early visual system in mouse
-\item The model relies on considering the visual pathway up to Layer 4 as a set of gabor filters randomly sampling the visual space. Only simple cells considered.
-\item Single cell receptive fields vary randomly in: 1) spatial location, 2) spatial frequency, 3) spatial extent, 4) excentricity, 5) spatial phase.
-\item Temporal filtering implements delay and adaptation in the early visual system
-\item Linear-Nonlinear-Poisson (LNP) model translate spatial and temporal filtering of visual stimuli into action potentials in Layer 4.
+\item The model relies on considering the visual pathway up to Layer 4 as a set of gabor filters randomly sampling the visual space. Temporal filtering implements delay and adaptation in the early visual system. Linear-Nonlinear-Poisson (LNP) model including spatial and temporal filtering translate visual stimuli into action potentials in Layer 4.
+\item Single cell receptive fields vary randomly in: 1) spatial location, 2) spatial frequency, 3) spatial extent, 4) excentricity, 5) spatial phase. Only simple cells considered.
 \item We add a virtual saccadic eye movement to model the active exploration of the visual space in awake mouse
-\item We analyze the response of the model to various visual stimuli: static gratings, drifting gratings, sparse noise, dense noise, natural images.
+\item We analyze the response of the model to various static and dynamic (time-varying) visual stimuli: full-field gratings, center and surround grating stimuli, drifting gratings, sparse noise, dense noise, center-surround stimuli, natural images.
 \end{itemize}
 
 * Methods
@@ -176,28 +174,27 @@ The list of implemented static stimuli is the following:
 
 \begin{enumerate}
 
-\item \underline{gratings}
+\item \underline{full-field gratings}
+      Parameters:
       \begin{itemize}
-      \item \bf full-field, static \normalfont
-      \item spatial frequency was 0.05 cycles per degree
-      \item 0.5s each
-      \item evenly spaced in terms of directions (if 5 gratings)
+      \item $f$: spatial frequency of the (default value: 0.07 cycles/$^o$)
+      \item $\theta$ orientation of the grating (default value: $\pi$/6)
+      \item $c$ contrast (default value: 1)
       \end{itemize}
 
 \item \underline{center gratings}
       \begin{itemize}
-      \item \bf full-field, static \normalfont
-      \item spatial frequency was 0.05 cycles per degree
-      \item 0.5s each
-      \item evenly spaced in terms of directions (if 5 gratings)
+      \item grating parameters: $f$, $\theta$, $c$
+      \item center position $\vec{x_c}$
+      \item center radius $r_c$
       \end{itemize}
 
 \item \underline{surround gratings}
       \begin{itemize}
-      \item \bf full-field, static \normalfont
-      \item spatial frequency was 0.05 cycles per degree
-      \item 0.5s each
-      \item evenly spaced in terms of directions (if 5 gratings)
+      \item grating parameters: $f$, $\theta$, $c$
+      \item center position $\vec{x_c}$
+      \item center radius $r_c$
+      \item surround radius $s_c$
       \end{itemize}
 
 \item \underline{white screen}
@@ -271,11 +268,11 @@ On the top plot, we show an example input signal designed for illustration purpo
 Showing the SEM on the image (top plot, the color gradient codes for time) together with its horizontal (x) and vertical (y) projection over time (bottom plots, same color code as top plot). The thin dashed line correspond to the center of the visual field.
 
 *** Static stimuli.
-#+options : {'label':'static-stimuli', 'extent':'doublecolumn', 'file':'figs/static-stimuli.png'}
+#+options : {'label':'static-stimuli', 'extent':'doublecolumn', 'file':'figs/static-stimuli.png', 'page_position':'t!'}
 Example of a set of 6 different gratings separated by 30$^o$ each.
 
 *** Dynamic stimuli.
-#+options : {'label':'dynamic-stimuli', 'extent':'doublecolumn', 'file':'figs/static-stimuli.png'}
+#+options : {'label':'dynamic-stimuli', 'extent':'doublecolumn', 'file':'figs/static-stimuli.png', 'page_position':'htb!'}
 Example of a set of 6 different gratings separated by 30$^o$ each.
 
 *** Response to drifting gratings
@@ -329,8 +326,6 @@ none & 0 & 0 & 0 & 0\\
 \hline
 \end{tabular}
 \end{center}
-
-
 
 * ksjdfhskfhj
 
