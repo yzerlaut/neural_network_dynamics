@@ -4,13 +4,67 @@ from earlyVis_model import earlyVis_model
 from stimuli import visual_stimulus
 from plots import plot
 
+
 try:
     Runcase=int(sys.argv[-1])
 except ValueError:
-    Runcase='all'
+    print('Provide aither an integer, the key "all", or a specific key (see run.py)')
+    Runcase=str(sys.argv[-1])
 
 
-if (Runcase==12) or (Runcase is 'model-doc') or (Runcase is 'all'):
+np.random.seed(1)
+Nshow = 8
+
+if (Runcase==19) or (Runcase=='model-doc') or (Runcase=='all'):
+    model = earlyVis_model(from_file='data/dense-noise.npz')
+    ps = plot(model=model)
+    fig = ps.protocol_plot(cell_plot=np.random.choice(np.arange(model.Ncells), Nshow, replace=False))
+    fig.savefig('docs/figs/response-dense-noise.png')
+    ps.show()
+    
+if (Runcase==18) or (Runcase=='model-doc') or (Runcase=='all'):
+    model = earlyVis_model(from_file='data/sparse-noise.npz')
+    ps = plot(model=model)
+    fig = ps.protocol_plot(cell_plot=np.random.choice(np.arange(model.Ncells), Nshow, replace=False))
+    fig.savefig('docs/figs/response-sparse-noise.png')
+    ps.show()
+    
+if (Runcase==15) or (Runcase=='model-doc') or (Runcase=='all'):
+    model = earlyVis_model(from_file='data/static-grating.npz')
+    ps = plot(model=model)
+    fig = ps.protocol_plot(cell_plot=np.random.choice(np.arange(model.Ncells), Nshow, replace=False))
+    fig.savefig('docs/figs/response-static-grating.png')
+    ps.show()
+    
+if (Runcase==14) or (Runcase=='model-doc') or (Runcase=='all'):
+    model = earlyVis_model(from_file='data/drifting-grating.npz')
+    ps = plot(model=model)
+    fig = ps.protocol_plot(cell_plot=np.random.choice(np.arange(model.Ncells), Nshow, replace=False))
+    fig.savefig('docs/figs/response-drifting-grating.png')
+    ps.show()
+    
+if (Runcase==15) or (Runcase=='model-doc') or (Runcase=='all'):
+    model = earlyVis_model(from_file='data/static-grating.npz')
+    ps = plot(model=model)
+    fig = ps.protocol_plot(cell_plot=np.random.choice(np.arange(model.Ncells), Nshow, replace=False))
+    fig.savefig('docs/figs/response-static-grating.png')
+    ps.show()
+    
+if (Runcase==14) or (Runcase=='model-doc') or (Runcase=='all'):
+    model = earlyVis_model(from_file='data/drifting-grating.npz')
+    ps = plot(model=model)
+    fig = ps.protocol_plot(cell_plot=np.random.choice(np.arange(model.Ncells), Nshow, replace=False))
+    fig.savefig('docs/figs/response-drifting-grating.png')
+    ps.show()
+    
+if (Runcase==13) or (Runcase=='model-doc') or (Runcase=='all'):
+    model = earlyVis_model(from_file='data/grating-saccadic.npz')
+    ps = plot(model=model)
+    fig = ps.protocol_plot(cell_plot=np.random.choice(np.arange(model.Ncells), Nshow, replace=False))
+    fig.savefig('docs/figs/response-static-grating-saccadic.png')
+    ps.show()
+    
+if (Runcase==12) or (Runcase=='model-doc') or (Runcase=='all'):
     """
     demo fig of dynamic stimuli
     """
@@ -18,7 +72,7 @@ if (Runcase==12) or (Runcase is 'model-doc') or (Runcase is 'all'):
     ps = plot(model=model)
     
     fig, AX = ps.ge.figure(axes=(5,6), figsize=(.9,.7),
-                           wspace=0.2, hspace=0.2, left=1.5, bottom=0., top=0.4, right=0.1)
+                           wspace=0.2, hspace=0.2, left=1.5, bottom=0.5, top=0.4, right=0.1)
 
     stim = visual_stimulus('drifting-grating')
     params = ' ($f$, $c$, $\\theta$, $\Psi$, $v_{dg}$)'
@@ -46,18 +100,22 @@ if (Runcase==12) or (Runcase is 'model-doc') or (Runcase is 'all'):
                                   with_time_annotation=False)
 
     stim = visual_stimulus('center-surround')
-    params = ' ($c_{CS}$)'
+    params = ' ($D_C$, $T_C$, $D_S$, $T_S$)'
     ps.ge.annotate(AX[4][0], 'centered-surround\nprotocols\n%s' % params,
                    (-0.55,0.5), va='center', ha='center')
     ps.show_visual_stim_snapshots(stim, np.linspace(0, 1.2, 6), AX[4],
                                   with_time_annotation=False)
+
     
+    sax = ps.ge.arrow(fig, x0=0.1, y0=.1, dx=.87, dy=0.,
+                      width=0.01, head_width=0.06)
+    ps.ge.annotate(fig, 'time', (.5, .03), ha='center')
     
     fig.savefig('docs/figs/dynamic-stimuli.png')
     ps.show()
     
     
-if (Runcase==11) or (Runcase is 'model-doc') or (Runcase is 'all'):
+if (Runcase==11) or (Runcase=='model-doc') or (Runcase=='all'):
     """
     demo fig of static stimuli
     """
@@ -141,7 +199,7 @@ if (Runcase==11) or (Runcase is 'model-doc') or (Runcase is 'all'):
     fig.savefig('docs/figs/static-stimuli.png')
     ps.show()
     
-if (Runcase==10) or (Runcase is 'model-doc') or (Runcase is 'all'):
+if (Runcase==10) or (Runcase=='model-doc') or (Runcase=='all'):
     """
     demo fig of SEM model
     """
@@ -152,7 +210,7 @@ if (Runcase==10) or (Runcase is 'model-doc') or (Runcase is 'all'):
     fig.savefig('docs/figs/SEM-model.png')
     plot_sim.show()
     
-if (Runcase==9) or (Runcase is 'model-doc') or (Runcase is 'all'):
+if (Runcase==9) or (Runcase=='model-doc') or (Runcase=='all'):
     """
     demo fig of LNP model
     """
@@ -169,13 +227,15 @@ if (Runcase==9) or (Runcase is 'model-doc') or (Runcase is 'all'):
 
     s = np.array([1 if tt>0.4 else 0 for tt in t])
     s[(t>0.1) & (t<0.2)] = -1
+    s[(t>1.2) & (t<1.25)] = -1
+    
     AX[0].plot(t, s, 'k-')
     plot_sim.ge.set_plot(AX[0], ['left'], ylabel='  input\n  signal',
                          yticks=[-1,0,1], xlim=[t[0], t[-1]])
     r, a = model.temporal_filtering(t, s)
     AX[1].plot(t, a, '-', color=plot_sim.ge.purple, label='a(t)')
     AX[1].plot(t, r, '-', color=plot_sim.ge.blue, lw=2, label='r(t)')
-    plot_sim.ge.annotate(AX[1], 'r(t)', (.6,-.1), color=plot_sim.ge.blue)
+    plot_sim.ge.annotate(AX[1], 'r(t)', (.6,0.), color=plot_sim.ge.blue)
     plot_sim.ge.annotate(AX[1], 'a(t)', (.6,1), color=plot_sim.ge.purple)
     plot_sim.ge.set_plot(AX[1], ['left'], ylabel='processed\nsignal', xlim=[t[0], t[-1]])
     model.RATES = [model.compute_rates(r)]
@@ -189,7 +249,7 @@ if (Runcase==9) or (Runcase is 'model-doc') or (Runcase is 'all'):
                          ylim=[0,1], xlim=[t[0], t[-1]])
     fig.savefig('docs/figs/LNP-model.png')
     plot_sim.show()
-if (Runcase==8) or (Runcase is 'model-doc') or (Runcase is 'all'):
+if (Runcase==8) or (Runcase=='model-doc') or (Runcase=='all'):
     model = earlyVis_model()
     model.draw_cell_RF_properties(model.Ncells, clustered_features=True)
     plot_sim = plot(model=model)
@@ -197,39 +257,108 @@ if (Runcase==8) or (Runcase is 'model-doc') or (Runcase is 'all'):
     fig = plot_sim.plot_RF_properties(cell_list=icells)
     fig.savefig('docs/figs/RF.png')
     plot_sim.show()
-if (Runcase==7) or (Runcase is 'model-doc') or (Runcase is 'all'):
+if (Runcase==7) or (Runcase=='model-doc') or (Runcase=='all'):
     model = earlyVis_model()
     model.draw_cell_RF_properties(model.Ncells, clustered_features=True)
     plot_sim = plot(model=model)
     fig = plot_sim.show_cell_props_distrib()
     fig.savefig('docs/figs/cell-props.png')
     plot_sim.show()
-if (Runcase==6) or (Runcase is 'all'):
+
+
+if (Runcase==6) or (Runcase=='all'):
     model = earlyVis_model(from_file='data/drifting-grating.npz')
     plot_sim = plot(model=model)
     plot_sim.protocol_plot()
     plot_sim.show()
-if (Runcase==5) or (Runcase is 'all'):
+if (Runcase==5) or (Runcase=='all'):
     model = earlyVis_model()
-    model.full_process('drifting-grating', '', seed=3)
+    model.full_process('drifting-grating', '')
     model.save_data('data/drifting-grating.npz')
-if (Runcase==4) or (Runcase is 'all'):
+if (Runcase==4) or (Runcase=='all'):
     model = earlyVis_model()
-    model.full_process('sparse-noise', 'saccadic', seed=3)
+    model.full_process('sparse-noise', 'saccadic')
     model.save_data('data/sparse-noise-saccadic.npz')
-if (Runcase==3) or (Runcase is 'all'):
+if (Runcase==3) or (Runcase=='all'):
     model = earlyVis_model()
-    model.full_process('dense-noise', '', seed=3)
+    model.full_process('dense-noise', 'saccadic')
     model.save_data('data/dense-noise.npz')
-if (Runcase==2) or (Runcase is 'all'):
+if (Runcase==2) or (Runcase=='all'):
     model = earlyVis_model()
-    model.full_process('sparse-noise', '', seed=3)
+    model.full_process('sparse-noise', '')
     model.save_data('data/sparse-noise.npz')
-if (Runcase==1) or (Runcase is 'all'):
+if (Runcase==1) or (Runcase=='all'):
     model = earlyVis_model()
-    model.full_process('grating', 'saccadic', seed=3)
+    model.full_process('grating', 'saccadic')
     model.save_data('data/grating-saccadic.npz')
-if (Runcase==0) or (Runcase is 'all'):
+if (Runcase==0) or (Runcase=='all'):
     model = earlyVis_model()
-    model.full_process('drifting-grating', 'saccadic', seed=3)
-    model.save_data('data/drifting-grating-saccadic.npz')
+    model.full_process('grating', '')
+    model.save_data('data/static-grating.npz')
+if (Runcase==1) or (Runcase=='all'):
+    model = earlyVis_model()
+    model.full_process('grating', 'saccadic')
+    model.save_data('data/grating-saccadic.npz')
+if (Runcase==0) or (Runcase=='all'):
+    model = earlyVis_model()
+    model.full_process('grating', '')
+    model.save_data('data/static-grating.npz')
+    
+if (Runcase=='model-doc-plot'):
+    
+    model = earlyVis_model()
+    np.random.seed(9)
+    cell_list = np.random.choice(np.arange(model.Ncells), Nshow, replace=False)
+    for stim in ['grating', 'drifting-grating', 'sparse-noise',
+                 'dense-noise', 'center-surround', 'natural-image']:
+        for em in ['', 'saccadic']:
+            model = earlyVis_model(from_file='data/%s-%s.npz' % (stim,em))
+            ps = plot(model=model)
+            fig = ps.protocol_plot(cell_plot=cell_list)
+            fig.savefig('docs/figs/response-%s-%s.png' % (stim,em))
+            
+if (Runcase=='model-doc-data'):
+    for stim in ['grating', 'drifting-grating', 'sparse-noise',
+                 'dense-noise', 'center-surround', 'natural-image']:
+        for em in ['', 'saccadic']:
+            model = earlyVis_model()
+            model.full_process(stim, em)
+            model.save_data('data/%s-%s.npz' % (stim,em))
+
+if (Runcase=='model-seed-dep'):
+
+    N_RF, N_STIM, N_SEM, N_POISSON = 2, 2, 2, 2
+    for stim in ['grating', 'drifting-grating', 'sparse-noise',
+                 'dense-noise', 'center-surround', 'natural-image']:
+        print('-----------------------------------------------------')
+        print('-----     %s                 -------------------' % stim)
+        print('-----------------------------------------------------')
+        for em in ['fixed', 'saccadic']:
+            for RF_seed in np.arange(N_RF):
+                for stim_seed in np.arange(N_STIM):
+                    if (stim in ['grating', 'drifting-grating',
+                                 'center-surround', 'natural-image']) and stim_seed>0:
+                        pass
+                    else:
+                        for SEM_seed in np.arange(N_SEM):
+                            if (em in ['fixed']) and SEM_seed>0:
+                                pass
+                            else:
+                                model = earlyVis_model()
+                                model.full_process(stim, em,
+                                                   RF_seed=RF_seed,
+                                                   em_seed=SEM_seed,
+                                                   stim_seed=stim_seed)
+                                model.save_data('data/%s-%s-RFseed-%i-StimSeed-%i-SEMseed-%i.npz' %\
+                                                (stim,em,RF_seed,stim_seed,SEM_seed))
+
+                                for poisson_seed in range(N_POISSON):
+
+                                    model = earlyVis_model(from_file='data/%s-%s-RFseed-%i-StimSeed-%i-%i-SEMseed-%i.npz' %\
+                                                           (stim,em,RF_seed,stim_seed, SEM_seed))
+
+                                    model.half_process2(seed=poisson_seed)
+                                    model.save_data('data/%s-%s-RFseed-%i-StimSeed-%i-%i-SEMseed-%i-PoissonSeed-%i.npz' %\
+                                                    (stim,em,RF_seed,stim_seed,SEM_seed,poisson_seed))
+
+    

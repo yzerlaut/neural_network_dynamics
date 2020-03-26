@@ -14,14 +14,14 @@ screen_params0 = {
     # units of the visual field is degree
     'screen_width':16./9.*50, # degree
     'screen_height':50.,
-    'screen_dpd':10, # dot per degree (dpd)
-    'screen_refresh_rate':30., #in Hz
+    'screen_dpd':3, # dot per degree (dpd)
+    'screen_refresh_rate':60., #in Hz
 }
 
 stim_params0 = {
     'stim_tstart':0.2, # in seconds
     'stim_tend':5, # in seconds
-    'lumin_value_at_init':0.5, # grey screen in pre-screen
+    'lumin_value_at_init':0., # black screen in pre-stim
     'static':False,
     # gratings drifting and static
     'theta':np.pi/6.,
@@ -30,12 +30,12 @@ stim_params0 = {
     'spatial_freq':0.07,
     # center and surround props
     'center':(40, 20), 
-    'center_radius':5,
+    'center_radius':8,
     'center_contrast':1.,
     'center_spatial_freq' : 0.15,
     'center_spatial_phase' : np.pi,
     'center_theta' : np.pi/6.,
-    'surround_radius':10,
+    'surround_radius':16,
     'surround_contrast':1.,
     'surround_spatial_freq' : 0.15,
     'surround_spatial_phase' : np.pi,
@@ -128,9 +128,13 @@ class visual_stimulus:
                  stimulus_key='',
                  stimulus_params=None,
                  screen_params=None,
-                 stim_number=1,
+                 stim_number=3,
                  seed=1):
 
+
+        # initialize random seed here
+        np.random.seed(seed)
+        
         if screen_params is not None:
             self.screen_params = screen_params
         else:
@@ -145,7 +149,7 @@ class visual_stimulus:
         
         self.initialize_screen_time_axis()
         
-        if stimulus_key=='static-full-field-grating':
+        if stimulus_key in ['static-full-field-grating', 'grating']:
             self.static_full_field_grating(**self.stimulus_params)
         elif stimulus_key=='static-center-grating':
             self.static_center_grating(**self.stimulus_params)
@@ -153,21 +157,20 @@ class visual_stimulus:
             self.static_surround_grating(**self.stimulus_params)
         elif stimulus_key=='static-center-surround-grating':
             self.static_center_surround_grating(**self.stimulus_params)
-        elif stimulus_key=='natural-images':
-            self.natural_images(image_number=stim_number)
+        elif stimulus_key=='natural-image':
+            self.natural_image(image_number=stim_number)
         elif stimulus_key in ['drifting-grating', 'full-field-drifting-grating']:
             self.drifting_grating(**self.stimulus_params)
         elif stimulus_key=='sparse-noise':
-            self.sparse_noise(seed=seed, **self.stimulus_params)
+            self.sparse_noise(**self.stimulus_params)
         elif stimulus_key=='dense-noise':
-            self.dense_noise(seed=seed, **self.stimulus_params)
+            self.dense_noise(**self.stimulus_params)
         elif stimulus_key in ['gaussian-blob-appearance', 'gaussian-blob']:
             # self.stimulus_params['lumin_value_at_init']=0., # black screen in pre-screen
             self.gaussian_blob_appearance(**self.stimulus_params)
         elif stimulus_key=='gaussian-blob':
             self.gaussian_blob_static(**self.stimulus_params)
         elif stimulus_key in ['center-surround-protocols', 'center-surround']:
-            print('ok !!')
             self.center_surround_protocols(**self.stimulus_params)
         elif stimulus_key=='black-screen': # grey screen by default
             self.black_screen()
@@ -182,11 +185,15 @@ class visual_stimulus:
         """
         initialize time array based on refresh rate
         """
-        self.t0 = self.stimulus_params['stim_tstart']
-        self.tstop = self.stimulus_params['stim_tend']
-        self.iTmax = int(self.tstop*self.SCREEN['refresh_rate'])+1
-        self.it0 = int(self.t0*self.SCREEN['refresh_rate'])+1
-        self.screen_time_axis = np.arange(self.iTmax)/self.SCREEN['refresh_rate']
+
+        self.iTmax = int(self.stimulus_params['stim_tend']*self.SCREEN['refresh_rate'])
+        self.screen_time_axis = np.arange(self.iTmax+1)/self.SCREEN['refresh_rate']
+        self.tstop = self.screen_time_axis[self.iTmax]
+        
+        # lock stim-start to a new frame
+        self.it0 = int(self.stimulus_params['stim_tstart']*self.SCREEN['refresh_rate'])
+        self.t0 = self.screen_time_axis[self.it0]
+        
         self.screen_time_axis_from_t0 = self.screen_time_axis[self.it0:]-self.t0
 
     def from_time_to_array_index(self, t):
@@ -195,7 +202,7 @@ class visual_stimulus:
         elif self.stimulus_params['static']:
             return 1
         else:
-            return int(t*self.SCREEN['refresh_rate'])
+            return int(np.round(t*self.SCREEN['refresh_rate'],0))
     
     def get(self, t):
         """
@@ -312,7 +319,7 @@ class visual_stimulus:
         self.full_array[i_screen_time,:,:][cond2] = 0.5-surround_contrast*np.cos(2*np.pi*surround_spatial_freq*x_theta2[cond2]+surround_spatial_phase)/2.
 
         
-    def natural_images(self,
+    def natural_image(self,
                        i_screen_time=1,
                        image_number=3, **args):
         
@@ -365,7 +372,7 @@ class visual_stimulus:
             self.full_array[it+self.it0,:,:] = 0.5-contrast*np.cos(2*np.pi*spatial_freq*x_theta+spatial_phase+2.*np.pi*drifting_speed_cycle_per_second*t)/2.
 
 
-    def sparse_noise(self, seed=0,
+    def sparse_noise(self,
                      SN_square_size=4.,
                      SN_sparseness=0.1,
                      SN_noise_mean_refresh_time=0.5,
@@ -373,7 +380,6 @@ class visual_stimulus:
                      **args):
 
         self.initialize_dynamic()
-        np.random.seed(seed)
                                    
         Nx = np.floor(self.SCREEN['width']/SN_square_size)+1
         Ny = np.floor(self.SCREEN['height']/SN_square_size)+1
@@ -404,13 +410,12 @@ class visual_stimulus:
             self.full_array[it1:it2,:,:] = Z
 
 
-    def dense_noise(self, seed=0,
+    def dense_noise(self,
                     DN_square_size=4.,
                     DN_noise_mean_refresh_time=0.5,
                     DN_noise_rdm_jitter_refresh_time=0.2,
                     **args):
 
-        np.random.seed(seed)
         self.initialize_dynamic()
                                    
         Nx = np.floor(self.SCREEN['width']/DN_square_size)+1

@@ -188,7 +188,7 @@ class plot:
         circ=plt.Circle((self.model.CELLS['x0'][i]*self.SCREEN['dpd'],
                          self.model.CELLS['y0'][i]*self.SCREEN['dpd']),
                         radius=self.model.CELLS['size'][i]*self.SCREEN['dpd'],
-                        color='w', fill=False, lw=3)
+                        facecolor='w', fill=True, lw=0)
         ax.add_patch(circ)
         ax.axis('off')
 
@@ -248,7 +248,7 @@ class plot:
                 self.screen_plot(visual_stim.get(t), with_scale_bar=False, ax=ax)
                 
             if add_SEM:
-                its=np.argmin((t-visual_stim.dt_screen)**2)[0]
+                its=np.argmin((t-self.model.t_screen)**2)
                 self.ge.multicolored_line(self.model.EM['x']*self.model.params['screen_dpd'],
                                           self.model.EM['y']*self.model.params['screen_dpd'],
                                           np.linspace(0, 1, len(self.model.EM['x'])),
@@ -258,107 +258,96 @@ class plot:
                            alpha=1, s=10,
                            color=self.ge.cool(np.linspace(0, 1, len(self.model.EM['x']))[its]))
 
-    def protocol_plot(self, cell_plot=3):
+    def protocol_plot(self, cell_plot=3, nscreen=4):
 
-        if type(cell_plot) in (list, np.ndarray, np.array):
-            pass
-        else:
+        if not type(cell_plot) in (list, np.ndarray, np.array):
             cell_plot = range(cell_plot)
-
             
-        axes_extents = [[[1,3], [1,3], [1,3], [1,3], [1,3]],
-                        [[5,1]],
+        axes_extents = [[[1,3] for i in range(nscreen)],
                         [[5,3]],
-                        [[5,3]]]
+                        [[5,2]],
+                        [[5,2]]]
         for i in cell_plot:
             axes_extents.append([[5,2]])
             axes_extents.append([[5,2]])
-        axes_extents.append([[5,3]])
+        axes_extents.append([[5,4]])
         
         fig, AX = self.ge.figure(axes_extents=axes_extents,
-                                 figsize=(.7, .2),
-                                 hspace=0.8, top=0.8, left=1.2, bottom=2.)
+                                 figsize=(.63, .15),
+                                 hspace=0.9, top=0.8, left=1.15, bottom=3.5, right=.6)
 
         visual_stim = visual_stimulus(self.model.params['stimulus_key'],
                                       stimulus_params=self.model.params,
                                       screen_params=self.model.params)
 
-        for i in range(5): # showing the screen stim at 5 successive timepoints
-            it=int(self.model.t[-1]/self.model.dt/5)*i
-            its=int(self.model.t_screen[-1]/self.model.dt_screen/5)*i
-            self.screen_plot(visual_stim.get(self.model.t[it]),
-                        Xbar_label='10$^o$  t=%.1fs' % self.model.t[it], ax=AX[0][i])
-            self.ge.multicolored_line(self.model.EM['x']*self.model.params['screen_dpd'],
-                                      self.model.EM['y']*self.model.params['screen_dpd'],
-                                      np.linspace(0, 1, len(self.model.EM['x'])),
-                                      ax=AX[0][i], lw=0.5)
-            AX[0][i].scatter([self.model.EM['x'][its]*self.model.params['screen_dpd']],
-                             [self.model.EM['y'][its]*self.model.params['screen_dpd']],
-                             alpha=1, s=10,
-                             color=self.ge.cool(np.linspace(0, 1, len(self.model.EM['x']))[its]))
-
-        # a nice time axis with the multiline
-        AX[1][0].axis('off')
-        upper_plot_pos = AX[2][0].get_position()
-        time_axis = plt.axes([upper_plot_pos.x0, upper_plot_pos.y1,
-                              upper_plot_pos.x1-upper_plot_pos.x0,
-                              .2*(upper_plot_pos.y1-upper_plot_pos.y0)])
-        self.ge.multicolored_line(self.model.t_screen, np.zeros(len(self.model.t_screen)),
-                                  np.linspace(0.3, 1., len(self.model.t_screen)),
-                                  ax=time_axis, lw=3)
-        self.ge.annotate(time_axis, 'time (s)\n', (.5, 1.), ha='center')
-        self.ge.set_plot(time_axis, [],
-                         xlim=[self.model.t[0], self.model.t[-1]], ylim=[-1,1])
+        self.show_visual_stim_snapshots(visual_stim,
+                                        np.linspace(0, nscreen/(nscreen+1)*self.model.t[-1], nscreen),
+                                        AX[0],
+                                        with_time_annotation=True,
+                                        add_SEM=True)
 
         ixc, iyc = int(self.SCREEN['Xd_max']/2),int(self.SCREEN['Yd_max']/2)
         luminance_at_center = [visual_stim.get(t)[ixc, iyc] for t in self.model.t_screen]
-        AX[2][0].plot(self.model.t_screen, luminance_at_center)
-        self.ge.set_plot(AX[2][0], ['left', 'top'], xlim=[self.model.t[0], self.model.t[-1]],
-                         ylabel='norm. lum.\nat center')
+        AX[1][0].plot(self.model.t_screen, luminance_at_center)
+        self.ge.set_plot(AX[1][0], ['left'], xlim=[self.model.t[0], self.model.t[-1]],
+                         yticks=[0, 0.5, 1.],
+                         ylabel='luminance\nat center')
 
-        AX[3][0].plot(self.model.t_screen, self.model.EM['x']-self.model.EM['x'][0]+1, color='firebrick')
-        self.ge.annotate(AX[3][0], 'x(t)', (0.,4), xycoords='data', color='firebrick')
-        AX[3][0].plot(self.model.t_screen, self.model.EM['y']-self.model.EM['y'][0]-1, color='olivedrab')
-        self.ge.annotate(AX[3][0], 'y(t)', (0.,-4),xycoords='data',color='olivedrab', va='top')
-        self.ge.set_plot(AX[3][0], ['left'], ylabel='position\neye($^{o}$)',
+        # eye movement
+        self.ge.annotate(AX[3][0], 'gaze dir.', (-.19,.4), rotation=90)
+        self.ge.multicolored_line(self.model.t_screen, self.model.EM['x'],
+                                  np.linspace(0.3, 1., len(self.model.t_screen)),
+                                  ax=AX[2][0], lw=2)
+        self.ge.set_plot(AX[2][0], ['left'], ylabel='x($^{o}$)',
                          xlim=[self.model.t[0], self.model.t[-1]],
-                         ylim=.5*self.SCREEN['width']*np.array([-1,1]))
+                         ylim=[0, self.SCREEN['width']], yticks=[20, 60])
+        self.ge.multicolored_line(self.model.t_screen, self.model.EM['y'],
+                                  np.linspace(0.3, 1., len(self.model.t_screen)),
+                                  ax=AX[3][0], lw=2)
+        self.ge.set_plot(AX[3][0], ['left'], ylabel='y($^{o}$)',
+                         xlim=[self.model.t[0], self.model.t[-1]],
+                         ylim=[0, self.SCREEN['height']], yticks=[10, 40])
+
+        # RASTER plot
+        for i, spk in enumerate(self.model.SPIKES):
+            AX[-1][0].scatter(spk, i*np.ones(len(spk)), s=3, color='k')
+        self.ge.set_plot(AX[-1][0], ylabel='cell ID', xlabel='time (s)',
+                         xlim=[self.model.t[0], self.model.t[-1]])
 
         # loop over cells:
+        colors = [self.ge.orange, 'olive', self.ge.brown,
+                  self.ge.blue, 'firebrick', self.ge.purple, self.ge.cyan, self.ge.red]
         for k, i in enumerate(cell_plot):
-            cc = self.ge.colors[k+5] # cell color
+            cc = colors[k] # cell color
             # cell annotation
-            self.ge.annotate(AX[5+2*i][0], 'cell %i' % (i+1), (0.5,1.),
+            self.ge.annotate(AX[5+2*k][0], 'cell %i' % (i+1), (0.5,1.),
                              color=cc, va='bottom', bold=True, ha='center')
             # RF feature inset
-            plot_pos = AX[4+2*i][0].get_position()
+            plot_pos = AX[4+2*k][0].get_position()
             dy = .9*(plot_pos.y1-plot_pos.y0)
             inset = plt.axes([plot_pos.x0, plot_pos.y0-dy/1.5, 16./9.*dy, dy])
             self.gabor_plot(i, ax=inset)
             # RF location inset
-            dy = .7*(plot_pos.y1-plot_pos.y0)
+            dy = (plot_pos.y1-plot_pos.y0)
             inset2 = plt.axes([plot_pos.x1-16./9.*dy, plot_pos.y0-dy/1.7, 16./9.*dy, dy])
             self.RF_location_plot(i, ax=inset2)
 
-            AX[4+2*i][0].plot(self.model.t, self.model.RF[i,:], color=cc)
-            AX[4+2*i][0].plot(self.model.t, self.model.ADAPT[i,:], ':', color=cc)
-            ymax = np.max([0.5, np.round(self.model.RF[i,:].max()+.1, 1)])
-            self.ge.set_plot(AX[4+2*i][0], ['left'], ylabel='a.u.',
+            AX[4+2*k][0].plot(self.model.t_screen, self.model.RF_filtered[i,:], '--', color=cc)
+            AX[4+2*k][0].plot(self.model.t, self.model.RF[i,:], color=cc)
+            AX[4+2*k][0].plot(self.model.t, self.model.ADAPT[i,:], ':', color=cc)
+            ymax = np.max([0.5, np.abs(self.model.RF_filtered[i,:]).max(), self.model.RF[i,:].max()])
+            self.ge.set_plot(AX[4+2*k][0], ['left'], ylabel='s,a,r',
                              ylim = [-ymax, ymax], num_yticks=3,
                              xlim=[self.model.t[0], self.model.t[-1]])
             
             ymax = np.round(self.model.RATES[i,:].max()+1, 0)
-            AX[5+2*i][0].plot(self.model.t, self.model.RATES[i,:], color=cc, lw=2)
+            AX[5+2*k][0].plot(self.model.t, self.model.RATES[i,:], color=cc, lw=2)
             for spk in self.model.SPIKES[i]:
-                AX[5+2*i][0].plot([spk, spk], [0, ymax], color=cc, lw=0.5)
-            self.ge.set_plot(AX[5+2*i][0], ['left'], ylabel='Hz',
-                             ylim = [0, ymax], num_yticks=2,
+                AX[5+2*k][0].plot([spk, spk], [0, ymax], color=cc, lw=0.5)
+                AX[-1][0].scatter([spk], [i], s=3, color=cc)
+            self.ge.set_plot(AX[5+2*k][0], ['left'], ylabel='rate\n(Hz)',
+                             ylim = [-2, ymax], num_yticks=2,
                              xlim=[self.model.t[0], self.model.t[-1]])
-
-        for i, spk in enumerate(self.model.SPIKES):
-            AX[-1][0].scatter(spk, i*np.ones(len(spk)), s=3, color=self.ge.brown)
-        self.ge.set_plot(AX[-1][0], ylabel='cell ID', xlabel='time (s)',
-                         xlim=[self.model.t[0], self.model.t[-1]])
 
         return fig
 

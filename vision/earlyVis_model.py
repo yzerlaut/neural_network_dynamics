@@ -13,13 +13,13 @@ from vision.virtual_eye_movement import virtual_eye_movement, vem_params0
 params0 = {
     # visual space props
     'height_VF':40, # degree, Angular height of the visual field
-    'width_VF':int(round(10*16./9.*40,0)/10), # degree, Angular width of the visual field
+    'width_VF':int(round(40*10*16./9.,0)/10), # degree, Angular width of the visual field
     'center_VF':45, # degree, Field center from antero-posterior axis
     # neuronal space props
-    'Ncells':100,
+    'Ncells':20,
     'Area_cells': np.round(np.sqrt(100/177e3/0.2),2),#sqrt(Ncell/177e3/Height_L4),177e3->Markram (2015)
     # receptive fields
-    'clustered_features':True,
+    'clustered_features':False,
     'rf_fraction':.4, # fraction of visual space covered by the cells, fraction of the screen 
     'rf_x0':[20, 70.], # degrees
     'rf_y0':[20, 30.], # degrees
@@ -28,14 +28,14 @@ params0 = {
     'rf_beta':[0.8, 2.5],
     'rf_theta':[0., np.pi],
     'rf_psi':[0., 2*np.pi], 'rf_psi_peak1':np.pi, 'rf_psi_peak2':3*np.pi/2, 'rf_psi_Dwidth':np.pi/4,
-    'convolve_extent_factor':1.5, # limit the convolution to thisfactor*rf-width to make comput faster
+    'convolve_extent_factor':1.5,
     # temporal filtering
     'tau_adapt':500e-3,
     'tau_delay':30e-3,
     'fraction_adapt':0.2,
     # non-linear amplification
     'NL_baseline':0.5,
-    'NL_slope_Hz_per_Null':20.,
+    'NL_slope_Hz_per_Null':10.,
     # # virtual eye movement
     'duration_distance_slope':1.9e-3, # s/degree
     'duration_distance_shift':63e-3, # s
@@ -85,13 +85,14 @@ class earlyVis_model:
         self.t = np.arange(int(self.params['tstop']/self.dt))*self.dt
 
         
-    def init_visual_stim(self, stimulus_key='', seed=1):
+    def init_visual_stim(self, stimulus_key='', seed=2):
         """ all parameters have to be lumped in self.params """
         print('[...] Initializing the visual stimulation')
         self.params['stimulus_key'] = stimulus_key
         self.visual_stim = visual_stimulus(stimulus_key,
                                            stimulus_params=self.params,
-                                           screen_params=self.params)
+                                           screen_params=self.params,
+                                           seed=seed)
 
     def init_eye_movement(self, eye_movement_key, seed=1):
         """ all parameters have to be lumped in self.params """
@@ -142,7 +143,8 @@ class earlyVis_model:
 
         
         
-    def draw_cell_RF_properties(self, seed,
+    def draw_cell_RF_properties(self,
+                                seed=1,
                                 clustered_features=True,
                                 n_clustering=10):
 
@@ -263,7 +265,7 @@ class earlyVis_model:
         self.RF_filtered = RF_filtered
 
     def keys_for_saving(self):
-        return ['CELLS', 't_screen', 'EM', 'RF', 'ADAPT', 'RATES', 'SPIKES']
+        return ['CELLS', 't_screen', 'EM', 'RF_filtered', 'RF', 'ADAPT', 'RATES', 'SPIKES']
     
     def resample_RF_traces(self):
 
@@ -285,7 +287,6 @@ class earlyVis_model:
         r[i+1= r[i]+dt/tau_delay*(-r[i]+s[i]-a[i])
         a[i]+dt/tau_adapt*((1-fraction_adapt)/fraction_adapt*r[i]-a[i])
         """
-        # return [r+dt/self.params['tau_delay']*((np.sign(s)+1)*s/2.)-r-a,
         return [r+dt/self.params['tau_delay']*((np.sign(s)+1)*s/2.-r-a),
                 a+dt/self.params['tau_adapt']*((1-self.params['fraction_adapt'])/self.params['fraction_adapt']*r-a)]
 
@@ -299,8 +300,9 @@ class earlyVis_model:
 
 
     def compute_rates(self, x):
-        return self.params['NL_baseline']+self.params['NL_slope_Hz_per_Null']*x
- 
+        return self.params['NL_baseline']+self.params['NL_slope_Hz_per_Null']*(np.sign(x)+1)/2.*x
+
+    
     def Poisson_process_transform(self, seed=0):
         """
         inhomogeneous POisson process
@@ -316,15 +318,15 @@ class earlyVis_model:
 
 
     def half_process1(self, stimulus_key, eye_movement_key,
-                      seed=2):
+                      stim_seed=2, em_seed=3, RF_seed=4):
         """
         from drawing to the traces from the spatial filtering of the visual input
         """
-        self.draw_cell_RF_properties(self.Ncells,
-                                      clustered_features=self.params['clustered_features'])
+        self.draw_cell_RF_properties(seed=RF_seed,
+                                     clustered_features=self.params['clustered_features'])
 
-        self.init_visual_stim(stimulus_key, seed=seed+1)
-        self.init_eye_movement(eye_movement_key, seed=seed+2)
+        self.init_visual_stim(stimulus_key, seed=stim_seed)
+        self.init_eye_movement(eye_movement_key, seed=em_seed)
         self.RF_filtering()
         
     def half_process2(self,
@@ -332,26 +334,34 @@ class earlyVis_model:
         """
         from RF traces to spikes
         """
-        RF0 = self.resample_RF_traces()
-        self.RF, self.ADAPT = 0*RF0, 0*RF0
-        self.RATES = 0*RF0
-        print('[...] Temporal filtering of the RF-traces (delay and adaptation)')
+        RF_OUTPUT = self.resample_RF_traces()
+        self.RF, self.ADAPT = 0*RF_OUTPUT, 0*RF_OUTPUT
+        self.RATES = 0*RF_OUTPUT
+        print('[...] Non-linear transformation & Temporal filtering (delay and adaptation)')
         for icell in range(self.Ncells):
-            self.RF[icell,:], self.ADAPT[icell,:] = self.temporal_filtering(self.t, RF0[icell,:])
+            self.RF[icell,:], self.ADAPT[icell,:] = self.temporal_filtering(self.t, RF_OUTPUT[icell,:])
             
-        print('[...] Non-linear transformation of RF-traces to get firing rates')
+        print('[...] Transformation to firing rates')
         for icell in range(self.Ncells):
             self.RATES[icell,:] = self.compute_rates(self.RF[icell,:])
 
         self.Poisson_process_transform(seed+1)
 
         
-    def full_process(self, stimulus_key, eye_movement_key, seed=2):
+    def full_process(self, stimulus_key, eye_movement_key,
+                     RF_seed=1,
+                     stim_seed=2,
+                     em_seed=3,
+                     poisson_seed=4,
+                     verbose=True):
         """
         full process of the model
         """
-        self.half_process1(stimulus_key, eye_movement_key, seed=seed)
-        self.half_process2(seed=seed+1)
+        self.half_process1(stimulus_key, eye_movement_key,
+                           RF_seed=RF_seed,
+                           stim_seed=stim_seed,
+                           em_seed=em_seed)
+        self.half_process2(seed=poisson_seed)
 
     def save_data(self, filename):
 
