@@ -41,9 +41,10 @@ def raster_and_Vm_plot(data,
     AE = [[[4,2]]] # axes extent
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
-        for pop in POP_KEYS:
-            if ('VMS_%s' % pop) in data:
-                AE.append([[4,1]])
+        
+    for pop in POP_KEYS:
+        if ('VMS_%s' % pop) in data:
+            AE.append([[4,1]])
 
     tzoom=[np.max([tzoom[0], 0.]), np.min([tzoom[1], data['tstop']])]
 
@@ -67,7 +68,7 @@ def raster_and_Vm_plot(data,
     else:
         firing_rate_plot = False
         
-    n=0
+    n = 0
     for i, tpop in enumerate(POP_KEYS):
 
         cond = (data['tRASTER_%s' % tpop]>tzoom[0]) & (data['tRASTER_%s' % tpop]<tzoom[1])
