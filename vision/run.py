@@ -4,7 +4,6 @@ from earlyVis_model import earlyVis_model
 from stimuli import visual_stimulus
 from plots import plot
 
-
 try:
     Runcase=int(sys.argv[-1])
 except ValueError:

@@ -31,6 +31,10 @@ import neural_network_dynamics.theory as theory
 from theory import mean_field
 # from 
 from neural_network_dynamics.single_cell_integration import morpho_analysis
+# VISION model 
+from neural_network_dynamics.vision.earlyVis_model import earlyVis_model
+from neural_network_dynamics.vision.earlyVis_model import full_params0 as vision_params
+from neural_network_dynamics.vision.plots import plot as vision_plot
 
 #########################################################################
 ######## Some quick visualization functions

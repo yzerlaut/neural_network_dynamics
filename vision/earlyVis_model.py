@@ -45,7 +45,6 @@ params0 = {
 }
 
 full_params0 = {**params0, **screen_params0, **stim_params0, **vem_params0}
-np.savez('docs/params.npz', **full_params0)
 
 class earlyVis_model:
     """
@@ -386,20 +385,4 @@ if __name__=='__main__':
 
     model = earlyVis_model()
 
-    # model.full_process('drifting-grating', 'saccadic', seed=3)
-    # model.save_data('data/drifting-grating-saccadic')
-
-    # model.full_process('drifting-grating', 'saccadic', seed=3)
-    model.load_data('data/drifting-grating-saccadic.npz')
-    
-    # # model.full_process('drifting-grating', '', seed=3)
-    
-    # model.half_process1('sparse-noise', 'saccadic', seed=3)
-    # model.save_RF_filtered_data('data.npz')
-    
-    # model.load_RF_filtered_data('data.npz')
-    # model.half_process2()
-    
-    # fig = model.protocol_plot()
-    # fig.savefig('docs/fig2.png')
-    # model.ge.show()
+    np.savez('docs/params.npz', **full_params0)

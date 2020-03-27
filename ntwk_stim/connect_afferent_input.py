@@ -9,6 +9,7 @@ import numpy as np
 from ntwk_stim.poisson_generator import spikes_from_time_varying_rate,\
     deal_with_multiple_spikes_per_bin
 
+
 def build_aff_to_pop_matrix(afferent_pop, target_pop,
                             Model,
                             N_source_pop=None,
@@ -123,6 +124,8 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'] = [pre_indices]
         NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'] = [pre_times]
 
+
+        
 if __name__=='__main__':
 
     print('test')
