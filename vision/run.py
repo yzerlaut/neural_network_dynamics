@@ -354,11 +354,11 @@ if (Runcase=='model-seed-dep'):
 
                                 for poisson_seed in range(N_POISSON):
 
-                                    model = earlyVis_model(from_file='data/%s-%s-RFseed-%i-StimSeed-%i-%i-SEMseed-%i.npz' %\
+                                    model = earlyVis_model(from_file='data/%s-%s-RFseed-%i-StimSeed-%i-SEMseed-%i.npz' %\
                                                            (stim,em,RF_seed,stim_seed,SEM_seed))
 
                                     model.half_process2(seed=poisson_seed)
-                                    model.save_data('data/%s-%s-RFseed-%i-StimSeed-%i-%i-SEMseed-%i-PoissonSeed-%i.npz' %\
+                                    model.save_data('data/%s-%s-RFseed-%i-StimSeed-%i-SEMseed-%i-PoissonSeed-%i.npz' %\
                                                     (stim,em,RF_seed,stim_seed,SEM_seed,poisson_seed))
 
     

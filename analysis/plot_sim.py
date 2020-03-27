@@ -92,7 +92,7 @@ def raster_and_Vm_plot(data,
         
         n += data['N_%s' % tpop]
         ge.annotate(AX[i+1], ' %s' % tpop, (1.,.5), xycoords='axes fraction',
-                    color=COLORS[i], bold=True, fontsize=ge.FONTSIZE+2)
+                    color=COLORS[i], bold=True, size='large')
 
     if firing_rate_plot:
         ge.set_plot(ax2, ['right'], ylabel='inst. Firing Rate (Hz)')
