@@ -327,7 +327,7 @@ if (Runcase=='model-doc-data'):
 
 if (Runcase=='model-seed-dep'):
 
-    N_RF, N_STIM, N_SEM, N_POISSON = 2, 2, 2, 2
+    N_RF, N_STIM, N_SEM, N_POISSON = 3, 4, 3, 10
     for stim in ['grating', 'drifting-grating', 'sparse-noise',
                  'dense-noise', 'center-surround', 'natural-image']:
         print('-----------------------------------------------------')
@@ -355,7 +355,7 @@ if (Runcase=='model-seed-dep'):
                                 for poisson_seed in range(N_POISSON):
 
                                     model = earlyVis_model(from_file='data/%s-%s-RFseed-%i-StimSeed-%i-%i-SEMseed-%i.npz' %\
-                                                           (stim,em,RF_seed,stim_seed, SEM_seed))
+                                                           (stim,em,RF_seed,stim_seed,SEM_seed))
 
                                     model.half_process2(seed=poisson_seed)
                                     model.save_data('data/%s-%s-RFseed-%i-StimSeed-%i-%i-SEMseed-%i-PoissonSeed-%i.npz' %\

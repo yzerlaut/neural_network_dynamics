@@ -28,7 +28,7 @@ params0 = {
     'rf_beta':[0.8, 2.5],
     'rf_theta':[0., np.pi],
     'rf_psi':[0., 2*np.pi], 'rf_psi_peak1':np.pi, 'rf_psi_peak2':3*np.pi/2, 'rf_psi_Dwidth':np.pi/4,
-    'convolve_extent_factor':1.5,
+    'convolve_extent_factor':1.5, # limit the convolution to thisfactor*rf-width to make comput fasterl
     # temporal filtering
     'tau_adapt':500e-3,
     'tau_delay':30e-3,
