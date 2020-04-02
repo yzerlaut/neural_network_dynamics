@@ -35,7 +35,6 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
     'pop_for_conductance' is the string identifying the source conductance
     that will be incremented by the afferent input !!
 
-    if AFF_TO_POP_MATRIX then fixed pre-pop number: see "poisson_generator.py"
     """
 
     Model = NTWK['Model']
@@ -58,7 +57,6 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
             pre_times = spikes_from_time_varying_rate(t, rate_array,\
                                                       NTWK['POPS'][ipop].N,
                                                       Nsyn,
-                                                      AFF_TO_POP_MATRIX=AFF_TO_POP_MATRIX,
                                                       SEED=(SEED+2)**2%100)
 
         # adding the additional spikes (1)
@@ -69,8 +67,7 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         if len(additional_spikes_in_terms_of_pre_pop['indices'])>0:
             try:
                 Matrix = NTWK['M_conn_'+afferent_pop+'_'+target_pop]
-                print(Matrix[0,:])
-                indices2, times2 = translate_aff_spikes_into_syn_target_events(additional_spikes_in_terms_of_pre_pop['indices'],
+                indices2, times2 = translate_aff_spikes_into_syn_target_events(np.array(additional_spikes_in_terms_of_pre_pop['indices'], dtype=int),
                                                                                additional_spikes_in_terms_of_pre_pop['times'], Matrix)
             except KeyError:
                 print("""

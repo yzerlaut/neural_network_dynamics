@@ -267,6 +267,7 @@ def build_populations(Model, POPULATIONS,
     
     NTWK = {'NEURONS':NEURONS, 'Model':Model,
             'POPULATIONS':np.array(POPULATIONS),
+            'AFFERENT_POPULATIONS':np.array(AFFERENT_POPULATIONS),
             'M':get_syn_and_conn_matrix(Model, POPULATIONS,
                                         AFFERENT_POPULATIONS=AFFERENT_POPULATIONS,
                                         verbose=verbose)}
