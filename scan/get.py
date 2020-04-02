@@ -2,15 +2,7 @@ import numpy as np
 from itertools import product
 import sys, pathlib
 import zipfile
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-try:
-    from data_analysis.IO.hdf5 import load_dict_from_hdf5
-except ImportError:
-    print('---------------------------------------------------------------')
-    print('you need the data_analysis folder')
-    print('get it at: bitbucket.org/yzerlaut/data_analysis')
-    print('---------------------------------------------------------------')
-
+from analyz.IO.hdf5 import load_dict_from_hdf5
 
 def get_scan(Model,
              filename=None,

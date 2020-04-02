@@ -107,7 +107,7 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         
     else:
         print('Nsyn = 0 for', afferent_pop+'_'+target_pop)
-        spikes, synapse, indices, times = None, None, [], []
+        spikes, synapse, indices, times, pre_indices, pre_times = None, None, [], [], [], []
     
     # storing quantities:
     if 'iRASTER_PRE' in NTWK.keys():

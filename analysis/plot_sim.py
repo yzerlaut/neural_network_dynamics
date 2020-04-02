@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pylab as plt
 
 from scipy.ndimage.filters import gaussian_filter1d
+
 def gaussian_smoothing(signal, idt_sbsmpl=10):
     return gaussian_filter1d(signal, idt_sbsmpl)
 

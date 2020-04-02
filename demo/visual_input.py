@@ -4,9 +4,9 @@ import numpy as np
 import matplotlib.pylab as plt
 import main as ntwk
 
-# from vision.earlyVis_model import earlyVis_model
-# from vision.stimuli import visual_stimulus
-# from vision.plots import plot as vision_plot
+from vision.earlyVis_model import earlyVis_model
+from vision.stimuli import visual_stimulus
+from vision.plots import plot as vision_plot
 
 
 import datavyz
@@ -71,8 +71,7 @@ if sys.argv[-1]=='plot':
     # plt.show()
 else:
 
-
-    if True:
+    if False:
         
         params = ntwk.vision_params.copy()
         params['rf_theta'] = [3*np.pi/12., 5.*np.pi/12.]
@@ -85,6 +84,7 @@ else:
         vision_model.save_data('drifting-grating-data.npz')
         
     else:
+        
         vision_model = ntwk.earlyVis_model(from_file='drifting-grating-data.npz')
 
     ps = ntwk.vision_plot(model=vision_model)
