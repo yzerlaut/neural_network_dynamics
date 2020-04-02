@@ -4,13 +4,7 @@ from itertools import combinations # for cross correlations
 import sys, pathlib
 from scipy.stats import skew
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-try:
-    from data_analysis.processing.signanalysis import get_acf_time
-except ImportError:
-    print('---------------------------------------------------------------')
-    print('you need the data_analysis folder')
-    print('get it at: bitbucket.org/yzerlaut/data_analysis')
-    print('---------------------------------------------------------------')
+from analyz.processing.signanalysis import get_acf_time
 
 def get_firing_rate(data, pop='Exc',
                     tdiscard=200):
