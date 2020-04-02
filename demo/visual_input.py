@@ -8,7 +8,6 @@ from vision.earlyVis_model import earlyVis_model
 from vision.stimuli import visual_stimulus
 from vision.plots import plot as vision_plot
 
-
 import datavyz
 
 ################################################################
@@ -61,14 +60,17 @@ if sys.argv[-1]=='plot':
     # ## ----- Plot ----- ##
     # ######################
 
-    vision_model = ntwk.earlyVis_model()
-    ## load file
-    # data = ntwk.load_dict_from_hdf5('visual_input_data.h5')
-
-    # # ## plot
-    # fig, _ = ntwk.raster_and_Vm_plot(data, smooth_population_activity=10.)
+    vision_model = ntwk.earlyVis_model(from_file='drifting-grating-data.npz')
+    ps = ntwk.vision_plot(model=vision_model)
+    fig0 = ps.protocol_plot()
     
-    # plt.show()
+    ## load file
+    data = ntwk.load_dict_from_hdf5('visual_input_data.h5')
+
+    # ## plot
+    fig, _ = ntwk.raster_and_Vm_plot(data, smooth_population_activity=10.)
+    ntwk.show()
+    
 else:
 
     if False:
@@ -87,36 +89,38 @@ else:
         
         vision_model = ntwk.earlyVis_model(from_file='drifting-grating-data.npz')
 
-    ps = ntwk.vision_plot(model=vision_model)
-    fig = ps.protocol_plot()
+    Model['N_AffExc'] = vision_model.Ncells
 
-    ntwk.show()
-    
-    
-    """
     NTWK = ntwk.build_populations(Model, ['Exc', 'Inh', 'DsInh'],
                                   AFFERENT_POPULATIONS=['AffExc'],
                                   with_raster=True,
-
                                   with_Vm=4,
-                                  # with_synaptic_currents=True,
-                                  # with_synaptic_conductances=True,
                                   verbose=True)
 
     ntwk.build_up_recurrent_connections(NTWK, SEED=5, verbose=True)
 
+    ntwk.build_fixed_afference(NTWK,
+                               ['AffExc'],
+                               ['Exc', 'Inh', 'DsInh'],
+                               SEED=6)
+
     #######################################
     ########### AFFERENT INPUTS ###########
     #######################################
+    
+    additional_spikes_in_terms_of_pre_pop={'indices':np.concatenate([np.ones(len(s)) for s in vision_model.SPIKES]),
+                                           'times':np.concatenate([1e3*np.array(s) for s in vision_model.SPIKES])}
 
-    faff = 1.
+
+    
     t_array = ntwk.arange(int(Model['tstop']/Model['dt']))*Model['dt']
     # # # afferent excitation onto cortical excitation and inhibition
     for i, tpop in enumerate(['Exc', 'Inh', 'DsInh']): # both on excitation and inhibition
         ntwk.construct_feedforward_input(NTWK, tpop, 'AffExc',
-                                         t_array, faff+0.*t_array,
-                                         verbose=True,
-                                         SEED=int(37*faff+i)%37)
+                                         t_array, 0.*t_array,
+                                         additional_spikes_in_terms_of_pre_pop=additional_spikes_in_terms_of_pre_pop,
+                                         SEED=i+3,
+                                         verbose=True)
 
     ################################################################
     ## --------------- Initial Condition ------------------------ ##
@@ -131,4 +135,5 @@ else:
     ntwk.write_as_hdf5(NTWK, filename='visual_input_data.h5')
     print('Results of the simulation are stored as:', 'visual_input_data.h5')
     print('--> Run \"python visual_input.py plot\" to plot the results')
-    """
+
+

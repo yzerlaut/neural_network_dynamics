@@ -10,30 +10,6 @@ from ntwk_stim.poisson_generator import spikes_from_time_varying_rate,\
     deal_with_multiple_spikes_per_bin
 
 
-def build_aff_to_pop_matrix(afferent_pop, target_pop,
-                            Model,
-                            N_source_pop=None,
-                            N_target_pop=None,
-                            SEED=3):
-    """
-    Generates the connectivity matrix for a random projection from 
-    one population to the other !
-
-    possibility to subsample the target or source pop through the "N_source_pop" and "N_target_pop" args
-    """
-    np.random.seed(SEED) # insure a precise seed !
-
-    if N_source_pop is None:
-        N_source_pop = Model['N_'+afferent_pop]
-    if N_target_pop is None:
-        N_target_pop = Model['N_'+target_pop]
-    Nsyn_onto_target_from_source = int(Model['p_'+afferent_pop+'_'+target_pop]*Model['N_'+afferent_pop])
-    
-    return np.array([\
-      np.random.choice(np.arange(N_target_pop), Nsyn_onto_target_from_source, replace=False)\
-                     for k in range(N_source_pop)], dtype=int)
-
-
 def translate_aff_spikes_into_syn_target_events(source_ids, source_times,
                                                 CONN_MATRIX):
     indices, times = [], []
@@ -46,8 +22,8 @@ def translate_aff_spikes_into_syn_target_events(source_ids, source_times,
 
 def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
                                 t, rate_array,\
-                                AFF_TO_POP_MATRIX=None,
                                 additional_spikes={'indices':[], 'times':[]},
+                                additional_spikes_in_terms_of_pre_pop={'indices':[], 'times':[]},
                                 verbose=False,
                                 SEED=1):
     """
@@ -79,16 +55,37 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
             print('drawing Poisson process for afferent input [...]')
             
         indices, times, pre_indices,\
-            pre_times = spikes_from_time_varying_rate(\
-                                                       t, rate_array,\
-                                                       NTWK['POPS'][ipop].N,
-                                                       Nsyn,
-                                                       AFF_TO_POP_MATRIX=AFF_TO_POP_MATRIX,
-                                                       SEED=(SEED+2)**2%100)
-        
-        # adding the additional spikes
+            pre_times = spikes_from_time_varying_rate(t, rate_array,\
+                                                      NTWK['POPS'][ipop].N,
+                                                      Nsyn,
+                                                      AFF_TO_POP_MATRIX=AFF_TO_POP_MATRIX,
+                                                      SEED=(SEED+2)**2%100)
+
+        # adding the additional spikes (1)
         indices = np.concatenate([indices, additional_spikes['indices']])
         times = np.concatenate([times, additional_spikes['times']])
+        
+        # adding the additional spikes (2)
+        if len(additional_spikes_in_terms_of_pre_pop['indices'])>0:
+            try:
+                Matrix = NTWK['M_conn_'+afferent_pop+'_'+target_pop]
+                print(Matrix[0,:])
+                indices2, times2 = translate_aff_spikes_into_syn_target_events(additional_spikes_in_terms_of_pre_pop['indices'],
+                                                                               additional_spikes_in_terms_of_pre_pop['times'], Matrix)
+            except KeyError:
+                print("""
+                -------------------------------------------------
+                Need to construct the afference to use this, with:
+                ntwk.build_fixed_afference(NTWK,
+                                           ['AffExc'],
+                                           ['Exc', 'Inh', 'DsInh'])
+                """)
+        else:
+            indices2, times2 = [], []
+                      
+        indices = np.concatenate([indices, indices2, additional_spikes['indices']])
+        times = np.concatenate([times, times2, additional_spikes['times']])
+                
         
         # insuring no more than one prespike per bin
         indices, times = deal_with_multiple_spikes_per_bin(indices, times, t, verbose=verbose)
@@ -125,9 +122,10 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'] = [pre_times]
 
 
+
         
 if __name__=='__main__':
 
     print('test')
-    print(aff_to_pop_matrix(3, 10, 2))
+    print(build_aff_to_pop_matrix(3, 10, 2))
 
