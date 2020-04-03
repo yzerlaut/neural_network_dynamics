@@ -7,6 +7,9 @@ from cells.cell_library import built_up_neuron_params
 import numpy as np
 from matplotlib import cm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+import matplotlib.pylab as plt
+import datavyz
+
 
 def build_up_afferent_synaptic_input(Model, POP_STIM, NRN_KEY=None, verbose=True):
 
@@ -71,10 +74,6 @@ def make_tf_plot(data,
                  logscale=True, cmap=cm.copper,
                  with_theory=False, th_discret=20):
     
-    sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-    from graphs.my_graph import set_plot, build_bar_legend
-    import matplotlib.pylab as plt
-
     # limiting the data within the range
     Fout_mean, Fout_std = data[output_key+'_mean'], data[output_key+'_std']
 

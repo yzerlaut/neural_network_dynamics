@@ -27,8 +27,11 @@ from neural_network_dynamics.scan.get import get_scan
 # theoretical module
 import neural_network_dynamics.theory as theory
 from theory import mean_field
-# from 
+from theory.tf import make_tf_plot
+# morphologically-detailed simulations
 from neural_network_dynamics.single_cell_integration import morpho_analysis
+# transfer function module
+from neural_network_dynamics.transfer_functions.single_cell_protocol import generate_transfer_function as generate_transfer_function
 # VISION model 
 from neural_network_dynamics.vision.earlyVis_model import earlyVis_model
 from neural_network_dynamics.vision.earlyVis_model import full_params0 as vision_params

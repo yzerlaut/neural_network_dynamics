@@ -1,7 +1,10 @@
-import sys, pathlib
+import os, sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-import main as ntwk
+
 import numpy as np
+import itertools
+
+import main as ntwk
 
 def my_logspace(x1, x2, n):
     return np.logspace(np.log(x1)/np.log(10), np.log(x2)/np.log(10), n)
@@ -76,32 +79,50 @@ def run_sim(Model,
             output['Ii'] = np.array([vv.Ii/ntwk.pA for vv in NTWK['ISYNi'][0]])
         return output
 
-### generate a transfer function's data
-import itertools
+#####################################################
+######## generate a transfer function's data ########
+#####################################################
+
 def generate_transfer_function(Model,\
                                scale='log'):
     """ Generate the data for the transfer function  """
 
-    data = {'F_RecExc':[], 'F_RecInh':[], 'F_AffExc':[], 'F_DsInh':[],
-            'Fout_mean':[], 'Fout_std':[], 'Model':Model}
-
+    data = {'Fout_mean':[], 'Fout_std':[], 'Model':Model}
+    
+    SET_OF_FREQ_RANGES = []
+    for pop in Model['POP_STIM']:
+        data['F_%s' % pop] = []
+        if 'F_%s_array' % pop in Model:
+            SET_OF_FREQ_RANGES.append(Model["F_%s_array" % pop])
+        else:
+            print('need to set the range of scanned input by passing the "F_%s_array" in "Model"' % pop)
+            
     print('============================================')
     print('             Starting Scan')
     print('============================================')
-    
-    for fe, fi, fa, fd in itertools.product(Model['F_RecExc_array'], Model['F_RecInh_array'],\
-                                            Model['F_AffExc_array'], Model['F_DsInh_array']):
-        print('--> excitatory level:', fe, ' inhibitory level:', fi, ' afferent level', fa, ' dsnh level', fd)
-        Model['RATES'] = {'F_RecExc':fe,'F_AffExc':fa, 'F_RecInh':fi, 'F_DsInh':fd}
+    for set_of_freqs in itertools.product(*SET_OF_FREQ_RANGES):
+
+        print(set_of_freqs)
+        Model['RATES'] = {}
+        string_monitoring = '--> '
+        for f, pop in zip(set_of_freqs, Model['POP_STIM']):
+            Model['RATES']['F_%s'%pop] = f
+            string_monitoring += '%s: %.1f, ' % (pop, f)
+        print(string_monitoring)
+
+        print(Model['RATES'])
         Fout_mean, Fout_std = run_sim(Model, firing_rate_only=True)
-        # adding the data
-        for f, key in zip([fe, fi, fa, fd, Fout_mean, Fout_std],\
-                          ['F_RecExc', 'F_RecInh', 'F_AffExc', 'F_DsInh', 'Fout_mean', 'Fout_std']):
+        # adding the input data
+        for f, pop in zip(set_of_freqs, Model['POP_STIM']):
+            data['F_%s' % pop].append(f)
+        # adding the output data
+        for f, key in zip([Fout_mean, Fout_std], ['Fout_mean', 'Fout_std']):
             data[key].append(f)
             
     # translating to 1d numpy array
-    for key in ['F_RecInh', 'F_AffExc', 'F_DsInh', 'F_RecExc', 'Fout_mean', 'Fout_std']:
+    for key in ['F_%s' % pop for pop in Model['POP_STIM']]+['Fout_mean', 'Fout_std']:
         data[key] = np.array(data[key])
+        
     print('============================================')
     print('             Scan finished')
     np.save(Model['filename'], data)
@@ -112,46 +133,31 @@ def generate_transfer_function(Model,\
     
 if __name__=='__main__':
 
+    from neural_network_dynamics.transfer_functions.plots import *
+    
     # import the model defined in root directory
-    sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
+    sys.path.append(os.path.join(\
+                                 str(pathlib.Path(__file__).resolve().parents[1]),
+                                 'configs', 'The_Spectrum_of_Asynch_Dyn_2018'))
     from model import *
     
-    # common to all protocols
-    parser.add_argument('--POP_STIM', nargs='+', help='Set of desired populations', type=str,
-                        default=['RecExc', 'RecInh'])    
-    parser.add_argument('--NRN_KEY', help='Neuron to stimulate', type=str, default='RecExc')    
-
-    ### ==============================================================
-    # type of stimulation
-    ### ==============================================================
-    
-    # TRANSFER FUNCTION (params scan)
-    parser.add_argument('--TF', help="Run the transfer function", action="store_true") # SET TO TRUE TO RUN TF
-    
-    parser.add_argument('--N_SEED', help='number of varied seed', type=int, default=1)    
-    # now range for inputs
-    parser.add_argument('--F_RecExc_array',
-                        nargs='+', help='Excitatory firing rates', type=float, default=my_logspace(1e-2, 10, 3))
-    parser.add_argument('--F_RecInh_array',
-                        nargs='+', help='Inhibitory firing rates', type=float, default=my_logspace(1e-2, 10, 3))
-    parser.add_argument('--F_AffExc_array',
-                        nargs='+', help='Afferent firing rates', type=float, default=my_logspace(4, 20, 3))    
-    parser.add_argument('--F_DsInh_array',
-                        nargs='+', help='DisInhibitory firing rates', type=float, default=[0])    
-    # additional stuff
-    parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
-    parser.add_argument("--filename", '-f', help="filename",type=str, default='data.npy')
-
-    args = parser.parse_args()
-
-    Model = vars(args)
-
-    if args.TF:
+    if sys.argv[-1]=='tf':
+        Model['filename'] = 'data.npy'
+        Model['NRN_KEY'] = 'RecExc' # we scan this population
+        Model['N_SEED'] = 2 # seed repetition
+        Model['POP_STIM'] = ['RecExc', 'RecInh']
+        Model['F_RecExc_array'] = np.array([1, 2, 5, 10.])
+        Model['F_RecInh_array'] = np.array([0.1, 1., 10.])
         generate_transfer_function(Model)
+    elif sys.argv[-1]=='plot-tf':
+        data = np.load('data.npy', allow_pickle=True).item()
+        make_tf_plot_2_variables(data)
+        ntwk.show()
     else:
-        from neural_network_dynamics.transfer_functions.plots import *
-        plt.style.use('ggplot')
-        data = run_sim(Model, with_Vm=Model['N_SEED'], with_synaptic_currents=True)
+        Model['NRN_KEY'] = 'RecExc' # we scan this population
+        Model['N_SEED'] = 2 # seed repetition
+        Model['POP_STIM'] = ['RecExc', 'RecInh']
+        data = run_sim(Model, with_Vm=2, with_synaptic_currents=True)
         fig = plot_single_cell_sim(data)
         ntwk.show()
     

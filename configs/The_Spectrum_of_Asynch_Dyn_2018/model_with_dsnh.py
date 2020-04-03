@@ -29,15 +29,15 @@ Model = {
     # === cellular properties (based on AdExp), population by population ===
     # --> Excitatory population (RecExc, recurrent excitation)
     'RecExc_Gl':10., 'RecExc_Cm':200.,'RecExc_Trefrac':5.,
-    'RecExc_El':-70., 'RecExc_Vthre':-50., 'RecExc_Vreset':-70., 'RecExc_delta_v':0.,
+    'RecExc_El':-70., 'RecExc_Vthre':-50., 'RecExc_Vreset':-70., 'RecExc_deltaV':0.,
     'RecExc_a':0., 'RecExc_b': 0., 'RecExc_tauw':1e9,
     # --> Inhibitory population (RecInh, recurrent inhibition)
     'RecInh_Gl':10., 'RecInh_Cm':200.,'RecInh_Trefrac':5.,
-    'RecInh_El':-70., 'RecInh_Vthre':-53., 'RecInh_Vreset':-70., 'RecInh_delta_v':0.,
+    'RecInh_El':-70., 'RecInh_Vthre':-53., 'RecInh_Vreset':-70., 'RecInh_deltaV':0.,
     'RecInh_a':0., 'RecInh_b': 0., 'RecInh_tauw':1e9,
     # --> Disinhibitory population (DsInh, disinhibition)
     'DsInh_Gl':10., 'DsInh_Cm':200.,'DsInh_Trefrac':5.,
-    'DsInh_El':-70., 'DsInh_Vthre':-50., 'DsInh_Vreset':-70., 'DsInh_delta_v':0.,
+    'DsInh_El':-70., 'DsInh_Vthre':-50., 'DsInh_Vreset':-70., 'DsInh_deltaV':0.,
     'DsInh_a':0., 'DsInh_b': 0., 'DsInh_tauw':1e9,
     ## ---------------------------------------------------------------------------------
     # === afferent population waveform:
