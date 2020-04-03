@@ -16,7 +16,7 @@ params0 = {
     'width_VF':int(round(40*10*16./9.,0)/10), # degree, Angular width of the visual field
     'center_VF':45, # degree, Field center from antero-posterior axis
     # neuronal space props
-    'Ncells':20,
+    'Ncells':100,
     'Area_cells': np.round(np.sqrt(100/177e3/0.2),2),#sqrt(Ncell/177e3/Height_L4),177e3->Markram (2015)
     # receptive fields
     'clustered_features':False,
