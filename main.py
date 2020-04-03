@@ -12,11 +12,9 @@ from neural_network_dynamics.ntwk_build.syn_and_connec_library import *
 # building the stimulation
 from neural_network_dynamics.ntwk_stim.connect_afferent_input import *
 from neural_network_dynamics.ntwk_stim.waveform_library import double_gaussian
-# for saving
-# for this you need the data_analysis folder
-# get it at: github.com/yzerlaut/data_analysis'
+# for saving and loading datafiles
 from neural_network_dynamics.recording.load_and_save import write_as_hdf5
-from data_analysis.IO.hdf5 import load_dict_from_hdf5
+from analyz.IO.hdf5 import load_dict_from_hdf5
 # for plotting
 from neural_network_dynamics.analysis.plot_sim import *
 # for analysis of netwok activity

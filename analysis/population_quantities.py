@@ -4,16 +4,7 @@ from scipy.stats import skew
 # for smoothing
 from scipy.ndimage.filters import gaussian_filter1d
 
-import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-
-try:
-    from data_analysis.processing.signanalysis import get_acf_time
-except ImportError:
-    print('---------------------------------------------------------------')
-    print('you need the data_analysis folder')
-    print('get it at: bitbucket.org/yzerlaut/data_analysis')
-    print('---------------------------------------------------------------')
+from analyz.processing.signanalysis import get_acf_time
 
 
 def gaussian_smoothing(signal, idt_sbsmpl=10):
@@ -27,7 +18,6 @@ def smooth_population_activity(rate_array, dt, Tsmoothing):
         print('/!\ SMOOTHING AT THAT TIME SCALE UNPOSSIBLE, dt is %s and Tsmoothing is %s' % (dt, Tsmoothing))
         return rate_array
 
-    
     
 def get_CV_spiking(data, pop='Exc'):
     """see Kumar et al. 2008"""

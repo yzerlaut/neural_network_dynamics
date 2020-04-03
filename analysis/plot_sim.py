@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pylab as plt
 
 from scipy.ndimage.filters import gaussian_filter1d
+
 def gaussian_smoothing(signal, idt_sbsmpl=10):
     return gaussian_filter1d(signal, idt_sbsmpl)
 
@@ -54,7 +55,6 @@ def raster_and_Vm_plot(data,
         COLORS = ge.colors
 
     fig, AX = ge.figure(axes_extents=AE, hspace=0.5, right = 5.)
-
     try:
         ax = AX[0]
     except TypeError:
@@ -92,8 +92,9 @@ def raster_and_Vm_plot(data,
             pass
         
         n += data['N_%s' % tpop]
-        ge.annotate(AX[i+1], ' %s' % tpop, (1.,.5), xycoords='axes fraction',
-                    color=COLORS[i], bold=True, size='large')
+        if ('VMS_%s' % tpop) in data:
+            ge.annotate(AX[i+1], ' %s' % tpop, (1.,.5), xycoords='axes fraction',
+                        color=COLORS[i], bold=True, size='large')
 
     if firing_rate_plot:
         ge.set_plot(ax2, ['right'], ylabel='inst. Firing Rate (Hz)')

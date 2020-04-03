@@ -58,6 +58,7 @@ if sys.argv[-1]=='plot':
     plt.show()
 
 else:
+    
     NTWK = ntwk.build_populations(Model, ['Exc', 'Inh'],
                                   AFFERENT_POPULATIONS=['AffExc'],
                                   with_raster=True, with_Vm=4,

@@ -57,7 +57,40 @@ def build_up_recurrent_connections(NTWK, SEED=1,
     else:
         NTWK['REC_SYNAPSES'] = random_connections(NTWK)
 
+
+def build_fixed_aff_to_pop_matrix(afferent_pop, target_pop,
+                                  Model,
+                                  N_source_pop=None,
+                                  N_target_pop=None,
+                                  SEED=3):
+    """
+    Generates the connectivity matrix for a random projection from 
+    one population to the other !
+
+    possibility to subsample the target or source pop through the "N_source_pop" and "N_target_pop" args
+    """
+    np.random.seed(SEED) # insure a precise seed !
+
+    if N_source_pop is None:
+        N_source_pop = Model['N_'+afferent_pop]
+    if N_target_pop is None:
+        N_target_pop = Model['N_'+target_pop]
         
+    Nsyn_onto_target_from_source = int(Model['p_'+afferent_pop+'_'+target_pop]*Model['N_'+target_pop])
+    
+    return np.array([\
+      np.random.choice(np.arange(N_target_pop), Nsyn_onto_target_from_source, replace=False)\
+                     for k in range(N_source_pop)], dtype=int)
+
+def build_fixed_afference(NTWK,
+                          AFFERENT_POPULATIONS,
+                          TARGET_POPULATIONS, SEED=1):
+    
+    for i, afferent_pop in enumerate(AFFERENT_POPULATIONS):
+        for j, target_pop in enumerate(TARGET_POPULATIONS):
+            NTWK['M_conn_%s_%s' % (afferent_pop, target_pop)] = build_fixed_aff_to_pop_matrix(afferent_pop, target_pop,
+                                                                                              NTWK['Model'], SEED=(SEED+1)*i+j+i*j)
+
 def random_connections(NTWK):
     
     CONN = np.empty((len(NTWK['POPS']), len(NTWK['POPS'])), dtype=object)
@@ -146,6 +179,7 @@ def random_distance_dependent_connections(NTWK):
 
     return CONN2
 
+
 def get_syn_and_conn_matrix(Model, POPULATIONS,
                             AFFERENT_POPULATIONS=[],
                             SI_units=False, verbose=False):
@@ -204,7 +238,8 @@ def get_syn_and_conn_matrix(Model, POPULATIONS,
             print('synaptic network parameters --NOT-- in SI units')
 
     return M
-    
+
+
 def build_populations(Model, POPULATIONS,
                       AFFERENT_POPULATIONS=[],
                       with_raster=False,
@@ -232,6 +267,7 @@ def build_populations(Model, POPULATIONS,
     
     NTWK = {'NEURONS':NEURONS, 'Model':Model,
             'POPULATIONS':np.array(POPULATIONS),
+            'AFFERENT_POPULATIONS':np.array(AFFERENT_POPULATIONS),
             'M':get_syn_and_conn_matrix(Model, POPULATIONS,
                                         AFFERENT_POPULATIONS=AFFERENT_POPULATIONS,
                                         verbose=verbose)}
@@ -244,6 +280,7 @@ def build_populations(Model, POPULATIONS,
                                                   with_synaptic_conductances=with_synaptic_conductances,
                                                   verbose=verbose))
         nrn['params'] = neuron_params
+
 
     if with_pop_act:
         NTWK['POP_ACT'] = []

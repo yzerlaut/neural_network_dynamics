@@ -6,7 +6,6 @@ import numpy as np
 def spikes_from_time_varying_rate(time_array, rate_array,
                                   N=100,
                                   Nsyn=10,
-                                  AFF_TO_POP_MATRIX=None,
                                   SEED=1):
     """
     GENERATES a POISSON INPUT TO POST_SYNAPTIC CELLS
@@ -32,29 +31,28 @@ def spikes_from_time_varying_rate(time_array, rate_array,
     # (N.B. valid only if AFF_TO_POP_MATRIX is not None)
     pre_indices, pre_times = [], []
 
-    if AFF_TO_POP_MATRIX is not None:
+    # if AFF_TO_POP_MATRIX is not None:
 
-        Npop_pre = AFF_TO_POP_MATRIX.shape[0] #
-        # trivial way to generate inhomogeneous poisson events
-        for it in range(len(time_array)):
-            rdm_num = np.random.random(Npop_pre)
-            for ii in np.arange(Npop_pre)[rdm_num<DT*rate_array[it]*1e-3]:
-                pre_indices.append(ii)
-                pre_times.append(time_array[it])
-        # and then distribute it across the post-synaptic cells
-        indices, times = np.empty(0, dtype=np.int), np.empty(0, dtype=np.float64)
-        for ii, tt in zip(pre_indices, pre_times):
-            indices = np.concatenate([indices, np.array(AFF_TO_POP_MATRIX[ii,:], dtype=int)]) # all the indices
-            times = np.concatenate([times, np.array([tt for j in range(len(AFF_TO_POP_MATRIX[ii,:]))])])
+    #     Npop_pre = AFF_TO_POP_MATRIX.shape[0] #
+    #     # trivial way to generate inhomogeneous poisson events
+    #     for it in range(len(time_array)):
+    #         rdm_num = np.random.random(Npop_pre)
+    #         for ii in np.arange(Npop_pre)[rdm_num<DT*rate_array[it]*1e-3]:
+    #             pre_indices.append(ii)
+    #             pre_times.append(time_array[it])
+    #     # and then distribute it across the post-synaptic cells
+    #     indices, times = np.empty(0, dtype=np.int), np.empty(0, dtype=np.float64)
+    #     for ii, tt in zip(pre_indices, pre_times):
+    #         indices = np.concatenate([indices, np.array(AFF_TO_POP_MATRIX[ii,:], dtype=int)]) # all the indices
+    #         times = np.concatenate([times, np.array([tt for j in range(len(AFF_TO_POP_MATRIX[ii,:]))])])
 
-    else:
 
-        # trivial way to generate inhomogeneous poisson events
-        for it in range(len(time_array)):
-            rdm_num = np.random.random(N)
-            for ii in np.arange(N)[rdm_num<DT*Nsyn*rate_array[it]*1e-3]:
-                indices.append(ii) # all the indices
-                times.append(time_array[it]) # all the same time !
+    # trivial way to generate inhomogeneous poisson events
+    for it in range(len(time_array)):
+        rdm_num = np.random.random(N)
+        for ii in np.arange(N)[rdm_num<DT*Nsyn*rate_array[it]*1e-3]:
+            indices.append(ii) # all the indices
+            times.append(time_array[it]) # all the same time !
                 
     return np.array(indices), np.array(times), np.array(pre_indices), np.array(pre_times)
 
