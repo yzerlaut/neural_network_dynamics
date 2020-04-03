@@ -102,7 +102,6 @@ def generate_transfer_function(Model,\
     print('============================================')
     for set_of_freqs in itertools.product(*SET_OF_FREQ_RANGES):
 
-        print(set_of_freqs)
         Model['RATES'] = {}
         string_monitoring = '--> '
         for f, pop in zip(set_of_freqs, Model['POP_STIM']):
@@ -110,7 +109,6 @@ def generate_transfer_function(Model,\
             string_monitoring += '%s: %.1f, ' % (pop, f)
         print(string_monitoring)
 
-        print(Model['RATES'])
         Fout_mean, Fout_std = run_sim(Model, firing_rate_only=True)
         # adding the input data
         for f, pop in zip(set_of_freqs, Model['POP_STIM']):
