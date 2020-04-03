@@ -53,11 +53,10 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         if verbose:
             print('drawing Poisson process for afferent input [...]')
             
-        indices, times, pre_indices,\
-            pre_times = spikes_from_time_varying_rate(t, rate_array,\
-                                                      NTWK['POPS'][ipop].N,
-                                                      Nsyn,
-                                                      SEED=(SEED+2)**2%100)
+        indices, times = spikes_from_time_varying_rate(t, rate_array,\
+                                                       NTWK['POPS'][ipop].N,
+                                                       Nsyn,
+                                                       SEED=(SEED+2)**2%100)
 
         # adding the additional spikes (1)
         indices = np.concatenate([indices, additional_spikes['indices']])
@@ -85,7 +84,7 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
                 
         
         # insuring no more than one prespike per bin
-        indices, times = deal_with_multiple_spikes_per_bin(indices, times, t, verbose=verbose)
+        # indices, times = deal_with_multiple_spikes_per_bin(indices, times, t, verbose=verbose)
 
         # incorporating into Brian2 objects
         spikes = brian2.SpikeGeneratorGroup(NTWK['POPS'][ipop].N, indices, times*brian2.ms)
@@ -111,12 +110,12 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         NTWK['iRASTER_PRE'] = [indices]
         NTWK['tRASTER_PRE'] = [times]
         
-    if 'iRASTER_PRE_in_terms_of_Pre_Pop' in NTWK.keys():
-        NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'].append(pre_indices)
-        NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'].append(pre_times)
-    else: # we create the key
-        NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'] = [pre_indices]
-        NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'] = [pre_times]
+    # if 'iRASTER_PRE_in_terms_of_Pre_Pop' in NTWK.keys():
+    #     NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'].append(pre_indices)
+    #     NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'].append(pre_times)
+    # else: # we create the key
+    #     NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'] = [pre_indices]
+    #     NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'] = [pre_times]
 
 
 
