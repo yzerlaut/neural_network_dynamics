@@ -58,11 +58,12 @@ def plot_single_cell_sim(data, XTICKS = None,
 
 def make_tf_plot_2_variables(data,
                              xkey='F_RecExc', ckey='F_RecInh', output_key='Fout',
-                             ckey_label='$\\nu_{i}$ (Hz)',
                              cond=None,
-                             ylim=[1e-2, 100], yticks=[0.01, 0.1, 1, 10], yticks_labels=['0.01', '0.1', '1', '10'], ylabel='$\\nu_{out}$ (Hz)',
-                             xticks=[0.1, 1, 10], xticks_labels=['0.1', '1', '10'], xlabel='$\\nu_{e}$ (Hz)',
-                             logscale=True, cmap=cm.copper, ax=None, acb=None, ge=None,
+                             ckey_label='$\\nu_{i}$ (Hz)',
+                             ylim=[1e-2, 100], yticks=[0.01, 0.1, 1, 10], yticks_labels=['0.01', '0.1', '1', '10'], yscale='log', ylabel='$\\nu_{out}$ (Hz)',
+                             xlim=[0.1, 50], xticks=[0.1, 1, 10], xticks_labels=['0.1', '1', '10'], xscale='log', xlabel='$\\nu_{e}$ (Hz)',
+                             cmap=cm.copper, ax=None, acb=None, ge=None,
+                             fig_args={'with_space_for_bar_legend':True},
                              with_top_label=False,
                              with_theory=False, th_discret=20):
     
@@ -73,9 +74,10 @@ def make_tf_plot_2_variables(data,
     if ge is None:
         ge = datavyz.main.graph_env()
     if ax is None:
-        fig, ax, acb = ge.figure(with_space_for_bar_legend=True)
+        fig, ax, acb = ge.figure(**fig_args)
+    else:
+        fig = None
 
-    
 
     if cond is None:
         cond = np.ones(len(data[xkey]), dtype=bool)
@@ -91,7 +93,7 @@ def make_tf_plot_2_variables(data,
                     Fout_mean[i1][cond1],
                     yerr=Fout_std[i1][cond1],
                     fmt='o', ms=4,
-                    color=cmap(i/len(np.unique(F1[i1]))))
+                    color=cmap(i/len(np.unique(F1[cond]))))
         
         # # # now analytical estimate
         # if with_theory:
@@ -107,27 +109,30 @@ def make_tf_plot_2_variables(data,
         
     if with_top_label:
         ax.set_title(col_key_label+'='+str(round(f1,1))+col_key_unit)
-    if logscale:
-        ax.set_yscale('log')
-        ax.set_xscale('log')
-    ylabel2, yticks_labels2 = '', []
-    if i==0: # if first column
-        ylabel2, yticks_labels2 = ylabel, yticks_labels
-    ge.set_plot(ax, ylim=[.9*ylim[0], ylim[1]],
-                yticks=yticks, xticks=xticks, ylabel=ylabel2, xlabel=xlabel,
-                yticks_labels=yticks_labels2, xticks_labels=xticks_labels)
+        
+    ge.set_plot(ax,
+                xlim=[.9*xlim[0], xlim[1]],
+                ylim=[.9*ylim[0], ylim[1]],
+                xticks=xticks,
+                yticks=yticks,
+                xlabel=xlabel,
+                ylabel=ylabel,
+                xscale=xscale,
+                yscale=yscale,
+                yticks_labels=yticks_labels,
+                xticks_labels=xticks_labels)
 
     F1_log = np.log(F1)/np.log(10)
+    print(F1_log)
     # cax = inset_axes(AX[-1], width="20%", height="90%", loc=3)
     F1_ticks, F1_ticks_labels = [], []
-    for k in np.arange(-2, 3):
+    for k in np.arange(int(np.floor(np.log10(F1.min()))+1), int(np.floor(np.log10(F1.max())))+1):
         for l in range(1, 10):
-            F1_ticks.append(np.log(l)/np.log(10) +k)
+            F1_ticks.append(np.log(l)/np.log(10)+k)
             if l%10==1:
-                F1_ticks_labels.append(str(l*np.exp(k*np.log(10))))
+                F1_ticks_labels.append(str(np.round(l*np.exp(k*np.log(10)),np.max([-k+1,0]))))
             else:
                 F1_ticks_labels.append('')
-
     cb = ge.build_bar_legend(F1_ticks, acb , cmap,
                              bounds = [np.log(F1.min())/np.log(10),
                                        np.log(F1.max())/np.log(10)],

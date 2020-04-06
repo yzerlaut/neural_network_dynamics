@@ -26,6 +26,7 @@ from neural_network_dynamics.scan.run import run_scan
 from neural_network_dynamics.scan.get import get_scan
 # theoretical module
 import neural_network_dynamics.theory as theory
+from neural_network_dynamics.theory.fitting_tf import fit_data as fit_tf_data
 from theory import mean_field
 from theory.tf import make_tf_plot
 # morphologically-detailed simulations

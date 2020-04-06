@@ -14,9 +14,15 @@ def getting_statistical_properties(params,
     then we apply the results of the Shotnoise analysis (see above)
     and we return the three moments
     """
+
     SYN_PARAMS, RATES2 = [], []
 
+    
     for i, syn in enumerate(SYN_POPS):
+
+        # insure that it's an array
+        RATES['F_%s' % syn['name']] = np.array(RATES['F_%s' % syn['name']])
+             
         if already_SI:
             SYN_PARAMS.append({'E_j': syn['Erev'], 'C_m':params['Cm'],
                                'Q_j':syn['Q'], 'tau_j':syn['Tsyn']})
@@ -39,7 +45,7 @@ def getting_statistical_properties(params,
         RATES2.append(RATES['F_'+syn['name']]*syn['N']*syn['pconn'])
 
     # A zero array to handle both float and array cases (for addition/multiplication)
-    Zero = 0.*RATES2[0] + 0.*SYN_POPS[0]['Q']
+    Zero = np.zeros(len(RATES2[0]))
     
     # starting by the mean-dependent quantities: muV and Tm
     if already_SI:
@@ -77,14 +83,15 @@ def getting_statistical_properties(params,
         # kV += RATES2[i]*F_iiiiPSP(**syn)
         nTv += RATES2[i]*F_numTv(**syn)
         dTv += RATES2[i]*F_denomTv(**syn)
-    sV = np.sqrt(np.max([sV, 1e-6])) # thresholded to 0.001 mV
+
+    sV[sV<1e-12] = 1e-12 # thresholded to 0.001 mV
+    sV = np.sqrt(sV)
+    
     gV = gV/sV**3
     # kV = kV/sV**4
-    
-    if dTv<=0:
-        Tv = Tm
-    else:
-        Tv = 1./2.*(nTv/dTv)**(-1)
+
+    Tv = Tm # initialized to Tm
+    Tv[dTv>0] = 1./2.*(nTv/dTv)**(-1) # when non-zero synaptic input
 
     if with_Isyn:
         # in case we also want synaptic currents
