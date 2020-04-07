@@ -5,66 +5,79 @@ from matplotlib import cm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import matplotlib.pylab as plt
 
+import os, sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 
-Blue, Orange, Green, Red, Purple, Brown, Pink, Grey,\
-    Kaki, Cyan = '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',\
-    '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
-
-def color(pop_key):
-    if pop_key=='RecExc':
-        return Green
-    if pop_key=='RecInh':
-        return Red
-    if pop_key=='AffExc':
-        return Grey
-    if pop_key=='DsInh':
-        return Purple
+from theory.tf import TF
 
 def plot_single_cell_sim(data, XTICKS = None,
-                         COLORS = [Green, Blue, Red, Orange], savefig=''):
+                         ge=None,
+                         fig_args={'figsize':(1.8,.6), 'hspace':.5, 'right':.5, 'left':.6},
+                         COLORS = [],
+                         savefig='',
+                         dVthre=10,
+                         ms=1,
+                         subsampling=2):
+    
+    # graph settings
+    if ge is None:
+        ge = datavyz.main.graph_env()
+    if len(COLORS)==0:
+        COLORS = [ge.green, ge.red, ge.blue, ge.orange]+ge.colors[4:]
+
+
+    fig, [ax1, ax2, ax3] = ge.figure(axes=(3,1), **fig_args)
+        
     Model = data['Model']
     Vthre = Model[Model['NRN_KEY']+'_Vthre']
-    fig, N1, N2 = plt.figure(figsize=(4,5)), 5, 1
-    plt.subplots_adjust(left=.15, bottom=.05, top=.96, right=.99)
-    ax1 = plt.subplot2grid((N1, N2), (0, 0))
-    ax2 = plt.subplot2grid((N1, N2), (1, 0), rowspan=2)
-    ax3 = plt.subplot2grid((N1, N2), (3, 0), rowspan=2)
+    N1, N2 = 5, 1
+    
     # presynaptic raster
     j = 0
     for i in range(len(Model['POP_STIM'])):
-        prespikes = data['t_prespikes'][i]
+        prespikes = data['t_prespikes'][i]*1e-3
         Npre = Model['N_'+Model['POP_STIM'][i]]
         y = j+np.random.randint(Npre, size=len(prespikes))
-        ax1.plot(prespikes, y, 'o', color=color(Model['POP_STIM'][i]), ms=2.)
+        ax1.plot(prespikes, y, 'o', color=COLORS[i], ms=ms)
         j += Npre
-    ax1.set_yticks([]);ax1.set_ylabel('presynaptic\n neurons')
+
+    t = np.arange(len(data['Vm'][0]))*float(Model['dt'])
+    
     # synaptic currents
-    ax2.plot(np.arange(len(data['Vm'][0]))*float(Model['dt']), data['Ie'][0], lw=1, color=Green)
-    ax2.plot(np.arange(len(data['Vm'][0]))*float(Model['dt']), data['Ii'][0], lw=1, color=Red)
-    ax2.set_ylabel('synaptic\ncurrents (nA)')
+    ax2.plot(t[::subsampling], data['Ie'][0][::subsampling], lw=1, color=ge.green)
+    ax2.plot(t[::subsampling], data['Ii'][0][::subsampling], lw=1, color=ge.red)
+    
     # Vm and spikes
     for i in range(Model['N_SEED']):
-        ax3.plot(np.arange(len(data['Vm'][i]))*float(Model['dt']), data['Vm'][i], lw=1., color='k')
-    for t in data['tspikes']: ax3.plot([t,t], [Vthre, Vthre+5], ':', lw=2, color='k')
-    for label, func in zip(['time (ms)', '$V_m$ (mV)'], [ax3.set_xlabel, ax3.set_ylabel]): func(label) # labeling
-    ax3.set_yticks([-70,-60,-50])
-    if XTICKS is not None:
-        ax1.set_xticks(XTICKS)
-        ax2.set_xticks(XTICKS)
-        ax3.set_xticks(XTICKS)
-    ax2.set_xticklabels([])
-    ax1.set_xticklabels([])
-    return fig
+        ax3.plot(t[::subsampling], data['Vm'][i][::subsampling], lw=1., color='k')
+    for tt in data['tspikes']:
+        ax3.plot([tt,tt], [Vthre, Vthre+dVthre], ':', lw=1, color='k')
+        
+    ge.set_plot(ax1, ['left'], yticks=[], ylabel='%i\npresynaptic\n neurons' % j, xlim=[t[0], t[-1]])
+    ge.set_plot(ax2, ['left'], ylabel='$I_{syn}$ (pA)', xlim=[t[0], t[-1]])
+    ge.set_plot(ax3, xlabel='time (ms)', ylabel='$V_m$ (mV)', xlim=[t[0], t[-1]])
+    
+    return fig, [ax1, ax2, ax3]
 
 def make_tf_plot_2_variables(data,
                              xkey='F_RecExc', ckey='F_RecInh', output_key='Fout',
                              cond=None,
                              ckey_label='$\\nu_{i}$ (Hz)',
-                             ylim=[1e-2, 100], yticks=[0.01, 0.1, 1, 10], yticks_labels=['0.01', '0.1', '1', '10'], yscale='log', ylabel='$\\nu_{out}$ (Hz)',
-                             xlim=[0.1, 50], xticks=[0.1, 1, 10], xticks_labels=['0.1', '1', '10'], xscale='log', xlabel='$\\nu_{e}$ (Hz)',
+                             ylim=[1e-2, 100],
+                             yticks=[0.01, 0.1, 1, 10],
+                             yticks_labels=['0.01', '0.1', '1', '10'],
+                             yscale='log',
+                             ylabel='$\\nu_{out}$ (Hz)',
+                             xlim=None,
+                             xticks=None,
+                             xticks_labels=None,
+                             xscale='log',
+                             cscale='log',
+                             xlabel='$\\nu_{e}$ (Hz)',
                              cmap=cm.copper, ax=None, acb=None, ge=None,
                              fig_args={'with_space_for_bar_legend':True},
                              with_top_label=False,
+                             ms=2, lw_th=2, alpha_th=0.7,
                              with_theory=False, th_discret=20):
     
     # limiting the data within the range
@@ -83,7 +96,13 @@ def make_tf_plot_2_variables(data,
         cond = np.ones(len(data[xkey]), dtype=bool)
         
     F0, F1 = data[xkey][cond], data[ckey][cond]
-    
+
+    # color scale
+    if cscale=='log':
+        color_scale = (np.log(F1)-np.log(F1.min()))/(np.log(F1.max())-np.log(F1.min()))
+    else:
+        color_scale = np.linspace(0, 1, len(F1))
+
     mFout, sFout = Fout_mean[cond], Fout_std[cond]
     for i, f1 in enumerate(np.unique(F1)):
         i1 = np.argwhere(F1==f1).flatten()
@@ -92,27 +111,26 @@ def make_tf_plot_2_variables(data,
         ax.errorbar(F0[i1][cond1],
                     Fout_mean[i1][cond1],
                     yerr=Fout_std[i1][cond1],
-                    fmt='o', ms=4,
-                    color=cmap(i/len(np.unique(F1[cond]))))
+                    fmt='o', ms=ms,
+                    color=cmap(color_scale[i]))
         
         # # # now analytical estimate
-        # if with_theory:
-        #     RATES = {xkey:np.concatenate([np.linspace(f1, f2, th_discret, endpoint=False)\
-        #                                        for f1, f2 in zip(Fe[i1][i1][:-1], Fe[i1][i1][1:])])}
-        #     for pop, f in zip([col_key, ckey, row_key],[f1, fi, fd]) :
-        #         RATES[pop] = f*np.ones(len(RATES[xkey]))
-        #     Fout_th = TF(RATES, data['Model'], data['Model']['NRN_KEY'])
-        #     th_cond = (Fout_th>ylim[0]) & (Fout_th<ylim[1])
-        #     AX[i].plot(RATES[xkey][th_cond],
-        #                Fout_th[th_cond], '-',
-        #                color=cmap(j/len(np.unique(Fi[i1]))), lw=5, alpha=.7)
+        if with_theory:
+            RATES = {xkey:np.concatenate([np.linspace(f1, f2, th_discret, endpoint=False)\
+                                               for f1, f2 in zip(F0[i1][:-1], F0[i1][1:])])}
+            RATES[ckey] = f1*np.ones(len(RATES[xkey]))
+            Fout_th = TF(RATES, data['Model'], data['Model']['NRN_KEY'])
+            th_cond = (Fout_th>ylim[0]) & (Fout_th<ylim[1])
+            ax.plot(RATES[xkey][th_cond],
+                    Fout_th[th_cond], '-',
+                    color=cmap(color_scale[i]), lw=lw_th, alpha=alpha_th)
         
     if with_top_label:
         ax.set_title(col_key_label+'='+str(round(f1,1))+col_key_unit)
         
     ge.set_plot(ax,
-                xlim=[.9*xlim[0], xlim[1]],
-                ylim=[.9*ylim[0], ylim[1]],
+                xlim=xlim,
+                ylim=ylim,
                 xticks=xticks,
                 yticks=yticks,
                 xlabel=xlabel,
@@ -122,24 +140,12 @@ def make_tf_plot_2_variables(data,
                 yticks_labels=yticks_labels,
                 xticks_labels=xticks_labels)
 
-    F1_log = np.log(F1)/np.log(10)
-    print(F1_log)
-    # cax = inset_axes(AX[-1], width="20%", height="90%", loc=3)
     F1_ticks, F1_ticks_labels = [], []
-    for k in np.arange(int(np.floor(np.log10(F1.min()))+1), int(np.floor(np.log10(F1.max())))+1):
-        for l in range(1, 10):
-            F1_ticks.append(np.log(l)/np.log(10)+k)
-            if l%10==1:
-                F1_ticks_labels.append(str(np.round(l*np.exp(k*np.log(10)),np.max([-k+1,0]))))
-            else:
-                F1_ticks_labels.append('')
-    cb = ge.build_bar_legend(F1_ticks, acb , cmap,
-                             bounds = [np.log(F1.min())/np.log(10),
-                                       np.log(F1.max())/np.log(10)],
-                             ticks_labels=F1_ticks_labels,
-                             color_discretization=100,
-                             label=ckey_label)
 
+    cb = ge.build_bar_legend_continuous(acb , cmap,
+                                        bounds = [F1.min(), F1.max()],
+                                        label=ckey_label,
+                                        scale='log')
 
     return fig, ax, acb
 

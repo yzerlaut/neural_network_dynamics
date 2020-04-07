@@ -5,7 +5,7 @@ from theory.psp_integrals import F_iPSP, F_iiPSP, F_iiiPSP, F_numTv, F_denomTv
 
 def getting_statistical_properties(params,
                                    SYN_POPS, RATES,
-                                   current_input = 0, # in pA of not SI
+                                   current_input = 0, # in pA if not SI
                                    already_SI=False,
                                    with_Isyn=False,
                                    with_current_based=False):
@@ -21,7 +21,11 @@ def getting_statistical_properties(params,
     for i, syn in enumerate(SYN_POPS):
 
         # insure that it's an array
-        RATES['F_%s' % syn['name']] = np.array(RATES['F_%s' % syn['name']])
+
+        # if type(RATES['F_%s' % syn['name']]) in [float, np.float, np.float64]:
+        #     RATES['F_%s' % syn['name']] = np.array([RATES['F_%s' % syn['name']]])
+        # else:
+        #     RATES['F_%s' % syn['name']] = np.array(RATES['F_%s' % syn['name']])
              
         if already_SI:
             SYN_PARAMS.append({'E_j': syn['Erev'], 'C_m':params['Cm'],
@@ -42,10 +46,11 @@ def getting_statistical_properties(params,
             SYN_PARAMS[-1]['a_j'] = syn['alpha']
         else:
             SYN_PARAMS[-1]['a_j'] = 1 # pure conductance based by default
+
         RATES2.append(RATES['F_'+syn['name']]*syn['N']*syn['pconn'])
 
     # A zero array to handle both float and array cases (for addition/multiplication)
-    Zero = np.zeros(len(RATES2[0]))
+    Zero = 0*RATES2[0]
     
     # starting by the mean-dependent quantities: muV and Tm
     if already_SI:
@@ -84,14 +89,20 @@ def getting_statistical_properties(params,
         nTv += RATES2[i]*F_numTv(**syn)
         dTv += RATES2[i]*F_denomTv(**syn)
 
-    sV[sV<1e-12] = 1e-12 # thresholded to 0.001 mV
+    if type(sV) in [float, np.float, np.float64]:
+        sV = np.max([sV, 1e-12]) # thresholded to 0.001 mV (after np.sqrt)
+    else:
+        sV[sV<1e-12] = 1e-12 # thresholded to 0.001 mV (after np.sqrt)
     sV = np.sqrt(sV)
     
     gV = gV/sV**3
     # kV = kV/sV**4
 
     Tv = Tm # initialized to Tm
-    Tv[dTv>0] = 1./2.*(nTv/dTv)**(-1) # when non-zero synaptic input
+    if type(Tv) not in [float, np.float, np.float64]:
+        Tv[dTv>0] = 1./2.*(nTv/dTv)**(-1) # when non-zero synaptic input
+    elif dTv>0:
+        Tv = 1./2.*(nTv/dTv)**(-1) # when non-zero synaptic input
 
     if with_Isyn:
         # in case we also want synaptic currents
