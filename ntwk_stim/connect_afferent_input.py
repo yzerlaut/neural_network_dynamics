@@ -82,7 +82,6 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         indices = np.concatenate([indices, indices2, additional_spikes['indices']])
         times = np.concatenate([times, times2, additional_spikes['times']])
                 
-        
         # insuring no more than one prespike per bin
         # indices, times = deal_with_multiple_spikes_per_bin(indices, times, t, verbose=verbose)
 
@@ -102,6 +101,9 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         print('Nsyn = 0 for', afferent_pop+'_'+target_pop)
         spikes, synapse, indices, times, pre_indices, pre_times = None, None, [], [], [], []
     
+    # afferent array
+    NTWK['Rate_%s_%s' % (afferent_pop, target_pop)] = rate_array
+    
     # storing quantities:
     if 'iRASTER_PRE' in NTWK.keys():
         NTWK['iRASTER_PRE'].append(indices)
@@ -109,7 +111,9 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
     else: # we create the key
         NTWK['iRASTER_PRE'] = [indices]
         NTWK['tRASTER_PRE'] = [times]
-        
+
+
+    
     # if 'iRASTER_PRE_in_terms_of_Pre_Pop' in NTWK.keys():
     #     NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'].append(pre_indices)
     #     NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'].append(pre_times)

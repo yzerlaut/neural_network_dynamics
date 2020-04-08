@@ -48,6 +48,10 @@ def write_as_hdf5(NTWK, filename='data.h5',
             data['iRASTER_'+aff_pop] = NTWK['iRASTER_'+aff_pop]
         except BaseException as e:
             pass
+
+        rate_key = 'Rate_%s_%s' % (afferent_pop, target_pop)
+        if rate_key in NTWK:
+            data[rate_key] = np.array(NTWK[rate_key], dtype=float)
     
     if ('iRASTER_PRE_in_terms_of_Pre_Pop' in NTWK) and ('iRASTER_PRE_in_terms_of_Pre_Pop' not in KEY_NOT_TO_RECORD):
         data['iRASTER_PRE_in_terms_of_Pre_Pop'] = np.array(NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'], dtype=np.int)
