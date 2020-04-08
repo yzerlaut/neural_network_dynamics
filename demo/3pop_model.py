@@ -13,7 +13,6 @@ import datavyz
 
 Model = {
     ## ---------------------------------------------------------------------------------
-    ### Initialisation by default parameters
     ## UNIT SYSTEM is : ms, mV, pF, nS, pA, Hz (arbitrary and unconsistent, so see code)
     ## ---------------------------------------------------------------------------------
     # numbers of neurons in population

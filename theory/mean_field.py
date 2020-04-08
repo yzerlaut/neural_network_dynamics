@@ -74,7 +74,6 @@ def solve_mean_field_first_order(Model,
         return dX_dt
     # ------------------------------------------- #
 
-    
     # starting point
     X0 = []
     for key in DYN_KEYS:
@@ -174,8 +173,8 @@ if __name__=='__main__':
     mg = graphs()
 
 
-    with open('../configs/The_Spectrum_of_Asynch_Dyn_2018/model.py') as f:
-        exec(f.read())
+    sys.path.append('../configs/The_Spectrum_of_Asynch_Dyn_2018/')
+    from model import Model
 
     Model['COEFFS_RecExc'] = np.load('../configs/The_Spectrum_of_Asynch_Dyn_2018/COEFFS_RecExc.npy')
     Model['COEFFS_RecInh'] = np.load('../configs/The_Spectrum_of_Asynch_Dyn_2018/COEFFS_RecInh.npy')
