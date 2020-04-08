@@ -67,18 +67,17 @@ if sys.argv[-1]=='plot':
     data['iRASTER_L4Exc'] = data['iRASTER_PRE1']
     data['tRASTER_L4Exc'] = data['tRASTER_PRE1']
     # # ## plot
-    fig, _ = ntwk.raster_and_Vm_plot(data,
-                                     # POP_KEYS = ['L4Exc', 'L23Exc', 'PVInh', 'SOMInh', 'VIPInh'],
-                                     # COLORS = ['brown', 'green', 'red', 'orange', 'purple'],
-                                     POP_KEYS = ['L23Exc', 'PVInh', 'SOMInh', 'VIPInh'],
-                                     COLORS = ['green', 'red', 'orange', 'purple'],
-                                     smooth_population_activity=10.)
+    fig, _ = ntwk.activity_plots(data,
+                                 POP_KEYS = ['L23Exc', 'PVInh', 'SOMInh', 'VIPInh'],
+                                 COLORS = ['green', 'red', 'orange', 'purple'],
+                                 smooth_population_activity=10.)
     plt.show()
 else:
     NTWK = ntwk.build_populations(Model, ['L23Exc', 'PVInh', 'SOMInh', 'VIPInh'],
                                   AFFERENT_POPULATIONS=['L4Exc'],
                                   with_raster=True,
                                   with_Vm=4,
+                                  with_pop_act=True,
                                   verbose=True)
 
     ntwk.build_up_recurrent_connections(NTWK, SEED=5, verbose=True)

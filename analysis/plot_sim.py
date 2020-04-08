@@ -5,16 +5,12 @@ from PIL import Image # BITMAP (png, jpg, ...)
 import numpy as np
 import matplotlib.pylab as plt
 
-from scipy.ndimage.filters import gaussian_filter1d
+from datavyz.main import graph_env
+from analyz.processing.signanalysis import gaussian_smoothing
 
-def gaussian_smoothing(signal, idt_sbsmpl=10):
-    return gaussian_filter1d(signal, idt_sbsmpl)
+# initialize graphical environment:
+ge = graph_env('manuscript')
 
-from datavyz.main import graph_env as dtvz_graph_env
-
-B, O, G, R, Purple, Brown, Pink, Grey,\
-    Kaki, Cyan = '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',\
-    '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
 
 def find_pop_keys(data):
     ii, pops = 0, []
@@ -32,12 +28,181 @@ def find_num_of_key(data,pop_key):
     return i0
 
 
+def raster_subplot(data, ax,
+                   POP_KEYS, COLORS, tzoom,
+                   graph_env):
+
+    n = 0
+    for i, tpop in enumerate(POP_KEYS):
+
+        cond = (data['tRASTER_%s' % tpop]>tzoom[0]) & (data['tRASTER_%s' % tpop]<tzoom[1])
+        ax.plot(data['tRASTER_%s' % tpop][cond], n+data['iRASTER_%s' % tpop][cond],
+                   'o', ms=1, c=COLORS[i], alpha=.5)
+        ax.plot(tzoom[1]*np.ones(2), [n,n+data['N_%s' % tpop]], 'w.', ms=0.01)
+        n += data['N_%s' % tpop]
+        
+    graph_env.set_plot(ax, xlim=tzoom, ylabel='neuron ID',
+                xticks_labels=[], yticks=[0,n], ylim=[0,n])
+
+
+def membrane_potential_subplots(data, AX,
+                                POP_KEYS, COLORS, tzoom,
+                                graph_env,
+                                subsampling=1,
+                                Vm_is_the_last_one=True):
+    
+    for i, tpop in enumerate(POP_KEYS):
+        
+        if ('VMS_%s' % tpop) in data:
+
+            t = np.arange(len(data['VMS_%s' % tpop][0]))*data['dt']
+            cond = (t>=tzoom[0]) & (t<=tzoom[1])
+            
+            for v in data['VMS_%s' % tpop]:
+                AX[i].plot(t[cond][::subsampling], v[::subsampling], '-', lw=1, c=COLORS[i])
+                
+            graph_env.annotate(AX[i], ' %s' % tpop, (1.,.5), xycoords='axes fraction',
+                        color=COLORS[i], bold=True, size='large')
+        else:
+
+            graph_env.annotate(AX[i], '$V_m$ of %s not recorded' % tpop,
+                               (.5,.5), xycoords='axes fraction',
+                               color=COLORS[i], bold=True, size='large', ha='center', va='center')
+
+        if tpop==POP_KEYS[-1] and Vm_is_the_last_one:
+            graph_env.set_plot(AX[i], xlabel='time (ms)', ylabel='Vm (mV)', xlim=tzoom)
+        else:
+            graph_env.set_plot(AX[i], ylabel='Vm (mV)', xlim=tzoom, xticks_labels=[])
+
+def population_activity_subplot(data, ax,
+                                POP_KEYS, COLORS, tzoom,
+                                graph_env,
+                                subsampling=1,
+                                with_smoothing=0, lw=2,
+                                fout_min=0.01, with_log_scale=False):
+
+    t = np.arange(int(data['tstop']/data['dt']))*data['dt']
+    cond = (t>tzoom[0]) & (t<tzoom[1])
+
+    for pop_key, color in zip(POP_KEYS, COLORS):
+        if with_smoothing>0:
+            ax.plot(t[cond][::subsampling],
+                    gaussian_smoothing(data['POP_ACT_'+pop_key][cond], int(with_smoothing/data['dt']))[::subsampling],
+                    color=color, lw=lw)
+        else:
+            ax.plot(t[cond][::subsampling], data['POP_ACT_'+pop_key][cond][::subsampling], color=color, lw=lw)
+
+    if with_log_scale:
+        # ax.set_yscale("log", nonposy='clip')
+        graph_env.set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
+                           xlim=tzoom,
+                           ylim=[fout_min, ax.get_ylim()[1]],
+                           yticks=[0.01, 1, 100],
+                           yticks_labels=['$10^{-2}$', '$10^0$', '$10^{2}$'],
+                           yscale='log')
+    else:
+        graph_env.set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
+                           num_yticks=4, xlim=tzoom)
+    
+    return ax
+
+def input_rate_subplot(data, ax,
+                       POP_KEYS, COLORS,
+                       tzoom,
+                       graph_env,
+                       subsampling=2):
+
+    """
+    ned to be improved to cover different afferent->target sets of waveforms
+    """
+    colors=['k', graph_env.brown, graph_env.kaki]
+    
+    rates, afferents, afferents_targets = {}, [], []
+    for key in data:
+        if len(key.split('Rate_'))>1:
+            _, afferent, target = key.split('_')
+            # rates['%s_%s' % (afferent, target)] = data[key]
+
+            if afferent not in rates:
+                rates[afferent] = data[key]
+    if len(rates.keys())>0:
+        ll = []
+        for i, afferent in enumerate(rates):
+            t = np.arange(len(rates[afferent]))*data['dt']
+            cond = (t>tzoom[0]) & (t<tzoom[1])
+            ll.append(ax.plot(t[cond][::subsampling], rates[afferent][cond][::subsampling], label=afferent, color=colors[i]))
+
+        ax.legend(frameon=False, fontsize=graph_env.fontsize)
+        
+        graph_env.set_plot(ax, ['left'],
+                           ylabel='input (Hz)',
+                           num_yticks=3, xlim=tzoom)
+    else:
+        graph_env.annotate(ax, 'no time varying input', (.5, .5), ha='center', va='center')
+        ax.axis('off')
+        
+
+def activity_plots(data,
+                   POP_KEYS = None,
+                   COLORS = None,
+                   tzoom=[0, np.inf],
+                   smooth_population_activity=0.,
+                   subsampling=2,
+                   graph_env=ge, ax=None,
+                   fig_args=dict(hspace=0.5, right = 5.)):
+
+    AE = [[[4,1]],
+          [[4,2]]] # axes extent
+    
+    if POP_KEYS is None:
+        POP_KEYS = find_pop_keys(data)
+
+    for pop in POP_KEYS:
+        if ('VMS_%s' % pop) in data:
+            AE.append([[4,1]])
+        Vm_is_the_last_one = True
+            
+    if ('POP_ACT_%s' % pop) in data: # just checking on the last one
+        AE.append([[4,2]])
+        Vm_is_the_last_one = False
+        
+    tzoom=[np.max([tzoom[0], 0.]), np.min([tzoom[1], data['tstop']])]
+
+    if COLORS is None:
+        COLORS = graph_env.colors
+
+    fig, AX = graph_env.figure(axes_extents=AE, **fig_args)
+
+    input_rate_subplot(data, AX[0],
+                       POP_KEYS, COLORS, tzoom,
+                       graph_env)
+    raster_subplot(data, AX[1],
+                   POP_KEYS, COLORS, tzoom,
+                   graph_env)
+
+    if ('VMS_%s' % pop) in data:
+        membrane_potential_subplots(data, AX[2:],
+                                    POP_KEYS, COLORS, tzoom,
+                                    graph_env, subsampling=subsampling,
+                                    Vm_is_the_last_one=Vm_is_the_last_one)
+    if ('POP_ACT_%s' % pop) in data:
+        population_activity_subplot(data, AX[-1],
+                                    POP_KEYS, COLORS,
+                                    tzoom,
+                                    graph_env,
+                                    with_smoothing=smooth_population_activity,
+                                    subsampling=subsampling)
+        
+
+    return fig, AX
+
 def raster_and_Vm_plot(data,
                        POP_KEYS = None,
                        COLORS = None,
                        tzoom=[0, np.inf],
                        smooth_population_activity=0.,
-                       graph_env='manuscript'):
+                       Vm_subsampling=2,
+                       graph_env=ge, ax=None):
 
     AE = [[[4,2]]] # axes extent
     if POP_KEYS is None:
@@ -49,70 +214,93 @@ def raster_and_Vm_plot(data,
 
     tzoom=[np.max([tzoom[0], 0.]), np.min([tzoom[1], data['tstop']])]
 
-    ge = dtvz_graph_env(graph_env)
-    
     if COLORS is None:
-        COLORS = ge.colors
+        COLORS = graph_env.colors
 
-    fig, AX = ge.figure(axes_extents=AE, hspace=0.5, right = 5.)
-    try:
-        ax = AX[0]
-    except TypeError:
-        ax = AX
-    
-    if 'POP_ACT_'+POP_KEYS[0] in data:
-        # means we also plot firing rate
-        ax2 = AX[0].twinx()
-        t = np.arange(len(data['POP_ACT_'+POP_KEYS[0]]))*data['dt']
-        firing_rate_plot = True
+    fig, AX = graph_env.figure(axes_extents=AE, hspace=0.5, right = 5.)
+
+    if ('VMS_%s' % pop) in data:
+        raster_subplot(data, AX[0],
+                       POP_KEYS, COLORS, tzoom,
+                       graph_env)
+        membrane_potential_subplots(data, AX[1:],
+                                    POP_KEYS, COLORS, tzoom,
+                                    graph_env, subsampling=Vm_subsampling)
     else:
-        firing_rate_plot = False
+        raster_subplot(data, AX,
+                       POP_KEYS, COLORS, tzoom,
+                       graph_env)
+
+    return fig, AX
+
+
+def twin_plot_raster_pop_act(data,
+                             POP_KEYS = None,
+                             COLORS = None,
+                             tzoom=[0, np.inf],
+                             with_smoothing=10.,
+                             with_log_scale=False, fout_min=1e-2,
+                             lw=2,
+                             raster_ms=2, raster_alpha=0.5,
+                             graph_env=ge, ax=None):
+
+    if POP_KEYS is None:
+        POP_KEYS = find_pop_keys(data)
+    if COLORS is None:
+        COLORS = graph_env.colors
         
-    n = 0
+    tzoom=[np.max([tzoom[0], 0.]), np.min([tzoom[1], data['tstop']])]
+    t = np.arange(int(data['tstop']/data['dt']))*data['dt']
+    cond = (t>tzoom[0]) & (t<tzoom[1])
+
+    if ax is None:
+        fig, ax = graph_env.figure(axes_extents=[[[4,2]]], hspace=0.5, right = 5.)
+    else:
+        fig = None
+
+    t = np.arange(len(data['POP_ACT_'+POP_KEYS[0]]))*data['dt']
+    for pop_key, color in zip(POP_KEYS, COLORS):
+        if with_smoothing>0:
+            ax.plot(t[cond],
+                    gaussian_smoothing(data['POP_ACT_'+pop_key][cond], int(with_smoothing/data['dt'])),
+                    color=color, lw=lw)
+        else:
+            ax.plot(t[cond], data['POP_ACT_'+pop_key][cond], color=color, lw=lw)
+            
+    # now spikes
+    ax2 = ax.twinx()
+    t = np.arange(int(data['tstop']/data['dt']))*data['dt']
+    n=0
     for i, tpop in enumerate(POP_KEYS):
 
         cond = (data['tRASTER_%s' % tpop]>tzoom[0]) & (data['tRASTER_%s' % tpop]<tzoom[1])
-        AX[0].plot(data['tRASTER_%s' % tpop][cond], n+data['iRASTER_%s' % tpop][cond],
-                   'o', ms=1, c=COLORS[i], alpha=.5)
-        AX[0].plot(tzoom[1]*np.ones(2), [n,n+data['N_%s' % tpop]], 'w.', ms=0.01)
-
-        if firing_rate_plot:
-            cond = (t>tzoom[0]) & (t<tzoom[1])
-            if smooth_population_activity>0:
-                ax2.plot(t[cond],
-                         gaussian_smoothing(data['POP_ACT_'+tpop][cond], int(smooth_population_activity/data['dt'])),
-                         color=COLORS[i], lw=2)
-            else:
-                ax2.plot(t[cond], data['POP_ACT_'+tpop][cond], color=COLORS[i], lw=2)
-
-        try:
-            for v in data['VMS_%s' % tpop]:
-                AX[i+1].plot(np.arange(len(v))*data['dt'], v, '-', lw=1, c=COLORS[i])
-        except KeyError:
-            pass
-        
+        ax2.plot(data['tRASTER_%s' % tpop][cond], n+data['iRASTER_%s' % tpop][cond],
+                 '.', ms=raster_ms, c=COLORS[i], alpha=raster_alpha)
+        ax2.plot(tzoom[1]*np.ones(2), [n,n+data['N_%s' % tpop]], 'w.', ms=0.01)
         n += data['N_%s' % tpop]
-        if ('VMS_%s' % tpop) in data:
-            ge.annotate(AX[i+1], ' %s' % tpop, (1.,.5), xycoords='axes fraction',
-                        color=COLORS[i], bold=True, size='large')
 
-    if firing_rate_plot:
-        ge.set_plot(ax2, ['right'], ylabel='inst. Firing Rate (Hz)')
-        
-    ge.set_plot(AX[0], xlim=tzoom, ylabel='neuron ID',
-                xticks_labels=[], yticks=[0,n], ylim=[0,n])
-
-    if len(AX)>1:
-        for ax in AX[1:-1]:
-            ge.set_plot(ax, ylabel='Vm (mV)', xlim=tzoom, xticks_labels=[])
-        ge.set_plot(AX[-1], xlabel='time (ms)', ylabel='Vm (mV)', xlim=tzoom)
+    if with_log_scale:
+        # ax.set_yscale("log", nonposy='clip')
+        graph_env.set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
+                    xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])],
+                    ylim=[fout_min, ax.get_ylim()[1]],
+                    yticks=[0.01, 1, 100],
+                    yticks_labels=['$10^{-2}$', '$10^0$', '$10^{2}$'],
+                    yscale='log')
+    else:
+        graph_env.set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
+                    num_yticks=4,
+                    xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
+    graph_env.set_plot(ax2, ['right'], ylabel='neuron ID',
+                       xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
     
-    return fig, AX
+    return fig, ax
 
     
 ######################################
 #### RASTER PLOT
 ######################################
+
 def raster(data,
            POP_KEYS = None, COLORS=None,
            NMAXS = None,
@@ -154,29 +342,25 @@ def raster(data,
 #### TIME-VARYING ACTIVITIES
 ######################################
 
-# for smoothing
-from scipy.ndimage.filters import gaussian_filter1d
-def gaussian_smoothing(signal, idt_sbsmpl=10):
-    return gaussian_filter1d(signal, idt_sbsmpl)
-
 def pop_act(data,
             POP_KEYS = None, COLORS=None,
             with_smoothing=0,
-            with_log_scale=False, fout_min=0.01,
+            with_log_scale=False,
+            fout_min=0.01,
             tzoom=[0, np.inf],
-            lw=2, ax=None):
+            lw=2,
+            graph_env=ge, ax=None):
 
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
     if COLORS is None:
-        COLORS = ['C'+str(i) for i in range(len(POP_KEYS))]
+        COLORS = graph_env.colors
         
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
     cond = (t>tzoom[0]) & (t<tzoom[1])
 
     if ax is None:
-        fig, ax = plt.subplots(1, figsize=(4,2.5))
-        plt.subplots_adjust(left=.3, bottom=.3)
+        fig, ax = graph_env.figure(axes_extents=[[[4,1]]], hspace=0.5, right = 5.)
 
     for pop_key, color in zip(POP_KEYS, COLORS):
         if with_smoothing>0:
@@ -187,16 +371,17 @@ def pop_act(data,
             ax.plot(t[cond], data['POP_ACT_'+pop_key][cond], color=color, lw=lw)
 
     if with_log_scale:
-        ax.set_yscale("log", nonposy='clip')
-        set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
-                 xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])],
-                 ylim=[fout_min, ax.get_ylim()[1]],
-                 yticks=[0.01, 1, 100],
-                 yticks_labels=['$10^{-2}$', '$10^0$', '$10^{2}$'])
+        # ax.set_yscale("log", nonposy='clip')
+        graph_env.set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
+                    xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])],
+                    ylim=[fout_min, ax.get_ylim()[1]],
+                    yticks=[0.01, 1, 100],
+                    yticks_labels=['$10^{-2}$', '$10^0$', '$10^{2}$'],
+                    yscale='log')
     else:
-        set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
-                 num_yticks=4,
-                 xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
+        graph_env.set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
+                    num_yticks=4,
+                    xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
     
     return ax
 

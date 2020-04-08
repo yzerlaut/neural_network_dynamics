@@ -52,7 +52,7 @@ if sys.argv[-1]=='plot':
     data = ntwk.load_dict_from_hdf5('RS-FS_data.h5')
 
     # ## plot
-    fig, _ = ntwk.raster_and_Vm_plot(data, smooth_population_activity=10.)
+    fig, _ = ntwk.activity_plots(data)
     
     plt.show()
     
