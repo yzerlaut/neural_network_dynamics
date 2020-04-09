@@ -8,6 +8,8 @@ from theory.tf import build_up_afferent_synaptic_input
 import numpy as np
 from scipy.integrate import odeint
 
+import time
+
 def input_output(neuron_params, SYN_POPS, RATES, COEFFS,
                  current_input = 0, # in pA of not SI
                  already_SI=False):
@@ -32,10 +34,10 @@ def solve_mean_field_first_order(Model,
                                  INPUTS = {'AffExc_RecExc':np.ones(1000),
                                            'AffExc_RecInh':np.ones(1000)},
                                  CURRENT_INPUTS = {},
-                                 dt = 0.1, tstop = 100.,
+                                 dt = 1e-4, tstop = .1,
                                  T=5e-3,
                                  replace_x0=False,
-                                 verbose=False):
+                                 verbose=True):
     """
     
 
@@ -49,6 +51,7 @@ def solve_mean_field_first_order(Model,
         DYN_SYSTEM[key]['syn_input'] = build_up_afferent_synaptic_input(Model,\
                                                         DYN_KEYS+DYN_SYSTEM[key]['aff_pops'], key,
                                                         verbose=verbose)
+
 
     # --- CONSTRUCT THE DIFFERENTIAL OPERATOR --- #
     def dX_dt(X, t, dt, DYN_KEYS, DYN_SYSTEM, INPUTS, CURRENT_INPUTS):
@@ -78,9 +81,14 @@ def solve_mean_field_first_order(Model,
     X0 = []
     for key in DYN_KEYS:
         X0.append(DYN_SYSTEM[key]['x0'])
-        
+
+    if verbose:
+        print('running ODE integration [...]')
+        start_time = time.time()
     X = odeint(dX_dt, X0, np.arange(int(tstop/dt))*dt,
                args=(dt, DYN_KEYS, DYN_SYSTEM, INPUTS, CURRENT_INPUTS))
+    if verbose:
+        print("--- ODE integration took %.1f seconds ---" % (time.time() - start_time))
 
     output = {}
     for key, x in zip(DYN_KEYS, X.T):

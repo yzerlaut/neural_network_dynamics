@@ -42,7 +42,7 @@ def get_membrane_equation(neuron_params, synaptic_array,\
     
     ## intrinsic currents
     if 'Ioscill_amp' in neuron_params:
-        eqs += '+ %(Ioscill_amp)f*pA *(1 + cos(2 * pi * %(Ioscill_freq)f * Hz * t))/2 ' % neuron_params
+        eqs += '+ %(Ioscill_amp)f*pA *(1 - cos(2 * pi * %(Ioscill_freq)f * Hz * t))/2 ' % neuron_params
         
     ## synaptic currents, 1) adding all synaptic currents to the membrane equation via the I variable
     for synapse in synaptic_array:

@@ -18,8 +18,8 @@ def getting_statistical_properties(params,
     SYN_PARAMS, RATES2 = [], []
 
     
-    for i, syn in enumerate(SYN_POPS):
 
+    for i, syn in enumerate(SYN_POPS):
         # insure that it's an array
 
         # if type(RATES['F_%s' % syn['name']]) in [float, np.float, np.float64]:
@@ -48,7 +48,7 @@ def getting_statistical_properties(params,
             SYN_PARAMS[-1]['a_j'] = 1 # pure conductance based by default
 
         RATES2.append(RATES['F_'+syn['name']]*syn['N']*syn['pconn'])
-
+        
     # A zero array to handle both float and array cases (for addition/multiplication)
     Zero = 0*RATES2[0]
     

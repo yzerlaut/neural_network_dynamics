@@ -14,6 +14,7 @@ from neural_network_dynamics.ntwk_build.syn_and_connec_library import *
 # building the stimulation
 from neural_network_dynamics.ntwk_stim.connect_afferent_input import *
 from neural_network_dynamics.ntwk_stim.waveform_library import double_gaussian
+from neural_network_dynamics.ntwk_stim import waveform_library as stim_waveforms
 
 # for saving and loading datafiles
 from neural_network_dynamics.recording.load_and_save import write_as_hdf5
@@ -35,7 +36,8 @@ from neural_network_dynamics.scan.get import get_scan
 import neural_network_dynamics.theory as theory
 from neural_network_dynamics.theory.fitting_tf import fit_data as fit_tf_data
 from theory import mean_field
-from theory.tf import make_tf_plot, build_up_afferent_synaptic_input
+from theory.tf import build_up_afferent_synaptic_input
+from theory.FastMF import FastMeanField
 
 # morphologically-detailed simulations
 from neural_network_dynamics.single_cell_integration import morpho_analysis
