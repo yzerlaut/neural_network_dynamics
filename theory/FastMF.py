@@ -84,7 +84,10 @@ class FastMeanField:
         return np.multiply(ecMatrix, self.CexcF), np.multiply(ecMatrix, self.CinhF)
 
     
-    def build_TF_func(self, Ngrid=20, coeffs_location='data/COEFFS_pyrExc.npy', pop=None):
+    def build_TF_func(self, Ngrid=20,
+                      coeffs_location='data/COEFFS_pyrExc.npy',
+                      pop=None,
+                      Exc_lim=[10,1000]):
         """
         """
 
