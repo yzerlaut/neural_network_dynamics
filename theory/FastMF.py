@@ -1,9 +1,9 @@
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+import time
 
 from scipy.interpolate import RegularGridInterpolator
 import itertools
-import time
 
 from cells.cell_library import built_up_neuron_params
 from theory.tf import build_up_afferent_synaptic_input
@@ -37,22 +37,22 @@ class FastMeanField:
         self.compute_exc_inh_matrix_factors(Model)
         
         # initialize afferent input
-        self.FAFF = np.zeros((len(self.t),len(self.AFF_POPS)))
+        self.FAFF = np.zeros((len(self.AFF_POPS),len(self.t)))
         for ipop, pop in enumerate(AFF_POPS):
             if '%s_IncreasingStep_size'%pop in Model:
                 print('Adding Increasing Step Waveform to:', pop)
-                self.FAFF[:,ipop] = IncreasingSteps(self.t, pop, Model, translate_to_SI=True)
+                self.FAFF[ipop,:] = IncreasingSteps(self.t, pop, Model, translate_to_SI=True)
             else:
                 print('Setting Constant Level to:', pop)
-                self.FAFF[:,ipop] = 0*self.t+Model['F_%s'%pop]
+                self.FAFF[ipop,:] = 0*self.t+Model['F_%s'%pop]
 
         # intrinsic currents
-        self.I_INTRINSINC = np.zeros((len(self.t),len(self.REC_POPS)))
+        self.I_INTRINSINC = np.zeros((len(self.REC_POPS),len(self.t)))
         for ipop, pop in enumerate(self.REC_POPS):
             # only support for time-phase-locked oscillatory current so far
             if '%s_Ioscill_freq'%pop in Model:
                 print('Adding intrinsic oscillation to:', pop)
-                self.I_INTRINSINC[:,ipop] = Intrinsic_Oscill(self.t, pop, Model, translate_to_SI=True)
+                self.I_INTRINSINC[ipop,:] = Intrinsic_Oscill(self.t, pop, Model, translate_to_SI=True)
 
         # matrix
         self.compute_exc_inh_matrix_factors(Model)
@@ -143,9 +143,9 @@ class FastMeanField:
         print('--> Done !')
 
     def rise_factor(self, X, t, Cexc, Cinh):
-        return self.TF_func(np.array([np.dot(np.concatenate([X, self.FAFF[int(t/self.dt),:]]), Cexc),
-                              np.dot(np.concatenate([X, self.FAFF[int(t/self.dt),:]]), Cinh),
-                              self.I_INTRINSINC[int(t/self.dt),:]]).T)
+        return self.TF_func(np.array([np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cexc),
+                              np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cinh),
+                              self.I_INTRINSINC[:,int(t/self.dt)]]).T)
 
     
     def dX_dt(self, X, t, Cexc, Cinh, tau=5e-3):
@@ -154,19 +154,18 @@ class FastMeanField:
         
     def run_single_connectivity_sim(self, ecMatrix, verbose=False):
         
-        X = np.zeros((len(self.t), len(self.REC_POPS)))
-        
+        X = np.zeros((len(self.REC_POPS),len(self.t)))
+
         if verbose:
             start_time=1e3*time.time()
             print('running ODE integration [...]')
-            
         if self.TF_func is None:
             raise NameError('/!\ Need to run the "build_TF_func" protocol before')
         else:
             Cexc, Cinh = self.compute_exc_inh_matrices(ecMatrix)
             # simple forward Euler iteration
             for it, tt in enumerate(self.t[:-1]):
-                X[it+1,:] = X[it,:]+self.dt*self.dX_dt(X[it,:], tt, Cexc, Cinh)
+                X[:,it+1] = X[:,it]+self.dt*self.dX_dt(X[:,it], tt, Cexc, Cinh)
         if verbose:
             print('--- ODE integration took %.1f milliseconds ' % (1e3*time.time()-start_time))
                 
