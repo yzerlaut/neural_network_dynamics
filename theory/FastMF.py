@@ -1,5 +1,6 @@
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+import time
 
 from scipy.interpolate import RegularGridInterpolator
 import itertools
@@ -36,22 +37,22 @@ class FastMeanField:
         self.compute_exc_inh_matrix_factors(Model)
         
         # initialize afferent input
-        self.FAFF = np.zeros((len(self.t),len(self.AFF_POPS)))
+        self.FAFF = np.zeros((len(self.AFF_POPS),len(self.t)))
         for ipop, pop in enumerate(AFF_POPS):
             if '%s_IncreasingStep_size'%pop in Model:
                 print('Adding Increasing Step Waveform to:', pop)
-                self.FAFF[:,ipop] = IncreasingSteps(self.t, pop, Model, translate_to_SI=True)
+                self.FAFF[ipop,:] = IncreasingSteps(self.t, pop, Model, translate_to_SI=True)
             else:
                 print('Setting Constant Level to:', pop)
-                self.FAFF[:,ipop] = 0*self.t+Model['F_%s'%pop]
+                self.FAFF[ipop,:] = 0*self.t+Model['F_%s'%pop]
 
         # intrinsic currents
-        self.I_INTRINSINC = np.zeros((len(self.t),len(self.REC_POPS)))
+        self.I_INTRINSINC = np.zeros((len(self.REC_POPS),len(self.t)))
         for ipop, pop in enumerate(self.REC_POPS):
             # only support for time-phase-locked oscillatory current so far
             if '%s_Ioscill_freq'%pop in Model:
                 print('Adding intrinsic oscillation to:', pop)
-                self.I_INTRINSINC[:,ipop] = Intrinsic_Oscill(self.t, pop, Model, translate_to_SI=True)
+                self.I_INTRINSINC[ipop,:] = Intrinsic_Oscill(self.t, pop, Model, translate_to_SI=True)
 
         # matrix
         self.compute_exc_inh_matrix_factors(Model)
@@ -87,7 +88,8 @@ class FastMeanField:
     def build_TF_func(self, Ngrid=20,
                       coeffs_location='data/COEFFS_pyrExc.npy',
                       pop=None,
-                      Exc_lim=[10,1000]):
+                      Exc_lim=[0.01,1000], Inh_lim=[0.01, 1000], sampling='log',
+                      EXC_VALUE_THRESHOLD=10.):
         """
         """
 
@@ -109,15 +111,20 @@ class FastMeanField:
         syn_input = build_up_afferent_synaptic_input(Model2,
                                                           AFF_POPS, pop)
         Model2['COEFFS'] = np.load(coeffs_location)
-        Freq_Exc = np.logspace(-2, 3, Ngrid+1)
-        Freq_Inh = np.logspace(-2, 3, Ngrid)
+        if sampling=='log':
+            Freq_Exc = np.logspace(*np.log10(Exc_lim), Ngrid+1)
+            Freq_Inh = np.logspace(*np.log10(Inh_lim), Ngrid)
+        else:
+            Freq_Exc = np.linspace(*Exc_lim, Ngrid+1)
+            Freq_Inh = np.linspace(*Inh_lim, Ngrid)
+
         Ioscill = np.linspace(0, 20*10, int(Ngrid/2))
         output_freq = np.zeros((len(Freq_Exc), len(Freq_Inh), len(Ioscill)))
 
         print('Performing grid simulation [...]')
         for i, j, k in itertools.product(range(len(Freq_Exc)), range(len(Freq_Inh)),
                                          range(len(Ioscill))):
-            if Freq_Exc[i]<10:
+            if Freq_Exc[i]<EXC_VALUE_THRESHOLD:
                 output_freq[i,j,k] = 0
             else:
                 output_freq[i,j,k] = input_output(nrn_params, syn_input,
@@ -136,25 +143,30 @@ class FastMeanField:
         print('--> Done !')
 
     def rise_factor(self, X, t, Cexc, Cinh):
-        return self.TF_func(np.array([np.dot(np.concatenate([X, self.FAFF[int(t/self.dt),:]]), Cexc),
-                              np.dot(np.concatenate([X, self.FAFF[int(t/self.dt),:]]), Cinh),
-                              self.I_INTRINSINC[int(t/self.dt),:]]).T)
+        return self.TF_func(np.array([np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cexc),
+                              np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cinh),
+                              self.I_INTRINSINC[:,int(t/self.dt)]]).T)
 
     
     def dX_dt(self, X, t, Cexc, Cinh, tau=5e-3):
         return (self.rise_factor(X,t,Cexc,Cinh)-X)/tau
 
         
-    def run_single_connectivity_sim(self, ecMatrix):
+    def run_single_connectivity_sim(self, ecMatrix, verbose=False):
         
-        X = np.zeros((len(self.t), len(self.REC_POPS)))
-        
+        X = np.zeros((len(self.REC_POPS),len(self.t)))
+
+        if verbose:
+            start_time=1e3*time.time()
+            print('running ODE integration [...]')
         if self.TF_func is None:
             raise NameError('/!\ Need to run the "build_TF_func" protocol before')
         else:
             Cexc, Cinh = self.compute_exc_inh_matrices(ecMatrix)
             # simple forward Euler iteration
             for it, tt in enumerate(self.t[:-1]):
-                X[it+1,:] = X[it,:]+self.dt*self.dX_dt(X[it,:], tt, Cexc, Cinh)
+                X[:,it+1] = X[:,it]+self.dt*self.dX_dt(X[:,it], tt, Cexc, Cinh)
+        if verbose:
+            print('--- ODE integration took %.1f milliseconds ' % (1e3*time.time()-start_time))
                 
         return X
