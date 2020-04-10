@@ -3,6 +3,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 
 from scipy.interpolate import RegularGridInterpolator
 import itertools
+import time
 
 from cells.cell_library import built_up_neuron_params
 from theory.tf import build_up_afferent_synaptic_input
@@ -151,10 +152,14 @@ class FastMeanField:
         return (self.rise_factor(X,t,Cexc,Cinh)-X)/tau
 
         
-    def run_single_connectivity_sim(self, ecMatrix):
+    def run_single_connectivity_sim(self, ecMatrix, verbose=False):
         
         X = np.zeros((len(self.t), len(self.REC_POPS)))
         
+        if verbose:
+            start_time=1e3*time.time()
+            print('running ODE integration [...]')
+            
         if self.TF_func is None:
             raise NameError('/!\ Need to run the "build_TF_func" protocol before')
         else:
@@ -162,5 +167,7 @@ class FastMeanField:
             # simple forward Euler iteration
             for it, tt in enumerate(self.t[:-1]):
                 X[it+1,:] = X[it,:]+self.dt*self.dX_dt(X[it,:], tt, Cexc, Cinh)
+        if verbose:
+            print('--- ODE integration took %.1f milliseconds ' % (1e3*time.time()-start_time))
                 
         return X
