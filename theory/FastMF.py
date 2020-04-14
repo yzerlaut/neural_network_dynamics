@@ -8,20 +8,21 @@ import itertools
 from cells.cell_library import built_up_neuron_params
 from theory.tf import build_up_afferent_synaptic_input
 from theory.mean_field import input_output
-
+from theory.mean_field import input_output
+from theory.Vm_statistics import getting_statistical_properties
 from ntwk_stim.waveform_library import *
 
 class FastMeanField:
 
     def __init__(self, Model, REC_POPS, AFF_POPS,
-                 tstop=None, dt=5e-3):
+                 tstop=None, dt=10e-3):
 
         self.REC_POPS = REC_POPS
         self.AFF_POPS = AFF_POPS
         self.Model = Model
         
         # initialize time axis
-        self.dt = dt
+        self.dt, self.tau = dt, 5*dt
         if tstop is None:
             if Model['tstop']>100:
                 print('very large value of tstop, suspecting MilliSecond instead of switching. Override by expliciting the "tstop" arg.')
@@ -87,6 +88,7 @@ class FastMeanField:
     
     def build_TF_func(self, Ngrid=20,
                       coeffs_location='data/COEFFS_pyrExc.npy',
+                      with_Vm_functions=False,
                       pop=None,
                       Exc_lim=[0.01,1000], Inh_lim=[0.01, 1000], sampling='log',
                       EXC_VALUE_THRESHOLD=10.):
@@ -119,7 +121,13 @@ class FastMeanField:
             Freq_Inh = np.linspace(*Inh_lim, Ngrid)
 
         Ioscill = np.linspace(0, 20*10, int(Ngrid/2))
+
         output_freq = np.zeros((len(Freq_Exc), len(Freq_Inh), len(Ioscill)))
+        
+        if with_Vm_functions:
+            mean_Vm = np.zeros((len(Freq_Exc), len(Freq_Inh), len(Ioscill)))
+            std_Vm = np.zeros((len(Freq_Exc), len(Freq_Inh), len(Ioscill)))
+            gamma_Vm = np.zeros((len(Freq_Exc), len(Freq_Inh), len(Ioscill)))
 
         print('Performing grid simulation [...]')
         for i, j, k in itertools.product(range(len(Freq_Exc)), range(len(Freq_Inh)),
@@ -131,6 +139,11 @@ class FastMeanField:
                                                   {'F_%s'%Exc_pop:Freq_Exc[i], 'F_%s'%Inh_pop:Freq_Inh[j]},
                                                   Model2['COEFFS'],
                                                   current_input=Ioscill[k])
+            if with_Vm_functions:
+                mean_Vm[i,j,k], std_Vm[i,j,k], _, _ =  getting_statistical_properties(nrn_params, syn_input,
+                                                                                      {'F_%s'%Exc_pop:Freq_Exc[i], 'F_%s'%Inh_pop:Freq_Inh[j]},
+                                                                                      current_input=Ioscill[k])
+                
         print('Building interpolation [...]')
         self.TF_func = RegularGridInterpolator([Freq_Exc*\
                                                 Model2['p_%s_%s'%(Exc_pop, pop)]*Model2['N_%s'%Exc_pop],
@@ -140,33 +153,90 @@ class FastMeanField:
                                                output_freq,
                                                method='linear',
                                                fill_value=None, bounds_error=False)
+        if with_Vm_functions:
+            self.mean_Vm_func = RegularGridInterpolator([Freq_Exc*\
+                                                         Model2['p_%s_%s'%(Exc_pop,pop)]*Model2['N_%s'%Exc_pop],
+                                                         Freq_Inh*\
+                                                         Model2['p_%s_%s'%(Inh_pop,pop)]*Model2['N_%s'%Inh_pop],
+                                                         Ioscill],
+                                                         mean_Vm,
+                                                         method='linear',
+                                                         fill_value=None, bounds_error=False)
+            # self.std_Vm_func = RegularGridInterpolator([Freq_Exc*\
+            #                                             Model2['p_%s_%s'%(Exc_pop, pop)]*Model2['N_%s'%Exc_pop],
+            #                                             Freq_Inh*\
+            #                                             Model2['p_%s_%s'%(Inh_pop, pop)]*Model2['N_%s'%Inh_pop],
+            #                                             Ioscill],
+            #                                             std_Vm,
+            #                                             method='linear',
+            #                                             fill_value=None, bounds_error=False)
         print('--> Done !')
 
+        
     def rise_factor(self, X, t, Cexc, Cinh):
         return self.TF_func(np.array([np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cexc),
                               np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cinh),
                               self.I_INTRINSINC[:,int(t/self.dt)]]).T)
 
+    def mean_Vm(self, X, t, Cexc, Cinh):
+        return self.mean_Vm_func(np.array([np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cexc),
+                                           np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cinh),
+                                           self.I_INTRINSINC[:,int(t/self.dt)]]).T)
     
-    def dX_dt(self, X, t, Cexc, Cinh, tau=5e-3):
-        return (self.rise_factor(X,t,Cexc,Cinh)-X)/tau
+    
+    def dX_dt(self, X, t, Cexc, Cinh):
+        return (self.rise_factor(X,t,Cexc,Cinh)-X)/self.tau
 
         
     def run_single_connectivity_sim(self, ecMatrix, verbose=False):
         
         X = np.zeros((len(self.REC_POPS),len(self.t)))
+        Vm = np.zeros((len(self.REC_POPS),len(self.t)))
 
         if verbose:
             start_time=1e3*time.time()
             print('running ODE integration [...]')
         if self.TF_func is None:
             raise NameError('/!\ Need to run the "build_TF_func" protocol before')
+        if self.mean_Vm_func is None:
+            raise NameError('/!\ Need to run the "build_Vm_func" protocol before')
         else:
             Cexc, Cinh = self.compute_exc_inh_matrices(ecMatrix)
+            Vm[:,0] = self.mean_Vm(X[:,0], 0, Cexc, Cinh)
             # simple forward Euler iteration
             for it, tt in enumerate(self.t[:-1]):
                 X[:,it+1] = X[:,it]+self.dt*self.dX_dt(X[:,it], tt, Cexc, Cinh)
+                Vm[:,it+1] = self.mean_Vm(X[:,it+1], tt, Cexc, Cinh)
         if verbose:
             print('--- ODE integration took %.1f milliseconds ' % (1e3*time.time()-start_time))
                 
-        return X
+        return X, Vm
+
+
+    def convert_to_mean_Vm_trace(self, X, target_key, verbose=False):
+
+        ipop = np.argwhere(np.array(self.REC_POPS)==target_key)[0][0]
+        
+        if verbose:
+            start_time=1e3*time.time()
+            print('running Vm conversion for population "%s" [...]' % target_key)
+            
+        if self.mean_Vm_func is None:
+            raise NameError('/!\ Need to run the "build_TF_func" protocol (with the "with_Vm_func" argument) before')
+        else:
+            Cexc, Cinh = self.compute_exc_inh_matrices(self.ecMatrix)
+            # simple forward Euler iteration
+            Vm = 0*self.t
+            
+            for it, tt in enumerate(self.t):
+
+                fe = np.dot(np.concatenate([X[:,it], self.FAFF[:,int(tt/self.dt)]]), Cexc)[ipop]
+                fi = np.dot(np.concatenate([X[:,it], self.FAFF[:,int(tt/self.dt)]]), Cinh)[ipop]
+                I = self.I_INTRINSINC[ipop,int(tt/self.dt)]
+                Vm[it] =  self.mean_Vm_func([fe,fi,I])
+
+        if verbose:
+            print('--- Vm conversion took %.1f milliseconds ' % (1e3*time.time()-start_time))
+                
+        return Vm
+    

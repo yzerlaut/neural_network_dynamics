@@ -87,18 +87,20 @@ def population_activity_subplot(data, ax,
     for pop_key, color in zip(POP_KEYS, COLORS):
         if with_smoothing>0:
             ax.plot(t[cond][::subsampling],
-                    gaussian_smoothing(data['POP_ACT_'+pop_key][cond], int(with_smoothing/data['dt']))[::subsampling],
+                    gaussian_smoothing(data['POP_ACT_'+pop_key][cond], int(with_smoothing/data['dt']))[::subsampling]+fout_min,
                     color=color, lw=lw)
         else:
-            ax.plot(t[cond][::subsampling], data['POP_ACT_'+pop_key][cond][::subsampling], color=color, lw=lw)
+            ax.plot(t[cond][::subsampling],
+                    data['POP_ACT_'+pop_key][cond][::subsampling]+fout_min,
+                    color=color, lw=lw)
 
     if with_log_scale:
         # ax.set_yscale("log", nonposy='clip')
         graph_env.set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
                            xlim=tzoom,
-                           ylim=[fout_min, ax.get_ylim()[1]],
-                           yticks=[0.01, 1, 100],
-                           yticks_labels=['$10^{-2}$', '$10^0$', '$10^{2}$'],
+                           # ylim=[fout_min, ax.get_ylim()[1]],
+                           # yticks=[0.01, 1, 100],
+                           # yticks_labels=['$10^{-2}$', '$10^0$', '$10^{2}$'],
                            yscale='log')
     else:
         graph_env.set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
@@ -147,6 +149,7 @@ def activity_plots(data,
                    COLORS = None,
                    tzoom=[0, np.inf],
                    smooth_population_activity=0.,
+                   pop_act_log_scale=False,
                    subsampling=2,
                    graph_env=ge, ax=None,
                    fig_args=dict(hspace=0.5, right = 5.)):
@@ -191,7 +194,8 @@ def activity_plots(data,
                                     tzoom,
                                     graph_env,
                                     with_smoothing=smooth_population_activity,
-                                    subsampling=subsampling)
+                                    subsampling=subsampling,
+                                    with_log_scale=pop_act_log_scale)
         
 
     return fig, AX
