@@ -1,6 +1,6 @@
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-import time
+import time, copy
 
 from scipy.interpolate import RegularGridInterpolator
 import itertools
@@ -14,11 +14,11 @@ from ntwk_stim.waveform_library import *
 
 class FastMeanField:
 
-    def __init__(self, Model, REC_POPS, AFF_POPS,
+    def __init__(self, Model,
                  tstop=None, dt=10e-3):
 
-        self.REC_POPS = REC_POPS
-        self.AFF_POPS = AFF_POPS
+        self.REC_POPS = Model['REC_POPS']
+        self.AFF_POPS = Model['AFF_POPS']
         self.Model = Model
         
         # initialize time axis
@@ -39,7 +39,7 @@ class FastMeanField:
         
         # initialize afferent input
         self.FAFF = np.zeros((len(self.AFF_POPS),len(self.t)))
-        for ipop, pop in enumerate(AFF_POPS):
+        for ipop, pop in enumerate(self.AFF_POPS):
             if '%s_IncreasingStep_size'%pop in Model:
                 print('Adding Increasing Step Waveform to:', pop)
                 self.FAFF[ipop,:] = IncreasingSteps(self.t, pop, Model, translate_to_SI=True)
@@ -105,7 +105,7 @@ class FastMeanField:
         
         # building artificial simulation situation (with just one exc and one inh)
         AFF_POPS = [Exc_pop, Inh_pop]
-        Model2 = self.Model.copy()
+        Model2 = copy.deepcopy(self.Model)
         Model2['N_%s'%Exc_pop], Model2['N_%s'%Inh_pop] = 10, 10
         Model2['p_%s_%s'%(Exc_pop, pop)], Model2['p_%s_%s'%(Inh_pop, pop)] = 0.1, 0.1
         
