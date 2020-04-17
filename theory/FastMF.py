@@ -8,7 +8,6 @@ import itertools
 from cells.cell_library import built_up_neuron_params
 from theory.tf import build_up_afferent_synaptic_input
 from theory.mean_field import input_output
-from theory.mean_field import input_output
 from theory.Vm_statistics import getting_statistical_properties
 from ntwk_stim.waveform_library import *
 
@@ -240,3 +239,7 @@ class FastMeanField:
                 
         return Vm
     
+if __name__=='__main__':
+
+    import time
+    # benchmark
