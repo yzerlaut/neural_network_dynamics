@@ -84,13 +84,35 @@ class FastMeanField:
         # just separates excitation and inhibition
         return np.multiply(ecMatrix, self.CexcF), np.multiply(ecMatrix, self.CinhF)
 
+
+    def build_TF_inputs(self,
+                        Exc_lim, Inh_lim, Iinj_lim, sampling, Ngrid):
+        
+        if sampling=='log':
+            Freq_Exc = np.logspace(*np.log10(Exc_lim), Ngrid+1)
+            Freq_Inh = np.logspace(*np.log10(Inh_lim), Ngrid)
+        else:
+            Freq_Exc = np.linspace(*Exc_lim, Ngrid+1)
+            Freq_Inh = np.linspace(*Inh_lim, Ngrid)
+
+        if Iinj_lim is not None:
+            Iinj = np.linspace(*Iinj_lim, int(Ngrid/2)) # doesn't need as much resolution
+        else:
+            Iinj = np.array([0.])
+
+        return Freq_Exc, Freq_Inh, Iinj
+
     
-    def build_TF_func(self, Ngrid=20,
-                      coeffs_location='data/COEFFS_pyrExc.npy',
-                      with_Vm_functions=False,
-                      pop=None,
-                      Exc_lim=[0.01,1000], Inh_lim=[0.01, 1000], sampling='log',
-                      EXC_VALUE_THRESHOLD=10.):
+    def simulate_TF_func(self, Ngrid=20,
+                         coeffs_location='data/COEFFS_pyrExc.npy',
+                         tf_sim_file='tf_sim_points.npz',
+                         with_Vm_functions=False,
+                         pop=None,
+                         Exc_lim=[0.01,1000],
+                         Inh_lim=[0.01, 1000],
+                         Iinj_lim=None,
+                         sampling='log',
+                         EXC_VALUE_THRESHOLD=10.):
         """
         """
 
@@ -110,81 +132,59 @@ class FastMeanField:
         
         nrn_params = built_up_neuron_params(Model2, pop)
         syn_input = build_up_afferent_synaptic_input(Model2,
-                                                          AFF_POPS, pop)
+                                                     AFF_POPS, pop)
         Model2['COEFFS'] = np.load(coeffs_location)
-        if sampling=='log':
-            Freq_Exc = np.logspace(*np.log10(Exc_lim), Ngrid+1)
-            Freq_Inh = np.logspace(*np.log10(Inh_lim), Ngrid)
-        else:
-            Freq_Exc = np.linspace(*Exc_lim, Ngrid+1)
-            Freq_Inh = np.linspace(*Inh_lim, Ngrid)
 
-        Ioscill = np.linspace(0, 20*10, int(Ngrid/2))
+        Freq_Exc, Freq_Inh, Iinj = self.build_TF_inputs(Exc_lim, Inh_lim, Iinj_lim, sampling, Ngrid)
 
-        output_freq = np.zeros((len(Freq_Exc), len(Freq_Inh), len(Ioscill)))
+        output_freq = np.zeros((len(Freq_Exc), len(Freq_Inh), len(Iinj)))
         
         if with_Vm_functions:
-            mean_Vm = np.zeros((len(Freq_Exc), len(Freq_Inh), len(Ioscill)))
-            std_Vm = np.zeros((len(Freq_Exc), len(Freq_Inh), len(Ioscill)))
-            gamma_Vm = np.zeros((len(Freq_Exc), len(Freq_Inh), len(Ioscill)))
+            mean_Vm, std_Vm, gamma_Vm = 0*output_freq, 0*output_freq, 0*output_freq
 
         print('Performing grid simulation [...]')
-        for i, j, k in itertools.product(range(len(Freq_Exc)), range(len(Freq_Inh)),
-                                         range(len(Ioscill))):
+        for i, j, k in itertools.product(range(len(Freq_Exc)),
+                                         range(len(Freq_Inh)),
+                                         range(len(Iinj))):
             if Freq_Exc[i]<EXC_VALUE_THRESHOLD:
                 output_freq[i,j,k] = 0
             else:
                 output_freq[i,j,k] = input_output(nrn_params, syn_input,
                                                   {'F_%s'%Exc_pop:Freq_Exc[i], 'F_%s'%Inh_pop:Freq_Inh[j]},
                                                   Model2['COEFFS'],
-                                                  current_input=Ioscill[k])
+                                                  current_input=Iinj[k])
             if with_Vm_functions:
                 mean_Vm[i,j,k], std_Vm[i,j,k], _, _ =  getting_statistical_properties(nrn_params, syn_input,
                                                                                       {'F_%s'%Exc_pop:Freq_Exc[i], 'F_%s'%Inh_pop:Freq_Inh[j]},
-                                                                                      current_input=Ioscill[k])
-                
-        print('Building interpolation [...]')
-        self.TF_func = RegularGridInterpolator([Freq_Exc*\
-                                                Model2['p_%s_%s'%(Exc_pop, pop)]*Model2['N_%s'%Exc_pop],
-                                                Freq_Inh*\
-                                                Model2['p_%s_%s'%(Inh_pop, pop)]*Model2['N_%s'%Inh_pop],
-                                                Ioscill],
-                                               output_freq,
-                                               method='linear',
-                                               fill_value=None, bounds_error=False)
-        if with_Vm_functions:
-            self.mean_Vm_func = RegularGridInterpolator([Freq_Exc*\
-                                                         Model2['p_%s_%s'%(Exc_pop,pop)]*Model2['N_%s'%Exc_pop],
-                                                         Freq_Inh*\
-                                                         Model2['p_%s_%s'%(Inh_pop,pop)]*Model2['N_%s'%Inh_pop],
-                                                         Ioscill],
-                                                         mean_Vm,
-                                                         method='linear',
-                                                         fill_value=None, bounds_error=False)
-            # self.std_Vm_func = RegularGridInterpolator([Freq_Exc*\
-            #                                             Model2['p_%s_%s'%(Exc_pop, pop)]*Model2['N_%s'%Exc_pop],
-            #                                             Freq_Inh*\
-            #                                             Model2['p_%s_%s'%(Inh_pop, pop)]*Model2['N_%s'%Inh_pop],
-            #                                             Ioscill],
-            #                                             std_Vm,
-            #                                             method='linear',
-            #                                             fill_value=None, bounds_error=False)
-        print('--> Done !')
+                                                                                      current_input=Iinj[k])
 
+        np.savez(tf_sim_file, **{'output_freq':output_freq,
+                                 'mean_Vm':mean_Vm, 'std_Vm':std_Vm,
+                                 'sampling':sampling,
+                                 'Ngrid':Ngrid,
+                                 'Exc_lim':Exc_lim,
+                                 'Inh_lim':Inh_lim,
+                                 'Iinj_lim':Iinj_lim})
         
-    def rise_factor(self, X, t, Cexc, Cinh):
-        return self.TF_func(np.array([np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cexc),
-                              np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cinh),
-                              self.I_INTRINSINC[:,int(t/self.dt)]]).T)
+    def build_TF_func(self,
+                      tf_sim_file='tf_sim_points.npz'):
+        
+        print('Building interpolation [...]')
+        sim = np.load(tf_sim_file)
 
-    def mean_Vm(self, X, t, Cexc, Cinh):
-        return self.mean_Vm_func(np.array([np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cexc),
-                                           np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cinh),
-                                           self.I_INTRINSINC[:,int(t/self.dt)]]).T)
-    
-    
-    def dX_dt(self, X, t, Cexc, Cinh):
-        return (self.rise_factor(X,t,Cexc,Cinh)-X)/self.tau
+        for key, val in sim.items():
+            setattr(self, key, val)
+            
+        self.Freq_Exc, self.Freq_Inh, self.Iinj = self.build_TF_inputs(self.Exc_lim,
+                                                                       self.Inh_lim,
+                                                                       self.Iinj_lim,
+                                                                       self.sampling, self.Ngrid)
+        
+    def full_MF_func(self, X, t, Cexc, Cinh):
+        I = np.digitize(np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cexc), self.Freq_Exc)
+        J = np.digitize(np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cinh), self.Freq_Inh)
+        K = np.digitize(self.I_INTRINSINC[:,int(t/self.dt)], self.Iinj)
+        return self.output_freq[I,J,K], self.mean_Vm[I,J,K]
 
         
     def run_single_connectivity_sim(self, ecMatrix, verbose=False):
@@ -195,17 +195,15 @@ class FastMeanField:
         if verbose:
             start_time=1e3*time.time()
             print('running ODE integration [...]')
-        if self.TF_func is None:
+        if self.full_MF_func is None:
             raise NameError('/!\ Need to run the "build_TF_func" protocol before')
-        if self.mean_Vm_func is None:
-            raise NameError('/!\ Need to run the "build_Vm_func" protocol before')
         else:
             Cexc, Cinh = self.compute_exc_inh_matrices(ecMatrix)
-            Vm[:,0] = self.mean_Vm(X[:,0], 0, Cexc, Cinh)
+            _, Vm[:,0] = self.full_MF_func(X[:,0], 0, Cexc, Cinh)
             # simple forward Euler iteration
             for it, tt in enumerate(self.t[:-1]):
-                X[:,it+1] = X[:,it]+self.dt*self.dX_dt(X[:,it], tt, Cexc, Cinh)
-                Vm[:,it+1] = self.mean_Vm(X[:,it+1], tt, Cexc, Cinh)
+                RF, Vm[:,it+1] = self.full_MF_func(X[:,it], tt, Cexc, Cinh)
+                X[:,it+1] = X[:,it]+self.dt*(RF-X[:,it])/self.tau
         if verbose:
             print('--- ODE integration took %.1f milliseconds ' % (1e3*time.time()-start_time))
                 
@@ -241,5 +239,33 @@ class FastMeanField:
     
 if __name__=='__main__':
 
-    import time
-    # benchmark
+    import sys
+    sys.path.append('../configs/Network_Modulation_2020')
+    from model import Model
+    
+    
+    mf = FastMeanField(Model, tstop=6.)
+
+    if sys.argv[-1]=='sim':
+        print('building the TF sim. (based on the COEFFS)')
+        mf.simulate_TF_func(200,
+                            coeffs_location='../configs/Network_Modulation_2020/COEFFS_pyrExc.npy',
+                            Iinj_lim=[0, 200.], # in pA
+                            Exc_lim=[0.01,1000],
+                            Inh_lim=[0.01, 1000],
+                            with_Vm_functions=True,
+                            sampling='lin')
+    mf.build_TF_func()
+    X, Vm = mf.run_single_connectivity_sim(mf.ecMatrix, verbose=True)
+
+    from datavyz import ges as ge
+    fig, AX = ge.figure(figsize=(3,1), axes=(1,5))
+    COLORS=[ge.g, ge.b, ge.r, ge.purple]
+    for i, label in enumerate(Model['REC_POPS']):
+        AX[-1].plot(1e3*mf.t, 1e-2+X[i,:], lw=4, color=COLORS[i], alpha=.5)
+        AX[i].plot(1e3*mf.t, 1e3*Vm[i,:], 'k-')
+        AX[i].set_ylim([-72,-45])
+        
+    
+    ge.show()
+    # # benchmark
