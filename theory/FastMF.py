@@ -14,14 +14,14 @@ from ntwk_stim.waveform_library import *
 class FastMeanField:
 
     def __init__(self, Model,
-                 tstop=None, dt=10e-3):
+                 tstop=None, dt=10e-3, tau=50e-3):
 
-        self.REC_POPS = Model['REC_POPS']
-        self.AFF_POPS = Model['AFF_POPS']
+        self.REC_POPS = list(Model['REC_POPS'])
+        self.AFF_POPS = list(Model['AFF_POPS'])
         self.Model = Model
         
         # initialize time axis
-        self.dt, self.tau = dt, 5*dt
+        self.dt, self.tau = dt, tau
         if tstop is None:
             if Model['tstop']>100:
                 print('very large value of tstop, suspecting MilliSecond instead of switching. Override by expliciting the "tstop" arg.')
@@ -149,7 +149,8 @@ class FastMeanField:
             if Freq_Exc[i]<EXC_VALUE_THRESHOLD:
                 output_freq[i,j,k] = 0
             else:
-                output_freq[i,j,k] = input_output(nrn_params, syn_input,
+                output_freq[i,j,k] = input_output(nrn_params,
+                                                  syn_input,
                                                   {'F_%s'%Exc_pop:Freq_Exc[i], 'F_%s'%Inh_pop:Freq_Inh[j]},
                                                   Model2['COEFFS'],
                                                   current_input=Iinj[k])
@@ -181,11 +182,19 @@ class FastMeanField:
                                                                        self.sampling, self.Ngrid)
         
     def full_MF_func(self, X, t, Cexc, Cinh):
-        I = np.digitize(np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cexc), self.Freq_Exc)
-        J = np.digitize(np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cinh), self.Freq_Inh)
-        K = np.digitize(self.I_INTRINSINC[:,int(t/self.dt)], self.Iinj)
-        return self.output_freq[I,J,K], self.mean_Vm[I,J,K]
-
+            
+            I = np.digitize(np.clip(np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cexc),
+                                    *self.Exc_lim),
+                            self.Freq_Exc, right=True)
+            J = np.digitize(np.clip(np.dot(np.concatenate([X, self.FAFF[:,int(t/self.dt)]]), Cinh),
+                                    *self.Inh_lim),
+                            self.Freq_Inh, right=True)
+            K = np.digitize(np.clip(self.I_INTRINSINC[:,int(t/self.dt)],
+                                    *self.Iinj_lim),
+                                    self.Iinj, right=True)
+            
+            return self.output_freq[I,J,K], self.mean_Vm[I,J,K]
+        
         
     def run_single_connectivity_sim(self, ecMatrix, verbose=False):
         
@@ -209,33 +218,6 @@ class FastMeanField:
                 
         return X, Vm
 
-
-    def convert_to_mean_Vm_trace(self, X, target_key, verbose=False):
-
-        ipop = np.argwhere(np.array(self.REC_POPS)==target_key)[0][0]
-        
-        if verbose:
-            start_time=1e3*time.time()
-            print('running Vm conversion for population "%s" [...]' % target_key)
-            
-        if self.mean_Vm_func is None:
-            raise NameError('/!\ Need to run the "build_TF_func" protocol (with the "with_Vm_func" argument) before')
-        else:
-            Cexc, Cinh = self.compute_exc_inh_matrices(self.ecMatrix)
-            # simple forward Euler iteration
-            Vm = 0*self.t
-            
-            for it, tt in enumerate(self.t):
-
-                fe = np.dot(np.concatenate([X[:,it], self.FAFF[:,int(tt/self.dt)]]), Cexc)[ipop]
-                fi = np.dot(np.concatenate([X[:,it], self.FAFF[:,int(tt/self.dt)]]), Cinh)[ipop]
-                I = self.I_INTRINSINC[ipop,int(tt/self.dt)]
-                Vm[it] =  self.mean_Vm_func([fe,fi,I])
-
-        if verbose:
-            print('--- Vm conversion took %.1f milliseconds ' % (1e3*time.time()-start_time))
-                
-        return Vm
     
 if __name__=='__main__':
 
@@ -244,7 +226,7 @@ if __name__=='__main__':
     from model import Model
     
     
-    mf = FastMeanField(Model, tstop=6.)
+    mf = FastMeanField(Model, tstop=6., dt=1e-2, tau=5e-2)
 
     if sys.argv[-1]=='sim':
         print('building the TF sim. (based on the COEFFS)')
@@ -254,8 +236,10 @@ if __name__=='__main__':
                             Exc_lim=[0.01,1000],
                             Inh_lim=[0.01, 1000],
                             with_Vm_functions=True,
-                            sampling='lin')
-    mf.build_TF_func()
+                            sampling='log')
+
+        
+    mf.build_TF_func(tf_sim_file='tf_sim_points.npz')
     X, Vm = mf.run_single_connectivity_sim(mf.ecMatrix, verbose=True)
 
     from datavyz import ges as ge
