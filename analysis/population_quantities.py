@@ -27,7 +27,7 @@ def get_CV_spiking(data, pop='Exc'):
         tspikes_i = tspikes[np.argwhere(ispikes==i).flatten()]
         isi = np.diff(tspikes_i)
         if len(isi)>2:
-            CV.append(np.mean(isi)/np.std(isi))
+            CV.append(np.std(isi)/np.mean(isi))
     if len(CV)>1:
         return np.array(CV).mean()
     else:
