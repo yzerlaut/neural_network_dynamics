@@ -14,7 +14,7 @@ from ntwk_stim.waveform_library import *
 class FastMeanField:
 
     def __init__(self, Model,
-                 tstop=None, dt=10e-3, tau=50e-3):
+                 tstop=None, dt=2.5e-3, tau=20e-3):
 
         self.REC_POPS = list(Model['REC_POPS'])
         self.AFF_POPS = list(Model['AFF_POPS'])
@@ -146,10 +146,10 @@ class FastMeanField:
         for i, j, k in itertools.product(range(len(Freq_Exc)),
                                          range(len(Freq_Inh)),
                                          range(len(Iinj))):
-            if Freq_Exc[i]<EXC_VALUE_THRESHOLD:
-                output_freq[i,j,k] = 0
-            else:
-                output_freq[i,j,k] = input_output(nrn_params,
+            # if Freq_Exc[i]<EXC_VALUE_THRESHOLD:
+            #     output_freq[i,j,k] = 0
+            # else:
+            output_freq[i,j,k] = input_output(nrn_params,
                                                   syn_input,
                                                   {'F_%s'%Exc_pop:Freq_Exc[i], 'F_%s'%Inh_pop:Freq_Inh[j]},
                                                   Model2['COEFFS'],
@@ -193,13 +193,14 @@ class FastMeanField:
                                     *self.Iinj_lim),
                                     self.Iinj, right=True)
             
-            return self.output_freq[I,J,K], self.mean_Vm[I,J,K]
+            return self.output_freq[I,J,K], self.mean_Vm[I,J,K], self.std_Vm[I,J,K]
         
         
     def run_single_connectivity_sim(self, ecMatrix, verbose=False):
         
         X = np.zeros((len(self.REC_POPS),len(self.t)))
-        Vm = np.zeros((len(self.REC_POPS),len(self.t)))
+        mVm = np.zeros((len(self.REC_POPS),len(self.t)))
+        sVm = np.zeros((len(self.REC_POPS),len(self.t)))
 
         if verbose:
             start_time=1e3*time.time()
@@ -208,15 +209,15 @@ class FastMeanField:
             raise NameError('/!\ Need to run the "build_TF_func" protocol before')
         else:
             Cexc, Cinh = self.compute_exc_inh_matrices(ecMatrix)
-            _, Vm[:,0] = self.full_MF_func(X[:,0], 0, Cexc, Cinh)
+            _, mVm[:,0], sVm[:,0] = self.full_MF_func(X[:,0], 0, Cexc, Cinh)
             # simple forward Euler iteration
             for it, tt in enumerate(self.t[:-1]):
-                RF, Vm[:,it+1] = self.full_MF_func(X[:,it], tt, Cexc, Cinh)
+                RF, mVm[:,it+1], sVm[:,it+1] = self.full_MF_func(X[:,it], tt, Cexc, Cinh)
                 X[:,it+1] = X[:,it]+self.dt*(RF-X[:,it])/self.tau
         if verbose:
             print('--- ODE integration took %.1f milliseconds ' % (1e3*time.time()-start_time))
                 
-        return X, Vm
+        return X, mVm, sVm
 
     
 if __name__=='__main__':
@@ -230,24 +231,26 @@ if __name__=='__main__':
 
     if sys.argv[-1]=='sim':
         print('building the TF sim. (based on the COEFFS)')
-        mf.simulate_TF_func(200,
+        mf.simulate_TF_func(300,
+                            tf_sim_file='tf_sim_points.npz',
                             coeffs_location='../configs/Network_Modulation_2020/COEFFS_pyrExc.npy',
                             Iinj_lim=[0, 200.], # in pA
-                            Exc_lim=[0.01,1000],
-                            Inh_lim=[0.01, 1000],
+                            Exc_lim=[0.01,10000],
+                            Inh_lim=[0.01, 10000],
                             with_Vm_functions=True,
                             sampling='log')
 
         
     mf.build_TF_func(tf_sim_file='tf_sim_points.npz')
-    X, Vm = mf.run_single_connectivity_sim(mf.ecMatrix, verbose=True)
+    X, mVm, sVm = mf.run_single_connectivity_sim(mf.ecMatrix, verbose=True)
 
     from datavyz import ges as ge
     fig, AX = ge.figure(figsize=(3,1), axes=(1,5))
     COLORS=[ge.g, ge.b, ge.r, ge.purple]
     for i, label in enumerate(Model['REC_POPS']):
         AX[-1].plot(1e3*mf.t, 1e-2+X[i,:], lw=4, color=COLORS[i], alpha=.5)
-        AX[i].plot(1e3*mf.t, 1e3*Vm[i,:], 'k-')
+        
+        ge.plot(1e3*mf.t, 1e3*mVm[i,:], sy=1e3*sVm[i,:], ax=AX[i], color='k')
         AX[i].set_ylim([-72,-45])
         
     
