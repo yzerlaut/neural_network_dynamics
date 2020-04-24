@@ -56,13 +56,41 @@ from neural_network_dynamics.vision.plots import plot as vision_plot
 ######## Some quick visualization functions
 #########################################################################
 
-def quick_look_at_Vm(NTWK):
-    fig, AX = plt.subplots(1, len(NTWK['VMS']), figsize=(3*len(NTWK['VMS']),2.5))
-    for i, pop_recording in enumerate(NTWK['VMS']):
-        for j in pop_recording.record:
-            AX[i].plot(pop_recording[j].t/ms, pop_recording[j].V/mV)
-        set_plot(AX[i], xlabel='time (ms)', ylabel='Vm (mV)')
-    show()
+from neural_network_dynamics.ntwk_build.run import quick_ntwk_sim, quick_MF_sim
+
+# def quick_look_at_Vm(NTWK):
+#     fig, AX = plt.subplots(1, len(NTWK['VMS']), figsize=(3*len(NTWK['VMS']),2.5))
+#     for i, pop_recording in enumerate(NTWK['VMS']):
+#         for j in pop_recording.record:
+#             AX[i].plot(pop_recording[j].t/ms, pop_recording[j].V/mV)
+#         set_plot(AX[i], xlabel='time (ms)', ylabel='Vm (mV)')
+#     show()
+
+def quick_plot(filename,
+             graph_env=None,
+             smooth_population_activity=10,
+             pop_act_log_scale=True):
+    
+    ## load file
+    data = ntwk.load_dict_from_hdf5(filename)
+    
+    # ## plot
+    fig, AX = ntwk.activity_plots(data,
+                                  smooth_population_activity=smooth_population_activity,
+                                  pop_act_log_scale=pop_act_log_scale)
+
+    try:
+        mf_data = load_dict(filename.replace('ntwk.h5', 'mf.npz'))
+    except FileNotFoundError:
+        mf_data = None
+    
+    if omf_data is not None:
+        t = np.linspace(0, data['tstop'], len(omf_data['pyrExc']))
+        for i, label in enumerate(data['REC_POPS']):
+            AX[-1].plot(t, 1e-23+mf_data[label], '-', lw=4, color=COLORS[i], alpha=.5)
+            # AX[-1].plot(t, omf_data[label], 'k--')
+
+    return fig, AX
     
 
 
