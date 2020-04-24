@@ -58,13 +58,17 @@ class FastMeanField:
         self.compute_exc_inh_matrix_factors(Model)
 
         self.TF_func = None # to be initialized !
-        
-    # initialize Effective Connectivity
-    def initialize_Effective_Connectivity_Matrix(self, Model):
-        self.ecMatrix = np.zeros((len(self.REC_POPS)+len(self.AFF_POPS), len(self.REC_POPS)))
+
+    def from_Model_pconn_to_Effective_Connectivity_Matrix(self, Model):
+        ecMatrix = np.zeros((len(self.REC_POPS)+len(self.AFF_POPS), len(self.REC_POPS)))
         for i, ii in enumerate(self.REC_POPS+self.AFF_POPS):
             for j, jj in enumerate(self.REC_POPS):
-                self.ecMatrix[i,j] = Model['p_%s_%s' % (ii,jj)]*Model['N_%s' % ii]
+                ecMatrix[i,j] = Model['p_%s_%s' % (ii,jj)]*Model['N_%s' % ii]
+        return ecMatrix
+    
+    # initialize Effective Connectivity
+    def initialize_Effective_Connectivity_Matrix(self, Model):
+        self.ecMatrix = self.from_Model_pconn_to_Effective_Connectivity_Matrix(Model)
 
 
     def compute_exc_inh_matrix_factors(self, Model):
