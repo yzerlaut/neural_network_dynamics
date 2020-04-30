@@ -230,11 +230,12 @@ if __name__=='__main__':
 
     if sys.argv[-1]=='sim':
         print('building the TF sim. (based on the COEFFS)')
-        mf.simulate_TF_func(200,
+        mf.simulate_TF_func(300,
                             coeffs_location='../configs/Network_Modulation_2020/COEFFS_pyrExc.npy',
+                            tf_sim_file='tf_sim_points.npz',
                             Iinj_lim=[0, 200.], # in pA
-                            Exc_lim=[0.01,1000],
-                            Inh_lim=[0.01, 1000],
+                            Exc_lim=[0.01,50000],
+                            Inh_lim=[0.01,50000],
                             with_Vm_functions=True,
                             sampling='log')
 

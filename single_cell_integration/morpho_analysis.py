@@ -39,6 +39,7 @@ def get_compartment_list(morpho,
 
 
 def compute_segments(morpho,
+                     inclusion_condition='True',
                      soma_comp=None,
                      without_axon=False):
     """
@@ -46,7 +47,8 @@ def compute_segments(morpho,
     """
 
     SEGMENTS = {} # a dictionary storing segment informations
-    COMP_LIST, SEG_INDICES = get_compartment_list(morpho)
+    COMP_LIST, SEG_INDICES = get_compartment_list(morpho,
+                                                  inclusion_condition=inclusion_condition)
 
     SEGMENTS['x'] = np.concatenate([c.x for c in COMP_LIST])
     SEGMENTS['y'] = np.concatenate([c.y for c in COMP_LIST])
