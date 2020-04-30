@@ -1,7 +1,7 @@
 import numpy as np
 import datavyz
 
-from matplotlib import cm
+from matplotlib.cm import copper
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import matplotlib.pylab as plt
 
@@ -74,7 +74,7 @@ def make_tf_plot_2_variables(data,
                              xscale='log',
                              cscale='log',
                              xlabel='$\\nu_{e}$ (Hz)',
-                             cmap=cm.copper, ax=None, acb=None, ge=None,
+                             cmap=copper, ax=None, acb=None, ge=None,
                              fig_args={'with_space_for_bar_legend':True},
                              with_top_label=False,
                              ms=2, lw_th=2, alpha_th=0.7,

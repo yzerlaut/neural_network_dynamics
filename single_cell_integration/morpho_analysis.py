@@ -39,7 +39,6 @@ def get_compartment_list(morpho,
 
 
 def compute_segments(morpho,
-                     inclusion_condition='True',
                      soma_comp=None,
                      without_axon=False):
     """
@@ -47,8 +46,7 @@ def compute_segments(morpho,
     """
 
     SEGMENTS = {} # a dictionary storing segment informations
-    COMP_LIST, SEG_INDICES = get_compartment_list(morpho,
-                                                  inclusion_condition=inclusion_condition)
+    COMP_LIST, SEG_INDICES = get_compartment_list(morpho)
 
     SEGMENTS['x'] = np.concatenate([c.x for c in COMP_LIST])
     SEGMENTS['y'] = np.concatenate([c.y for c in COMP_LIST])
@@ -104,16 +102,18 @@ if __name__=='__main__':
     morpho = ntwk.Morphology.from_swc_file(filename)
     
     SEGMENTS = compute_segments(morpho)
+    print(np.unique(SEGMENTS['comp_type'][SEGMENTS['comp_type']=='dend']))
 
-    # print(ntwk.morpho_analysis.list_compartment_types(COMP_LIST))
-    print(find_indices_with_conditions(SEGMENTS,\
-                                       min_distance_to_soma=230e-6,
-                                       comp_type='apic'))
-    print(SEGMENTS['start_x'][:3], SEGMENTS['end_x'][:3], SEGMENTS['y'][:3], SEGMENTS['z'][:3])
-    # print(SEGMENTS['x'][-3:], SEGMENTS['y'][-3:], SEGMENTS['z'][-3:])
-    # print(len(SEGMENTS['index']), len(np.unique(SEGMENTS['index'])))
     
-    COMP_LIST, INDICES = ntwk.morpho_analysis.get_compartment_list(morpho,
-                                inclusion_condition='comp.type!="axon"')
-    print(dir(COMP_LIST[0]))
+    # print(ntwk.morpho_analysis.list_compartment_types(COMP_LIST))
+    # print(find_indices_with_conditions(SEGMENTS,\
+    #                                    min_distance_to_soma=230e-6,
+    #                                    comp_type='apic'))
+    # print(SEGMENTS['start_x'][:3], SEGMENTS['end_x'][:3], SEGMENTS['y'][:3], SEGMENTS['z'][:3])
+    # # print(SEGMENTS['x'][-3:], SEGMENTS['y'][-3:], SEGMENTS['z'][-3:])
+    # # print(len(SEGMENTS['index']), len(np.unique(SEGMENTS['index'])))
+    
+    # COMP_LIST, INDICES = ntwk.morpho_analysis.get_compartment_list(morpho,
+    #                             inclusion_condition='comp.type!="axon"')
+    # print(dir(COMP_LIST[0]))
     # print(ntwk.morpho_analysis.list_compartment_types(COMP_LIST))

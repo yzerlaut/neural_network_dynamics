@@ -1,9 +1,13 @@
+import numpy as np
+
 Model = {
     ## ---------------------------------------------------------------------------------
     ### Initialisation by default parameters
     ## UNIT SYSTEM is : ms, mV, pF, nS, pA, Hz (arbitrary and unconsistent, so see code)
     ## ---------------------------------------------------------------------------------
     # numbers of neurons in population
+    'REC_POPS':['RecExc', 'RecInh', 'DsInh'],
+    'AFF_POPS':['AffExc'],
     'N_RecExc':4000, 'N_RecInh':1000, 'N_DsInh':500, 'N_AffExc':100,
     # synaptic weights
     'Q_RecExc_RecExc':2., 'Q_RecExc_RecInh':2., 
@@ -39,11 +43,22 @@ Model = {
     # --> Disinhibitory population (DsInh, disinhibition)
     'DsInh_Gl':10., 'DsInh_Cm':200.,'DsInh_Trefrac':5.,
     'DsInh_El':-70., 'DsInh_Vthre':-50., 'DsInh_Vreset':-70., 'DsInh_deltaV':0.,
-    'DsInh_a':0., 'DsInh_b': 0., 'DsInh_tauw':1e9
+    'DsInh_a':0., 'DsInh_b': 0., 'DsInh_tauw':1e9,
+    # COEFFS for MF
+    'COEFFS_RecExc' : np.load('COEFFS_RecExc.npy'),
+    'COEFFS_RecInh' : np.load('COEFFS_RecInh.npy'),
+    'COEFFS_DsInh' : np.load('COEFFS_RecExc.npy'),
+    #
 }
+Model['AffExc_IncreasingStep_onset']= 1000 # 200ms delay for onset
+Model['AffExc_IncreasingStep_baseline']= 0.
+Model['AffExc_IncreasingStep_length']= 1000
+Model['AffExc_IncreasingStep_size']= 4.
+Model['AffExc_IncreasingStep_smoothing']= 100
 
 if __name__=='__main__':
 
+    
     import sys
     sys.path.append('../..')
     import main as ntwk
@@ -58,45 +73,6 @@ if __name__=='__main__':
         ntwk.show()
     
     else:
-        import numpy as np
-        from analyz.processing.signanalysis import smooth
-        
-        NTWK = ntwk.build_populations(Model, ['RecExc', 'RecInh', 'DsInh'],
-                                      AFFERENT_POPULATIONS=['AffExc'],
-                                      with_raster=True,
-                                      with_Vm=4,
-                                      verbose=True)
 
-        ntwk.build_up_recurrent_connections(NTWK, SEED=5, verbose=True)
-
-        #######################################
-        ########### AFFERENT INPUTS ###########
-        #######################################
-
-
-        t_array = ntwk.arange(int(Model['tstop']/Model['dt']))*Model['dt']
-        faff = smooth(np.array([4*int(tt/1000) for tt in t_array]), int(200/0.1))       
-
-        # ######################
-        # ## ----- Plot ----- ##
-        # ######################
-
-        # # # afferent excitation onto cortical excitation and inhibition
-        for i, tpop in enumerate(['RecExc', 'RecInh', 'DsInh']): # both on excitation and inhibition
-            ntwk.construct_feedforward_input(NTWK, tpop, 'AffExc',
-                                             t_array, faff,
-                                             verbose=True)
-
-        ################################################################
-        ## --------------- Initial Condition ------------------------ ##
-        ################################################################
-        ntwk.initialize_to_rest(NTWK)
-
-        #####################
-        ## ----- Run ----- ##
-        #####################
-        network_sim = ntwk.collect_and_run(NTWK, verbose=True)
-
-        ntwk.write_as_hdf5(NTWK, filename='CellRep2019_data.h5')
-        print('Results of the simulation are stored as:', 'CellRep2019_data.h5')
-        print('--> Run \"python CellRep2019.py plot\" to plot the results')
+        # ntwk.quick_ntwk_sim(Model)
+        ntwk.quick_MF_sim(Model)
