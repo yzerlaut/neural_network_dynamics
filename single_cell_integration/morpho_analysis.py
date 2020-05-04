@@ -93,6 +93,7 @@ def find_indices_with_conditions(SEGMENTS,
     
     return SEGMENTS['index'][condition]
 
+
 if __name__=='__main__':
 
     filename = os.path.join(str(pathlib.Path(__file__).resolve().parent),
@@ -104,11 +105,9 @@ if __name__=='__main__':
     SEGMENTS = compute_segments(morpho)
     print(np.unique(SEGMENTS['comp_type'][SEGMENTS['comp_type']=='dend']))
 
-    
-    # print(ntwk.morpho_analysis.list_compartment_types(COMP_LIST))
-    # print(find_indices_with_conditions(SEGMENTS,\
-    #                                    min_distance_to_soma=230e-6,
-    #                                    comp_type='apic'))
+    print(find_indices_with_conditions(SEGMENTS,\
+                                       min_distance_to_soma=230e-6,
+                                       comp_type='apic'))
     # print(SEGMENTS['start_x'][:3], SEGMENTS['end_x'][:3], SEGMENTS['y'][:3], SEGMENTS['z'][:3])
     # # print(SEGMENTS['x'][-3:], SEGMENTS['y'][-3:], SEGMENTS['z'][-3:])
     # # print(len(SEGMENTS['index']), len(np.unique(SEGMENTS['index'])))
