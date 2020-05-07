@@ -60,7 +60,6 @@ def process_and_connect_event_stimulation(neuron, spike_IDs, spike_times,
     stim = {'ID':[array of event ID in terms of pre],
             'time': [array of time of those events] }
     """
-    # iseg_with_syn = np.unique(pre_index_to_segment)
 
     stimulation = ntwk.SpikeGeneratorGroup(len(pre_index_to_segment),
                                            np.array(spike_IDs, dtype=int),
@@ -76,19 +75,3 @@ def process_and_connect_event_stimulation(neuron, spike_IDs, spike_times,
 
     return stimulation, ES
 
-def Poisson_background(t, Freq, Nsyn, verbose=True, debug=False):
-
-    synapse_ID, time_ID = [], []
-    for syn in range(Nsyn):
-        for e, event in enumerate(np.cumsum(np.random.exponential(1e3/Freq,
-                                            size=max([1,int(1.3e-3*t[-1]*Freq)])))):
-            synapse_ID.append(syn)
-            time_ID.append(event)
-
-
-    stim = {}
-    stim['ID'], stim['time'] = ntwk.deal_with_multiple_spikes_per_bin(np.array(synapse_ID, dtype=int),
-                                                                      np.array(time_ID), t,
-                                                                      verbose=verbose, debug=debug)            
-    
-    return stim
