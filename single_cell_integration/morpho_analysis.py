@@ -68,13 +68,15 @@ def find_conditions(SEGMENTS,
                     min_distance_to_soma=0.,
                     max_distance_to_soma=1e9):
 
-    condition = np.ones(len(SEGMENTS['x']), dtype=bool)
 
     if type(comp_type) is list:
+        condition = np.zeros(len(SEGMENTS['x']), dtype=bool)
         for c in comp_type:
-            condition = condition & (SEGMENTS['comp_type']==c)
+            condition = condition | (SEGMENTS['comp_type']==c)
     elif comp_type is not None:
-        condition = condition & (SEGMENTS['comp_type']==comp_type)
+        condition = SEGMENTS['comp_type']==comp_type
+    else:
+        condition = np.ones(len(SEGMENTS['x']), dtype=bool)
 
     # distances:
     dx = SEGMENTS['x']-SEGMENTS['x'][isoma]
