@@ -19,23 +19,25 @@ def get_compartment_list(morpho,
     condition should be of the form: 'comp.z>130', 'comp.type!="axon"'
     """
     
-    COMP_LIST, N_seg, INCLUSION = [], [], []
-    exec("COMP_LIST.append(morpho); comp = COMP_LIST[-1]; N_seg.append(len(comp.x)); INCLUSION.append("+inclusion_condition+")")
+    COMP_LIST, COMP_LIST_WITH_ARB, N_seg, INCLUSION = [], [], [], []
+    exec("COMP_LIST.append(morpho); COMP_LIST_WITH_ARB.append('soma'); comp = COMP_LIST[-1]; N_seg.append(len(comp.x)); INCLUSION.append("+inclusion_condition+")")
 
     TOPOL = str(morpho.topology())
     TT = TOPOL.split('\n')
     condition, comp = True, None
     for index, t in enumerate(TT[1:-1]):
         exec("COMP_LIST.append(morpho."+t.split(' .')[-1]+"); comp = COMP_LIST[-1]; N_seg.append(len(comp.x)); INCLUSION.append("+inclusion_condition+")")
-
+        COMP_LIST_WITH_ARB.append(t.split('|  .')[1])
+        
     NSEG_TOT = np.cumsum(N_seg)
-    COMPARTMENT_LIST, NSEG_INDICES = [], []
-    for c, i, nseg_tot, nseg in zip(COMP_LIST, INCLUSION, NSEG_TOT, N_seg):
+    COMPARTMENT_LIST, COMPARTMENT_NAMES, NSEG_INDICES = [], [], []
+    for c, cwa, i, nseg_tot, nseg in zip(COMP_LIST, COMP_LIST_WITH_ARB, INCLUSION, NSEG_TOT, N_seg):
         if i:
             COMPARTMENT_LIST.append(c)
+            COMPARTMENT_NAMES.append(cwa)
             NSEG_INDICES.append(nseg_tot+np.arange(nseg))
     # return COMPARTMENT_LIST, np.arange(len(COMP_LIST))[np.array(INCLUSION, dtype=bool)]
-    return COMPARTMENT_LIST, NSEG_INDICES
+    return COMPARTMENT_LIST, COMPARTMENT_NAMES, NSEG_INDICES
 
 
 def compute_segments(morpho,
@@ -46,8 +48,9 @@ def compute_segments(morpho,
     """
 
     SEGMENTS = {} # a dictionary storing segment informations
-    COMP_LIST, SEG_INDICES = get_compartment_list(morpho)
+    COMP_LIST, COMP_NAMES, SEG_INDICES = get_compartment_list(morpho)
 
+    SEGMENTS['name'] = np.concatenate([[n for i in range(len(c.x))] for c, n in zip(COMP_LIST, COMP_NAMES)])
     SEGMENTS['x'] = np.concatenate([c.x for c in COMP_LIST])
     SEGMENTS['y'] = np.concatenate([c.y for c in COMP_LIST])
     SEGMENTS['z'] = np.concatenate([c.z for c in COMP_LIST])
@@ -103,11 +106,12 @@ if __name__=='__main__':
     morpho = ntwk.Morphology.from_swc_file(filename)
     
     SEGMENTS = compute_segments(morpho)
-    print(np.unique(SEGMENTS['comp_type'][SEGMENTS['comp_type']=='dend']))
+    print(SEGMENTS['name'])
+    # print(np.unique(SEGMENTS['comp_type'][SEGMENTS['comp_type']=='dend']))
 
-    print(find_indices_with_conditions(SEGMENTS,\
-                                       min_distance_to_soma=230e-6,
-                                       comp_type='apic'))
+    # print(find_indices_with_conditions(SEGMENTS,\
+    #                                    min_distance_to_soma=230e-6,
+    #                                    comp_type='apic'))
     # print(SEGMENTS['start_x'][:3], SEGMENTS['end_x'][:3], SEGMENTS['y'][:3], SEGMENTS['z'][:3])
     # # print(SEGMENTS['x'][-3:], SEGMENTS['y'][-3:], SEGMENTS['z'][-3:])
     # # print(len(SEGMENTS['index']), len(np.unique(SEGMENTS['index'])))
