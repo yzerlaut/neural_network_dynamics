@@ -5,14 +5,6 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 import main as ntwk # my custom layer on top of Brian2
 
 
-def list_compartment_types(COMP_LIST):
-    type_list = []
-    for cc in COMP_LIST:
-        if cc.type not in type_list:
-            type_list.append(cc.type)
-    return type_list
-    
-
 def get_compartment_list(morpho,
                          inclusion_condition='True'):
     """
@@ -38,6 +30,7 @@ def get_compartment_list(morpho,
             NSEG_INDICES.append(nseg_tot+np.arange(nseg))
     # return COMPARTMENT_LIST, np.arange(len(COMP_LIST))[np.array(INCLUSION, dtype=bool)]
     return COMPARTMENT_LIST, COMPARTMENT_NAMES, NSEG_INDICES
+
 
 
 def compute_segments(morpho,
@@ -69,35 +62,38 @@ def compute_segments(morpho,
     
     return SEGMENTS
 
-def find_somatic_compartment(morpho):
-    somaS, _ = ntwk.morpho_analysis.get_compartment_list(morpho,
-                            inclusion_condition='comp.type=="soma"')
-    if len(somaS)==1:
-        soma = somaS[0]
-    else:
-        soma = somaS[0]
-        print('/!\ several compartments for soma, took:', soma)
-        
+def distance(x, y, z):
+    return np.sqrt(x**2+y**2+z**2)
 
-def find_indices_with_conditions(SEGMENTS,
-                                 comp_type = None,
-                                 min_distance_to_soma=0.,
-                                 max_distance_to_soma=1e9):
+def find_conditions(SEGMENTS,
+                    comp_type = None,
+                    isoma = 0,
+                    min_distance_to_soma=0.,
+                    max_distance_to_soma=1e9):
 
     condition = np.ones(len(SEGMENTS['x']), dtype=bool)
 
-    if comp_type is not None:
-        condition = (SEGMENTS['comp_type']==comp_type)
+    if type(comp_type) is list:
+        for c in comp_type:
+            condition = condition & (SEGMENTS['comp_type']==c)
+    elif comp_type is not None:
+        condition = condition & (SEGMENTS['comp_type']==comp_type)
 
     # distances:
-    print(np.sqrt(SEGMENTS['x']**2+SEGMENTS['y']**2+SEGMENTS['z']**2)>=0)
-    condition = condition & (np.sqrt(SEGMENTS['x']**2+SEGMENTS['y']**2+SEGMENTS['z']**2)>=min_distance_to_soma)
-    condition = condition & (np.sqrt(SEGMENTS['x']**2+SEGMENTS['y']**2+SEGMENTS['z']**2)<=max_distance_to_soma)
+    dx = SEGMENTS['x']-SEGMENTS['x'][isoma]
+    dy = SEGMENTS['y']-SEGMENTS['y'][isoma]
+    dz = SEGMENTS['z']-SEGMENTS['z'][isoma]
     
-    return SEGMENTS['index'][condition]
+    condition = condition & (distance(dx, dy, dz)>=min_distance_to_soma)
+    condition = condition & (distance(dx, dy, dz)<=max_distance_to_soma)
+    
+    return condition
 
 
 if __name__=='__main__':
+
+    sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+    import main as ntwk # my custom layer on top of Brian2
 
     filename = os.path.join(str(pathlib.Path(__file__).resolve().parent),
                             'morphologies',
@@ -106,6 +102,7 @@ if __name__=='__main__':
     morpho = ntwk.Morphology.from_swc_file(filename)
     
     SEGMENTS = compute_segments(morpho)
+
     print(SEGMENTS['name'])
     # print(np.unique(SEGMENTS['comp_type'][SEGMENTS['comp_type']=='dend']))
 
@@ -120,3 +117,9 @@ if __name__=='__main__':
     #                             inclusion_condition='comp.type!="axon"')
     # print(dir(COMP_LIST[0]))
     # print(ntwk.morpho_analysis.list_compartment_types(COMP_LIST))
+    # find_conditions(SEGMENTS,
+    #                 comp_type = ['soma', 'dend'],
+    #                 isoma = 0,
+    #                 min_distance_to_soma=0.,
+    #                 max_distance_to_soma=1e9)
+
