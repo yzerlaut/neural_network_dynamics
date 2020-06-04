@@ -60,7 +60,7 @@ def get_synchrony_of_spiking(data, pop='Exc',
 
     if len(ispikes_unique)>3:
         # if there are at least two couples
-        couples = list(combinations(ispikes_unique, r=2))
+        couples = [comb for comb in combinations(ispikes_unique, r=2)]
         Nmax_pairs = min([len(couples), Nmax_pairs])
         rdm_picks = np.random.choice(range(len(couples)), Nmax_pairs)
 
