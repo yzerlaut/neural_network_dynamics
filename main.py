@@ -42,6 +42,7 @@ from theory.FastMF import FastMeanField
 # morphologically-detailed simulations
 from neural_network_dynamics.single_cell_integration import morpho_analysis
 from neural_network_dynamics.single_cell_integration.synaptic_input import spread_synapses_on_morpho, process_and_connect_event_stimulation
+from neural_network_dynamics.single_cell_integration.active_mechanisms import *
 
 
 # transfer function module
