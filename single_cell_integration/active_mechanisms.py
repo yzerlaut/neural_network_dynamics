@@ -1,3 +1,6 @@
+"""
+tries to implement a NEURON-like way to incorporate mechanisms into morphologically detailed cells
+"""
 from brian2 import *
 from brian2.units.constants import (zero_celsius, faraday_constant as F,
                                     gas_constant as R)
@@ -21,13 +24,15 @@ class MembraneCurrent:
         
         self.name=name
 
-        if params is None:
-            self.params = self.default_params()
-        else:
-            self.params = params
+        # initialize params to class default
+        self.params = self.default_params()
+        if params is not None:
+            for key in params:
+                self.params[key] = params[key] # passed values overrides default
             
         self.params['name'] = self.name
-        self.compute_code(self.params) 
+        
+        self.compute_code(self.params) # build the equations with the params
         
         
     def compute_code(self, params):
@@ -57,8 +62,7 @@ class PassiveCurrent(MembraneCurrent):
 
     parameters El, gl
     """
-    def __init__(self, name='Pas',
-                 params=None):
+    def __init__(self, name='Pas', params=None):
         
         self.equations = """
         I{name} = gbar_{name}*1e-12*siemens/um**2*(v-{El}*mV): amp/meter**2"""
@@ -456,7 +460,7 @@ class CalciumConcentrationDecay:
     -- linear rectification because cannot pump inward (see above function)
     """
     def __init__(self,
-                 name='CaDecay', # not a current, so not needed
+                 name='CaDecay', # not a current, so not really needed (do not need to be identified)
                  contributing_current='IHVACa',
                  params=None):
         self.name=name
