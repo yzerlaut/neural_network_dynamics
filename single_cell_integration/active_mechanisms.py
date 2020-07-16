@@ -116,7 +116,7 @@ class HodgkinHuxleyCurrent(MembraneCurrent):
         
 class LowThresholdCalciumCurrent(MembraneCurrent):
     """
-    Low-threshold Calcium current (I_T)
+    Low-threshold Calcium current (iT)
 
     Genealogy (NEURON comment):
 
@@ -131,12 +131,12 @@ class LowThresholdCalciumCurrent(MembraneCurrent):
         
         self.equations = """
         I{name} = g{name} * (v - {E_Ca}*mV): amp/meter**2
-        g{name} = gbar{name} * m{name}**2 * h{name} : siemens/meter**2
-        gbar{name} : siemens/meter**2
-        m{name}_inf = 1.0 / ( 1 + exp(-(v/mV+{v12m})/{vwm}) ) 
-	h{name}_inf = 1.0 / ( 1 + exp((v/mV+{v12h})/{vwh}) )
-	tau_m{name} = ( {am} + 1.0 / ( exp((v/mV+{vm1})/{wm1}) + exp(-(v/mV+{vm2})/{wm2}) ) ) 
-	tau_h{name} = ( {ah} + 1.0 / ( exp((v/mV+{vh1})/{wh1}) + exp(-(v/mV+{vh2})/{wh2}) ) ) 
+        g{name} = gbar_{name} * m{name}**2 * h{name} : siemens/meter**2
+        gbar_{name} : siemens/meter**2
+        m{name}_inf = 1.0 / ( 1 + exp(-(v/mV+{v12m})/{vwm}) ) : 1 
+	h{name}_inf = 1.0 / ( 1 + exp((v/mV+{v12h})/{vwh}) ) : 1 
+	tau_m{name} = ( {am} + 1.0 / ( exp((v/mV+{vm1})/{wm1}) + exp(-(v/mV+{vm2})/{wm2}) ) ) * ms : second
+	tau_h{name} = ( {ah} + 1.0 / ( exp((v/mV+{vh1})/{wh1}) + exp(-(v/mV+{vh2})/{wh2}) ) ) * ms : second
         dm{name}/dt = -(m{name} - m{name}_inf)/tau_m{name} : 1
         dh{name}/dt = -(h{name} - h{name}_inf)/tau_h{name} : 1
         """
@@ -376,7 +376,7 @@ class HyperpolarizationActivatedCationCurrent(MembraneCurrent):
 
     I-h channel from Magee 1998 for distal dendrites
     """
-    def __init__(self, name='h', params=None):
+    def __init__(self, name='H', params=None):
 
         self.equations = """
         I{name} = g{name} * (v - {E_hdb}*mV) : amp/meter**2
@@ -404,19 +404,47 @@ class HyperpolarizationActivatedCationCurrent(MembraneCurrent):
             qt=4.5**((34-33)/10))
 
 
+class MuscarinicPotassiumCurrent(MembraneCurrent):
+    """
+    Im current
+
+    26 Ago 2002 Modification of original channel to allow variable time step and to correct an initialization error.
+       Done by Michael Hines(michael.hines@yale.e) and Ruggero Scorcioni(rscorcio@gmu.edu) at EU Advance Course in Computational Neuroscience. Obidos, Portugal
+
+    "km.mod"
+    Potassium channel, Hodgkin-Huxley style kinetics
+    Based on I-M (muscarinic K channel)
+    Slow, noninactivating
+
+    Author: Zach Mainen, Salk Institute, 1995, zach@salk.edu
+    """
+    def __init__(self, name='Musc', params=None):
+
+        self.equations = """
+        I{name} = g{name} * (v - {E_K}*mV) : amp/meter**2
+        g{name} = gbar_{name} * n{name} : siemens/meter**2
+        gbar_{name} : siemens/meter**2
+        a{name} = {Ra} * (v/mV - {tha}) / (1 - exp(-(v/mV - {tha})/{qa})) : 1
+        b{name} = {Rb} : 1
+	tau_n{name} = 1/{tadj}/(a{name}+b{name})*ms : second 
+	n{name}_inf = a{name}/(a{name}+b{name}) : 1
+        dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name} : 1"""
+        
+        super().__init__(name, params)
+
+        
+    def default_params(self):
+        return dict(
+            E_K = -90, # (mV)
+	    tha  = -30, #	(mV)		: v 1/2 for inf
+	    qa   = 9, #	(mV)		: inf slope		
+	    Ra   = 0.001, #	(/ms)		: max act rate  (slow)
+	    Rb   = 0.001, #	(/ms)		: max deact rate  (slow)
+	    tadj = 2.3**((34-23)/10))
+    
 ################################################
 ########### Concentration Mechanisms ###########
 ################################################
-
-# def lin_rectified(x):
-#     if x>=0:
-#         return x
-#     else:
-#         return 0
-#     # return (sign(x)+1)/2.*x
-# lin_rectified = Function(lin_rectified,
-#                          arg_units=[molar/second],
-#                          return_unit=molar/second)
 
 class CalciumConcentrationDynamics:
     """
@@ -455,6 +483,11 @@ class CalciumConcentrationDynamics:
 
 
     -- linear rectification because cannot pump inward (see above function)
+
+    ====================================
+    Y. Zerlaut (2020): hard to understand the unit factor
+    so reversed engineered from the NEURON code using:
+    1 mA/cm**2/2/F/um = 51821.34786953 * nmolar / msecond
     """
     def __init__(self,
                  name='CaDynamics', # not a current, so not really needed (do not need to be identified)
@@ -467,9 +500,11 @@ class CalciumConcentrationDynamics:
             self.params = params
         self.params['name'] = self.name
         self.params['contributing_currents'] = contributing_currents
-            
+
+
         self.equations ="""
-	dInternalCalcium/dt = -({contributing_currents})/2/F/{depth}/um+({cainf}*mmolar-InternalCalcium)/{taur}/ms : mmolar"""
+        drive_channel = -51821.35/{depth}*({contributing_currents})/mA*cm**2*nmolar/ms : mmolar/second
+	dInternalCalcium/dt = (sign(drive_channel)+1)/2*drive_channel+({cainf}*mmolar-InternalCalcium)/{taur}/ms : mmolar"""
         self.code = self.equations.format(**self.params)
         
     def insert(self, eqs):
@@ -490,7 +525,7 @@ if __name__=='__main__':
 
     defaultclock.dt = 0.01*ms
 
-    # calcium dynamics
+    # calcium dynamics following: HighVoltageActivationCalciumCurrent + LowThresholdCalciumCurrent
     Equation_String = CalciumConcentrationDynamics(contributing_currents='IT+IHVACa',
                                              name='CaDynamics').insert(Equation_String)
     
@@ -500,6 +535,7 @@ if __name__=='__main__':
                 SodiumChannelCurrent(name='Na'),
                 HighVoltageActivationCalciumCurrent(name='HVACa'),
                 LowThresholdCalciumCurrent(name='T'),
+                MuscarinicPotassiumCurrent(name='Musc'),
                 CalciumDependentPotassiumCurrent(name='KCa')]
     
     for current in CURRENTS:
@@ -514,12 +550,12 @@ if __name__=='__main__':
     neuron = SpatialNeuron(morpho, eqs, Cm=1*uF/cm**2, Ri=150*ohm*cm,
                            method='exponential_euler')
 
+    # initial conditions:
     neuron.v = -75*mV
-    neuron.InternalCalcium = 100e-6*mmolar
-    
+    neuron.InternalCalcium = 100*nM
+
     for current in CURRENTS:
         current.init_sim(neuron)
-        
     
     ## -- PASSIVE PROPS -- ##
     neuron.gbar_Pas = 1e-4*siemens/cm**2
@@ -546,9 +582,9 @@ if __name__=='__main__':
     neuron.dend.distal.gbar_T = 0.0006*1e-12*siemens/um**2
 
     ## -- M-CURRENT (Potassium) -- ##
-    neuron.gbar_M = 2.2*1e-12*siemens/um**2
-    neuron.dend.gbar_M = 0.05*1e-12*siemens/um**2
-    neuron.dend.distal.gbar_M = 0.05*1e-12*siemens/um**2
+    neuron.gbar_Musc = 2.2*1e-12*siemens/um**2
+    neuron.dend.gbar_Musc = 0.05*1e-12*siemens/um**2
+    neuron.dend.distal.gbar_Musc = 0.05*1e-12*siemens/um**2
 
     # ## -- H-CURRENT (non-specific) -- ##
     # neuron.gbar_H = 0*1e-12*siemens/um**2 # set to zero !!
@@ -556,22 +592,16 @@ if __name__=='__main__':
 
     soma_loc, dend_loc = 0, 2
     mon = StateMonitor(neuron, ['v', 'InternalCalcium'], record=[soma_loc, dend_loc])
-    # mon = StateMonitor(neuron, ['v', 'IHVACa'], record=[soma_loc, dend_loc])
 
-    # neuron.P_Ca = 0*cm/second
-    # neuron.dend.distal.P_Ca = 0*cm/second
-    
+
     run(100*ms)
     neuron.main.I_inj = 300*pA
     run(200*ms)
     neuron.main.I_inj = 0*pA
     run(100*ms)
-    # WITH T-CURRENT
-    # neuron.P_Ca = 1.7e-5*cm/second
-    # neuron.dend.distal.P_Ca = 9.5e-5*cm/second
-    neuron.main.I_inj = 300*pA
+    neuron.dend.I_inj = 300*pA
     run(200*ms)
-    neuron.main.I_inj = 0*pA
+    neuron.dend.I_inj = 0*pA
     run(200*ms)
 
 
@@ -579,8 +609,7 @@ if __name__=='__main__':
     from datavyz import ges as ge
     fig, AX = ge.figure(axes=(1,2), figsize=(2.,1.))
     ge.plot(mon.t / ms, Y=[mon[soma_loc].v/mV, mon[dend_loc].v/mV],
-            LABELS=['soma', 'dend'], COLORS=['k', ge.blue], ax=AX[0])
-    # ge.plot(mon.t / ms, Y=[mon[soma_loc].IHVACa/mA*cm**2, mon[dend_loc].IHVACa/mA*cm**2],
-    ge.plot(mon.t / ms, Y=[mon[soma_loc].InternalCalcium/uM, mon[dend_loc].InternalCalcium/uM],
-            COLORS=['k', ge.blue], ax=AX[1])
+            LABELS=['soma', 'dend'], COLORS=['k', ge.blue], ax=AX[0], axes_args={'ylabel':'Vm (mV)'})
+    ge.plot(mon.t / ms, Y=[mon[soma_loc].InternalCalcium/nM, mon[dend_loc].InternalCalcium/nM],
+            COLORS=['k', ge.blue], ax=AX[1], axes_args={'ylabel':'[Ca$^{2+}$] (nM)', 'xlabel':'time (ms)'})
     ge.show()
