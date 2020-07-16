@@ -116,20 +116,27 @@ class HodgkinHuxleyCurrent(MembraneCurrent):
         
 class LowThresholdCalciumCurrent(MembraneCurrent):
     """
-    Low-threshold Calcium current (I_T)  -- nonlinear function of voltage
+    Low-threshold Calcium current (I_T)
+
+    Genealogy (NEURON comment):
+
+    T-type Ca channel 
+    ca.mod to lead to thalamic ca current inspired by destexhe and huguenrd
+    Uses fixed eca instead of GHK eqn
+    changed from (AS Oct0899)
+    changed for use with Ri18  (B.Kampa 2005)
     """
     def __init__(self, name='T',
                  params=None):
         
         self.equations = """
-        I{name} = P_Ca * m{name}**2 * h{name} * G_Ca : amp/meter**2
-        P_Ca : meter/second  # maximum Permeability to Calcium
-        G_Ca = {Z_Ca}**2*F*v*gamma*(InternalCalcium - {Ca_o}*mM*exp(-{Z_Ca}*gamma*v))/(1 - exp(-{Z_Ca}*gamma*v)) : coulomb/meter**3
-        m{name}_inf = 1/(1 + exp(-(v/mV + 56)/6.2)) : 1
-        h{name}_inf = 1/(1 + exp((v/mV + 80)/4)) : 1
-        tau_m{name} = (0.612 + 1.0/(exp(-(v/mV + 131)/16.7) + exp((v/mV + 15.8)/18.2))) * ms / {tadj}: second
-        tau_h{name} = (int(v<-81*mV) * exp((v/mV + 466)/66.6) +
-               int(v>=-81*mV) * (28 + exp(-(v/mV + 21)/10.5))) * ms / {tadj}: second
+        I{name} = g{name} * (v - {E_Ca}*mV): amp/meter**2
+        g{name} = gbar{name} * m{name}**2 * h{name} : siemens/meter**2
+        gbar{name} : siemens/meter**2
+        m{name}_inf = 1.0 / ( 1 + exp(-(v/mV+{v12m})/{vwm}) ) 
+	h{name}_inf = 1.0 / ( 1 + exp((v/mV+{v12h})/{vwh}) )
+	tau_m{name} = ( {am} + 1.0 / ( exp((v/mV+{vm1})/{wm1}) + exp(-(v/mV+{vm2})/{wm2}) ) ) 
+	tau_h{name} = ( {ah} + 1.0 / ( exp((v/mV+{vh1})/{wh1}) + exp(-(v/mV+{vh2})/{wh2}) ) ) 
         dm{name}/dt = -(m{name} - m{name}_inf)/tau_m{name} : 1
         dh{name}/dt = -(h{name} - h{name}_inf)/tau_h{name} : 1
         """
@@ -137,8 +144,23 @@ class LowThresholdCalciumCurrent(MembraneCurrent):
         super().__init__(name, params)
         
     def default_params(self):
-        return dict(Z_Ca=2, # Valence of Calcium ions
-                    Ca_o = 2, # mM, extracellular Calcium concentration
+        return dict(E_Ca = 140, # mV
+	            vshift = 0, #	(mV)		: voltage shift (affects all)
+	            cao  = 2.5, #	(mM)	        : external ca concentration
+	            v12m=50, #         	(mV)
+	            v12h=78, #         	(mV)
+	            vwm =7.4, #         	(mV)
+	            vwh=5.0, #         	(mV)
+	            am=3, #         	(mV)
+	            ah=85, #         	(mV)
+	            vm1=25, #         	(mV)
+	            vm2=100, #         	(mV)
+	            vh1=46, #         	(mV)
+	            vh2=405, #         	(mV)
+	            wm1=20, #         	(mV)
+	            wm2=15, #         	(mV)
+	            wh1=4, #         	(mV)
+	            wh2=50, #         	(mV)
                     tadj = 2.5**((34-24)/10.0))
 
 
@@ -357,11 +379,12 @@ class HyperpolarizationActivatedCationCurrent(MembraneCurrent):
     def __init__(self, name='h', params=None):
 
         self.equations = """
-        I{name} = l{name} * (v - {E_hdb}*mV) * {gbar}*1e-12*siemens/um**2 : amp/meter**2
-        a{name} = {Ra} * (v/mV - {tha}) / (1 - exp(-(v/mV - {tha})/{qa})) : 1
-        b{name} = {Rb} : 1
-	tau_l{name} = 1/(a{name}+b{name})*ms : second 
-	l{name}_inf = a{name}/(a{name}+b{name}) : 1
+        I{name} = g{name} * (v - {E_hdb}*mV) : amp/meter**2
+        g{name} = gbar_{name} * l{name} : siemens/meter**2
+        gbar_{name} : : siemens/meter**2
+        a{name} = 1/(1+ exp(0.0378*{zetat}*(v/mV-{vhalft}))) : 1
+	tau_l{name} = exp(0.0378*{zetat}*{gmt}*(v/mV-{vhalft})) / ({qtl}*{qt}*{a0t}*(1+a{name})) *ms : second 
+	l{name}_inf = 1/(1+a{name}) : 1
         dl{name}/dt = -(l{name} - l{name}_inf)/tau_l{name} : 1
         """
         
@@ -371,31 +394,29 @@ class HyperpolarizationActivatedCationCurrent(MembraneCurrent):
     def default_params(self):
         return dict(
             E_hdb=0,#  (mV)        
-            gbar=0.,# pS/um2, (mho/cm2)
             vhalfl=-81, #   (mV)
             kl=-8, #
             vhalft=-75, #   (mV)
             a0t=0.011, #      (/ms)
             zetat=2.2, #    (1)
             gmt=.4, #   (1)
-            q10=4.5, #
             qtl=1, #
-	    temp = 23)
+            qt=4.5**((34-33)/10))
 
 
 ################################################
 ########### Concentration Mechanisms ###########
 ################################################
 
-def lin_rectified(x):
-    if x>=0:
-        return x
-    else:
-        return 0
-    # return (sign(x)+1)/2.*x
-lin_rectified = Function(lin_rectified,
-                         arg_units=[molar/second],
-                         return_unit=molar/second)
+# def lin_rectified(x):
+#     if x>=0:
+#         return x
+#     else:
+#         return 0
+#     # return (sign(x)+1)/2.*x
+# lin_rectified = Function(lin_rectified,
+#                          arg_units=[molar/second],
+#                          return_unit=molar/second)
 
 class CalciumConcentrationDynamics:
     """
@@ -513,30 +534,25 @@ if __name__=='__main__':
     neuron.dend.distal.gbar_Na = 40*1e-12*siemens/um**2
     neuron.dend.distal.gbar_K = 30*1e-12*siemens/um**2
 
-    ## -- HIGH-VOLTAGE-ACT CALCIUM CURRENT -- ##
+    ## -- HIGH-VOLTAGE-ACTIVATION CALCIUM CURRENT -- ##
     neuron.gbar_HVACa = 0.5*1e-12*siemens/um**2
 
     ## -- CALCIUM-DEPENDENT POTASSIUM CURRENT -- ##
     neuron.gbar_KCa = 2.5*1e-12*siemens/um**2
 
-    ## -- T-CURRENT -- ##
+    ## -- T-CURRENT (Calcium) -- ##
     neuron.gbar_T = 0.0003*1e-12*siemens/um**2
     neuron.dend.gbar_T = 0.0006*1e-12*siemens/um**2
     neuron.dend.distal.gbar_T = 0.0006*1e-12*siemens/um**2
 
-    # gkm_soma = 2.2
-    # gkca_soma = 2.5
-    # gca_soma = 0.5
-    # git_soma = 0.0003
-    
-    # gna_dend = 40      
-    # gkv_dend = 30      
-    # gkm_dend = 0.05    
-    # gkca_dend = 2.5   
-    # gca_dend = 0.5  
-    # git_dend = 0.0006
-    # gh_dend = 0    
-    
+    ## -- M-CURRENT (Potassium) -- ##
+    neuron.gbar_M = 2.2*1e-12*siemens/um**2
+    neuron.dend.gbar_M = 0.05*1e-12*siemens/um**2
+    neuron.dend.distal.gbar_M = 0.05*1e-12*siemens/um**2
+
+    # ## -- H-CURRENT (non-specific) -- ##
+    # neuron.gbar_H = 0*1e-12*siemens/um**2 # set to zero !!
+
 
     soma_loc, dend_loc = 0, 2
     mon = StateMonitor(neuron, ['v', 'InternalCalcium'], record=[soma_loc, dend_loc])
