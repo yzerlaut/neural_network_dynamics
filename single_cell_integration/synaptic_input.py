@@ -67,7 +67,7 @@ def process_and_connect_event_stimulation(neuron, spike_IDs, spike_times,
     
     ES = ntwk.Synapses(stimulation, neuron,
                        model=SYNAPSES_EQUATIONS,
-                       on_pre=ON_EVENT)
+                       on_pre=ON_EVENT, method='exponential_euler')
     
     for ipre, iseg_post in enumerate(pre_index_to_segment):
         ES.connect(i=ipre, j=iseg_post)
