@@ -502,8 +502,9 @@ class CalciumConcentrationDynamics:
         self.params['contributing_currents'] = contributing_currents
 
 
+        # drive_channel = -0.05182136/{depth}*({contributing_currents})/mA*cm**2*nmolar/ms : mmolar/second
         self.equations ="""
-        drive_channel = -51821.35/{depth}*({contributing_currents})/mA*cm**2*nmolar/ms : mmolar/second
+        drive_channel = -5182*({contributing_currents})/mA*cm**2*mmolar/ms : mmolar/second
 	dInternalCalcium/dt = (sign(drive_channel)+1)/2*drive_channel+({cainf}*mmolar-InternalCalcium)/{taur}/ms : mmolar"""
         self.code = self.equations.format(**self.params)
         
@@ -523,7 +524,7 @@ class CalciumConcentrationDynamics:
     
 if __name__=='__main__':
 
-    defaultclock.dt = 0.01*ms
+    defaultclock.dt = 0.025*ms
 
     # calcium dynamics following: HighVoltageActivationCalciumCurrent + LowThresholdCalciumCurrent
     Equation_String = CalciumConcentrationDynamics(contributing_currents='IT+IHVACa',

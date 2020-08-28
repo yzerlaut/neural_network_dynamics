@@ -62,12 +62,13 @@ if sys.argv[-1]=='plot':
 
 else:
     
-    nrn.defaultclock.dt = 0.01*nrn.ms
+    nrn.defaultclock.dt = 0.025*nrn.ms
 
     # calcium dynamics following: HighVoltageActivationCalciumCurrent + LowThresholdCalciumCurrent
-    Equation_String = nrn.CalciumConcentrationDynamics(contributing_currents='0*mA/cm**2',
+    # Equation_String = nrn.CalciumConcentrationDynamics(contributing_currents='0*mA/cm**2',
+    Equation_String = nrn.CalciumConcentrationDynamics(contributing_currents='IHVACa+IT',
                                              name='CaDynamics').insert(nrn.Equation_String)
-
+    
     # intrinsic currents
     CURRENTS = [nrn.PassiveCurrent(name='Pas'),
                 nrn.PotassiumChannelCurrent(name='K'),
@@ -76,11 +77,12 @@ else:
                 nrn.LowThresholdCalciumCurrent(name='T'),
                 nrn.MuscarinicPotassiumCurrent(name='Musc'),
                 nrn.CalciumDependentPotassiumCurrent(name='KCa')]
-    CURRENTS = [nrn.PassiveCurrent(name='Pas'),
-                nrn.HodgkinHuxleyCurrent(name='HH')]
+    # CURRENTS = [nrn.PassiveCurrent(name='Pas'),
+    #             nrn.HodgkinHuxleyCurrent(name='HH')]
 
     for current in CURRENTS:
         Equation_String = current.insert(Equation_String)
+
 
 
 
@@ -129,13 +131,13 @@ else:
     ## -- PASSIVE PROPS -- ##
     neuron.gbar_Pas = 1e-4*nrn.siemens/nrn.cm**2
 
-    ## -- SPIKE PROPS (Na & Kv) -- ##
-    # dendrites
-    neuron.gbarNa_HH = 40*1e-12*nrn.siemens/nrn.um**2
-    neuron.gbarK_HH = 30*1e-12*nrn.siemens/nrn.um**2
-    # soma
-    neuron.gbarNa_HH[0] = 1500*1e-12*nrn.siemens/nrn.um**2
-    neuron.gbarK_HH[0] = 200*1e-12*nrn.siemens/nrn.um**2
+    # ## -- SPIKE PROPS (Na & Kv) -- ##
+    # # dendrites
+    # neuron.gbarNa_HH = 40*1e-12*nrn.siemens/nrn.um**2
+    # neuron.gbarK_HH = 30*1e-12*nrn.siemens/nrn.um**2
+    # # soma
+    # neuron.gbarNa_HH[0] = 1500*1e-12*nrn.siemens/nrn.um**2
+    # neuron.gbarK_HH[0] = 200*1e-12*nrn.siemens/nrn.um**2
     
     # neuron.gbar_Na = 40*1e-12*nrn.siemens/nrn.um**2
     # neuron.gbar_K = 30*1e-12*nrn.siemens/nrn.um**2
@@ -144,22 +146,21 @@ else:
     # neuron.gbar_K[0] = 200*1e-12*nrn.siemens/nrn.um**2
 
     # ## -- HIGH-VOLTAGE-ACTIVATION CALCIUM CURRENT -- ##
-    # neuron.gbar_HVACa = 0.5*1e-12*nrn.siemens/nrn.um**2
+    neuron.gbar_HVACa = 0.5*1e-12*nrn.siemens/nrn.um**2
 
     # ## -- CALCIUM-DEPENDENT POTASSIUM CURRENT -- ##
-    # # neuron.gbar_KCa = 2.5*1e-12*nrn.siemens/nrn.um**2
+    neuron.gbar_KCa = 2.5*1e-12*nrn.siemens/nrn.um**2
 
     # ## -- T-CURRENT (Calcium) -- ##
-    # neuron.gbar_T = 0.0003*1e-12*nrn.siemens/nrn.um**2
-    # neuron.dend.gbar_T = 0.0006*1e-12*nrn.siemens/nrn.um**2
+    neuron.gbar_T = 0.0003*1e-12*nrn.siemens/nrn.um**2
+    neuron.dend.gbar_T = 0.0006*1e-12*nrn.siemens/nrn.um**2
 
     # ## -- M-CURRENT (Potassium) -- ##
-    # # neuron.gbar_Musc = 2.2*1e-12*nrn.siemens/nrn.um**2
-    # # neuron.dend.gbar_Musc = 0.05*1e-12*nrn.siemens/nrn.um**2
-    # # neuron.dend.distal.gbar_Musc = 0.05*1e-12*nrn.siemens/nrn.um**2
+    neuron.gbar_Musc = 2.2*1e-12*nrn.siemens/nrn.um**2
+    neuron.dend.gbar_Musc = 0.05*1e-12*nrn.siemens/nrn.um**2
 
     # # ## -- H-CURRENT (non-specific) -- ##
-    # # neuron.gbar_H = 0*1e-12*nrn.siemens/nrn.um**2 # set to zero !!
+    # neuron.gbar_H = 0*1e-12*nrn.siemens/nrn.um**2 # set to zero !!
 
     for current in CURRENTS:
         current.init_sim(neuron)
