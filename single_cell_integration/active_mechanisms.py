@@ -45,7 +45,7 @@ class MembraneCurrent:
         return eqs.replace('Im = ', 'Im = - I%s ' % self.name)+self.code
 
 
-    def init_sim(self, neuron):
+    def init_sim(self, neuron, verbose=True):
         # if model has HH-like variable ("m","n","h","l") -> we initialize to inf values if possible, else 0
         for l in ['m', 'n', 'h', 'l']:
             if hasattr(neuron, l+self.name):
@@ -53,7 +53,8 @@ class MembraneCurrent:
                     setattr(neuron, l+self.name, l+self.name+'_inf')
                 except KeyError:
                     setattr(neuron, l+self.name, 0)
-                print(l+self.name, 'was set to :', getattr(neuron, l+self.name))
+                if verbose:
+                    print(l+self.name, 'was set to :', getattr(neuron, l+self.name))
 
 
 class PassiveCurrent(MembraneCurrent):
@@ -187,15 +188,17 @@ class HighVoltageActivationCalciumCurrent(MembraneCurrent):
         I{name} = g{name} * (v - {E_Ca}*mV) : amp/meter**2
 	g{name} = gbar_{name} * {tadj} * m{name}*m{name}*h{name} : siemens/meter**2
 	gbar_{name} : siemens/meter**2
+        # --> activation: m
 	a_m{name} = 0.055*(-27 - v/mV)/expm1((-27-v/mV)/3.8) : 1
 	b_m{name} = 0.94*exp((-75 - v/mV)/17) : 1
-	tau_m{name} = 1/{tadj}/(a_m{name}+b_m{name})*ms : second
-	m{name}_inf = a_m{name}/(a_m{name}+b_m{name}) : 1
+	h{name}_inf = a_h{name}/(a_h{name}+b_h{name}) : 1
+        tau_m{name} = 1/{tadj}/(a_m{name}+b_m{name})*second : second
+        dm{name}/dt = -(m{name} - m{name}_inf)/tau_m{name} : 1
+        # --> inactivation: h
 	a_h{name} = 0.000457*exp((-13-v/mV)/50) : 1
 	b_h{name} = 0.0065/(exp((-v/mV-15)/28) + 1) : 1
-	tau_h{name} = 1/{tadj}/(a_h{name}+b_h{name})*ms : second
-	h{name}_inf = a_h{name}/(a_h{name}+b_h{name}) : 1
-        dm{name}/dt = -(m{name} - m{name}_inf)/tau_m{name} : 1
+	m{name}_inf = a_m{name}/(a_m{name}+b_m{name}) : 1
+	tau_h{name} = 1/{tadj}/(a_h{name}+b_h{name})*second : second
         dh{name}/dt = -(h{name} - h{name}_inf)/tau_h{name} : 1
         """
         
@@ -288,24 +291,25 @@ class SodiumChannelCurrent(MembraneCurrent):
         I{name} = g{name} * (v - {E_Na}*mV) : amp/meter**2
         gbar_{name} : siemens/meter**2
         g{name} = gbar_{name} * {tadj} * m{name}**3 *h{name} : siemens/meter**2
-	a_m{name} = {Ra}/ms*{qa}/exprel(-(v/mV+{vshift}-{tha})/{qa}): 1/second
-	b_m{name} = {Rb}/ms*{qa}/exprel((v/mV+{vshift}-{tha})/{qa}): 1/second
+	a_m{name} = {Ra}/ms*{qa}/exprel(-(clip(v/mV+{vshift},-120,100)-{tha})/{qa}): 1/second
+	b_m{name} = {Rb}/ms*{qa}/exprel(-(-clip(v/mV+{vshift},-120,100)+{tha})/{qa}): 1/second
 	tau_m{name} = 1/{tadj}/(a_m{name}+b_m{name}) : second
 	m{name}_inf = a_m{name}/(a_m{name}+b_m{name}) : 1
-	a_h{name} = {Rd}/ms*{qi}/exprel(-(v/mV+{vshift}-{thi1})/{qi}): 1/second
-	b_h{name} = {Rg}/ms*{qi}/exprel((v/mV+{vshift}-{thi2})/{qi}): 1/second
+	a_h{name} = {Rd}/ms*{qi}/exprel(-(clip(v/mV+{vshift},-120,100)-{thi1})/{qi}): 1/second
+	b_h{name} = {Rg}/ms*{qi}/exprel(-(-clip(v/mV+{vshift},-120,100)+{thi2})/{qi}): 1/second
 	tau_h{name} = 1/{tadj}/(a_h{name}+b_h{name}) : second
-	h{name}_inf = 1/(1+exp((v/mV+{vshift}-{thinf})/{qinf})) : 1
+	h{name}_inf = 1/(1+exp((clip(v/mV+{vshift}, -120, 100)-{thinf})/{qinf})) : 1
         dm{name}/dt = -(m{name} - m{name}_inf)/tau_m{name} : 1
         dh{name}/dt = -(h{name} - h{name}_inf)/tau_h{name} : 1
         """
+	# h{name}_inf = a_h{name}/(a_h{name}+b_h{name}) : 1
         super().__init__(name, params)
 
         
     def default_params(self):
         return dict(
             E_Na=60, # mV
-	    vshift = -5,#	(mV)		: voltage shift (affects all)
+	    vshift = -10,#	(mV)		: voltage shift (affects all)
 	    tha  = -35,#	(mV)		: v 1/2 for act		(-42)
 	    qa   = 9, #	(mV)		: act slope		
 	    Ra   = 0.182, #	(/ms)		: open (v)		
@@ -353,12 +357,21 @@ class CalciumDependentPotassiumCurrent(MembraneCurrent):
         
         super().__init__(name, params)
 
-    # def insert(self, eqs): # needs to override the default insert to check for the internal [Ca2+] variable
-    #     if (len(eqs.split('InternalCalcium : mmolar'))==1) or (len(eqs.split('dInternalCalcium'))==1): # not present
-    #         print(eqs)
-    #         self.code += """
-    #     InternalCalcium : mmolar""" # adding the variable
-    #     return super().insert(eqs) # then we can insert as usual
+    def insert(self, eqs):
+        """
+        we override the default "insert()" to check for the internal [Ca2+] variable
+        """
+        if (len(eqs.split('InternalCalcium : mmolar'))<2) and (len(eqs.split('dInternalCalcium'))<2):
+            # not present
+            raise BaseException("""
+            -------------------------------------------------------------------
+            /!\ No mechanism to describe the Calcium Concentration dynamics inserted !! /!\
+
+            Need to include one, e.g. check the "CalciumConcentrationDynamics" class
+            -------------------------------------------------------------------
+            """)
+        else:
+            return super().insert(eqs) # then we can insert as usual
             
     def default_params(self):
         return dict(
@@ -504,8 +517,8 @@ class CalciumConcentrationDynamics:
 
         # drive_channel = -0.05182136/{depth}*({contributing_currents})/mA*cm**2*nmolar/ms : mmolar/second
         self.equations ="""
-        drive_channel = -5182*({contributing_currents})/mA*cm**2*mmolar/ms : mmolar/second
-	dInternalCalcium/dt = (sign(drive_channel)+1)/2*drive_channel+({cainf}*mmolar-InternalCalcium)/{taur}/ms : mmolar"""
+        drive_channel = -0.5182*({contributing_currents})/mA*cm**2*mmolar/ms : mmolar/second
+	dInternalCalcium/dt = clip(drive_channel, 0, inf)+({cainf}*mmolar-InternalCalcium)/{taur}/ms : mmolar"""
         self.code = self.equations.format(**self.params)
         
     def insert(self, eqs):
@@ -566,9 +579,9 @@ if __name__=='__main__':
     neuron.gbar_Na = 1500*1e-12*siemens/um**2
     neuron.gbar_K = 200*1e-12*siemens/um**2
     # dendrites
-    neuron.dend.gbar_Na = 40*1e-12*siemens/um**2
+    # neuron.dend.gbar_Na = 40*1e-12*siemens/um**2
     neuron.dend.gbar_K = 30*1e-12*siemens/um**2
-    neuron.dend.distal.gbar_Na = 40*1e-12*siemens/um**2
+    # neuron.dend.distal.gbar_Na = 40*1e-12*siemens/um**2
     neuron.dend.distal.gbar_K = 30*1e-12*siemens/um**2
 
     ## -- HIGH-VOLTAGE-ACTIVATION CALCIUM CURRENT -- ##
@@ -612,5 +625,6 @@ if __name__=='__main__':
     ge.plot(mon.t / ms, Y=[mon[soma_loc].v/mV, mon[dend_loc].v/mV],
             LABELS=['soma', 'dend'], COLORS=['k', ge.blue], ax=AX[0], axes_args={'ylabel':'Vm (mV)'})
     ge.plot(mon.t / ms, Y=[mon[soma_loc].InternalCalcium/nM, mon[dend_loc].InternalCalcium/nM],
-            COLORS=['k', ge.blue], ax=AX[1], axes_args={'ylabel':'[Ca$^{2+}$] (nM)', 'xlabel':'time (ms)'})
+            COLORS=['k', ge.blue], ax=AX[1],
+            axes_args={'ylabel':'[Ca$^{2+}$] (nM)', 'xlabel':'time (ms)'})
     ge.show()
