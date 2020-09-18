@@ -52,7 +52,7 @@ stim_params0 = {
     # gaussian blob & appearance
     'blob_center':[30.,20.],
     'blob_size':[8.,8.],
-    'blob_amplitude':1.,
+j    'blob_amplitude':1.,
     'blob_rise_time':.4,
     'blob_time':0.5,
     # center-surround protocols

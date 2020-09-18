@@ -539,6 +539,11 @@ if __name__=='__main__':
 
     defaultclock.dt = 0.025*ms
 
+    # Starting from an empty equation string:
+    Equation_String= '''
+    Im = + 0*amp/meter**2 : amp/meter**2
+    I_inj : amp (point current)'''
+
     # calcium dynamics following: HighVoltageActivationCalciumCurrent + LowThresholdCalciumCurrent
     Equation_String = CalciumConcentrationDynamics(contributing_currents='IT+IHVACa',
                                              name='CaDynamics').insert(Equation_String)
@@ -579,9 +584,9 @@ if __name__=='__main__':
     neuron.gbar_Na = 1500*1e-12*siemens/um**2
     neuron.gbar_K = 200*1e-12*siemens/um**2
     # dendrites
-    # neuron.dend.gbar_Na = 40*1e-12*siemens/um**2
+    neuron.dend.gbar_Na = 40*1e-12*siemens/um**2
     neuron.dend.gbar_K = 30*1e-12*siemens/um**2
-    # neuron.dend.distal.gbar_Na = 40*1e-12*siemens/um**2
+    neuron.dend.distal.gbar_Na = 40*1e-12*siemens/um**2
     neuron.dend.distal.gbar_K = 30*1e-12*siemens/um**2
 
     ## -- HIGH-VOLTAGE-ACTIVATION CALCIUM CURRENT -- ##
@@ -605,7 +610,7 @@ if __name__=='__main__':
 
 
     soma_loc, dend_loc = 0, 2
-    mon = StateMonitor(neuron, ['v', 'InternalCalcium'], record=[soma_loc, dend_loc])
+    mon = StateMonitor(neuron, ['v', 'I_inj', 'InternalCalcium'], record=[soma_loc, dend_loc])
 
 
     run(100*ms)
@@ -618,13 +623,21 @@ if __name__=='__main__':
     neuron.dend.I_inj = 0*pA
     run(200*ms)
 
+    # # # ## Run the various variants of the model to reproduce Figure 12
+    import matplotlib.pylab as plt
+    fig, AX = plt.subplots(3,1, figsize=(12,4))
 
-    # # ## Run the various variants of the model to reproduce Figure 12
-    from datavyz import ges as ge
-    fig, AX = ge.figure(axes=(1,2), figsize=(2.,1.))
-    ge.plot(mon.t / ms, Y=[mon[soma_loc].v/mV, mon[dend_loc].v/mV],
-            LABELS=['soma', 'dend'], COLORS=['k', ge.blue], ax=AX[0], axes_args={'ylabel':'Vm (mV)'})
-    ge.plot(mon.t / ms, Y=[mon[soma_loc].InternalCalcium/nM, mon[dend_loc].InternalCalcium/nM],
-            COLORS=['k', ge.blue], ax=AX[1],
-            axes_args={'ylabel':'[Ca$^{2+}$] (nM)', 'xlabel':'time (ms)'})
-    ge.show()
+    AX[0].plot(mon.t / ms, mon[soma_loc].v/mV, color='blue', label='soma')
+    AX[0].plot(mon.t / ms, mon[dend_loc].v/mV, color='red', label='dend')
+    AX[0].set_ylabel('Vm (mV)')
+    AX[0].legend()
+
+    AX[1].plot(mon.t / ms, mon[soma_loc].InternalCalcium/nM, color='blue', label='soma')
+    AX[1].plot(mon.t / ms, mon[dend_loc].InternalCalcium/nM, color='red', label='dend')
+    AX[1].set_ylabel('[Ca$^{2+}$] (nM)')
+
+    AX[2].plot(mon.t / ms, mon[soma_loc].I_inj/pA, color='blue', label='soma')
+    AX[2].plot(mon.t / ms, mon[dend_loc].I_inj/pA, color='red', label='dend')
+    AX[2].set_ylabel('Iinj (pA)')
+    AX[2].set_xlabel('time (ms)')
+
