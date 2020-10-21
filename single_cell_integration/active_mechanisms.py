@@ -10,7 +10,9 @@ gamma = F/(R*T)  # R=gas constant, F=Faraday constant
 
 Equation_String= '''
 Im = + 0*amp/meter**2 : amp/meter**2
-I_inj : amp (point current)'''
+I_inj : amp (point current)
+vclip = clip(v, -80, 20) : volt
+'''
 
 #########################################
 ########### Membrane currents ###########
@@ -97,7 +99,7 @@ class HodgkinHuxleyCurrent(MembraneCurrent):
         I{name}_K = gbarK_{name} * n{name}**4 * (v-{E_K}*mV) : amp/meter**2
         gbarNa_{name} : siemens/meter**2
         gbarK_{name} : siemens/meter**2
-        v2 = v - {VT}*mV : volt  # shifted membrane potential (Traub convention)
+        v2 = vclip - {VT}*mV : volt  # shifted membrane potential (Traub convention)
         dm{name}/dt = (0.32*(mV**-1)*(13.*mV-v2)/
           (exp((13.*mV-v2)/(4.*mV))-1.)*(1-m{name})-0.28*(mV**-1)*(v2-40.*mV)/
           (exp((v2-40.*mV)/(5.*mV))-1.)*m{name}) / ms * {tadj}: 1
@@ -134,10 +136,10 @@ class LowThresholdCalciumCurrent(MembraneCurrent):
         I{name} = g{name} * (v - {E_Ca}*mV): amp/meter**2
         g{name} = gbar_{name} * m{name}**2 * h{name} : siemens/meter**2
         gbar_{name} : siemens/meter**2
-        m{name}_inf = 1.0 / ( 1 + exp(-(v/mV+{v12m})/{vwm}) ) : 1 
-	h{name}_inf = 1.0 / ( 1 + exp((v/mV+{v12h})/{vwh}) ) : 1 
-	tau_m{name} = ( {am} + 1.0 / ( exp((v/mV+{vm1})/{wm1}) + exp(-(v/mV+{vm2})/{wm2}) ) ) * ms : second
-	tau_h{name} = ( {ah} + 1.0 / ( exp((v/mV+{vh1})/{wh1}) + exp(-(v/mV+{vh2})/{wh2}) ) ) * ms : second
+        m{name}_inf = 1.0 / ( 1 + exp(-(vclip/mV+{v12m})/{vwm}) ) : 1 
+	h{name}_inf = 1.0 / ( 1 + exp((vclip/mV+{v12h})/{vwh}) ) : 1 
+	tau_m{name} = ( {am} + 1.0 / ( exp((vclip/mV+{vm1})/{wm1}) + exp(-(vclip/mV+{vm2})/{wm2}) ) ) * ms : second
+	tau_h{name} = ( {ah} + 1.0 / ( exp((vclip/mV+{vh1})/{wh1}) + exp(-(vclip/mV+{vh2})/{wh2}) ) ) * ms : second
         dm{name}/dt = -(m{name} - m{name}_inf)/tau_m{name} : 1
         dh{name}/dt = -(h{name} - h{name}_inf)/tau_h{name} : 1
         """
@@ -189,14 +191,14 @@ class HighVoltageActivationCalciumCurrent(MembraneCurrent):
 	g{name} = gbar_{name} * {tadj} * m{name}*m{name}*h{name} : siemens/meter**2
 	gbar_{name} : siemens/meter**2
         # --> activation: m
-	a_m{name} = 0.055*(-27 - v/mV)/expm1((-27-v/mV)/3.8) : 1
-	b_m{name} = 0.94*exp((-75 - v/mV)/17) : 1
+	a_m{name} = 0.055*(-27 - vclip/mV)/expm1((-27-vclip/mV)/3.8) : 1
+	b_m{name} = 0.94*exp((-75 - vclip/mV)/17) : 1
 	h{name}_inf = a_h{name}/(a_h{name}+b_h{name}) : 1
         tau_m{name} = 1/{tadj}/(a_m{name}+b_m{name})*second : second
         dm{name}/dt = -(m{name} - m{name}_inf)/tau_m{name} : 1
         # --> inactivation: h
-	a_h{name} = 0.000457*exp((-13-v/mV)/50) : 1
-	b_h{name} = 0.0065/(exp((-v/mV-15)/28) + 1) : 1
+	a_h{name} = 0.000457*exp((-13-vclip/mV)/50) : 1
+	b_h{name} = 0.0065/(exp((-vclip/mV-15)/28) + 1) : 1
 	m{name}_inf = a_m{name}/(a_m{name}+b_m{name}) : 1
 	tau_h{name} = 1/{tadj}/(a_h{name}+b_h{name})*second : second
         dh{name}/dt = -(h{name} - h{name}_inf)/tau_h{name} : 1
@@ -235,8 +237,8 @@ class PotassiumChannelCurrent(MembraneCurrent):
         I{name} = g{name} * (v - {E_K}*mV) : amp/meter**2
         g{name} = gbar_{name} * {tadj} * n{name} : siemens/meter**2
         gbar_{name} : siemens/meter**2
-        a{name} = {Ra} * (v/mV - {tha}) / (1 - exp(-(v/mV - {tha})/{qa})) : 1
-        b{name} = -{Rb} * (v/mV - {tha}) / (1 - exp((v/mV - {tha})/{qa})) : 1
+        a{name} = {Ra} * (vclip/mV - {tha}) / (1 - exp(-(vclip/mV - {tha})/{qa})) : 1
+        b{name} = -{Rb} * (vclip/mV - {tha}) / (1 - exp((vclip/mV - {tha})/{qa})) : 1
 	tau_n{name} = 1/{tadj}/(a{name}+b{name})*ms : second 
 	n{name}_inf = a{name}/(a{name}+b{name}) : 1
         dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name} : 1
@@ -291,14 +293,14 @@ class SodiumChannelCurrent(MembraneCurrent):
         I{name} = g{name} * (v - {E_Na}*mV) : amp/meter**2
         gbar_{name} : siemens/meter**2
         g{name} = gbar_{name} * {tadj} * m{name}**3 *h{name} : siemens/meter**2
-	a_m{name} = {Ra}/ms*{qa}/exprel(-(clip(v/mV+{vshift},-120,100)-{tha})/{qa}): 1/second
-	b_m{name} = {Rb}/ms*{qa}/exprel(-(-clip(v/mV+{vshift},-120,100)+{tha})/{qa}): 1/second
+	a_m{name} = {Ra}/ms*{qa}/exprel(-(clip(vclip/mV+{vshift},-120,100)-{tha})/{qa}): 1/second
+	b_m{name} = {Rb}/ms*{qa}/exprel(-(-clip(vclip/mV+{vshift},-120,100)+{tha})/{qa}): 1/second
 	tau_m{name} = 1/{tadj}/(a_m{name}+b_m{name}) : second
 	m{name}_inf = a_m{name}/(a_m{name}+b_m{name}) : 1
-	a_h{name} = {Rd}/ms*{qi}/exprel(-(clip(v/mV+{vshift},-120,100)-{thi1})/{qi}): 1/second
-	b_h{name} = {Rg}/ms*{qi}/exprel(-(-clip(v/mV+{vshift},-120,100)+{thi2})/{qi}): 1/second
+	a_h{name} = {Rd}/ms*{qi}/exprel(-(clip(vclip/mV+{vshift},-120,100)-{thi1})/{qi}): 1/second
+	b_h{name} = {Rg}/ms*{qi}/exprel(-(-clip(vclip/mV+{vshift},-120,100)+{thi2})/{qi}): 1/second
 	tau_h{name} = 1/{tadj}/(a_h{name}+b_h{name}) : second
-	h{name}_inf = 1/(1+exp((clip(v/mV+{vshift}, -120, 100)-{thinf})/{qinf})) : 1
+	h{name}_inf = 1/(1+exp((clip(vclip/mV+{vshift}, -120, 100)-{thinf})/{qinf})) : 1
         dm{name}/dt = -(m{name} - m{name}_inf)/tau_m{name} : 1
         dh{name}/dt = -(h{name} - h{name}_inf)/tau_h{name} : 1
         """
@@ -395,8 +397,8 @@ class HyperpolarizationActivatedCationCurrent(MembraneCurrent):
         I{name} = g{name} * (v - {E_hdb}*mV) : amp/meter**2
         g{name} = gbar_{name} * l{name} : siemens/meter**2
         gbar_{name} : : siemens/meter**2
-        a{name} = 1/(1+ exp(0.0378*{zetat}*(v/mV-{vhalft}))) : 1
-	tau_l{name} = exp(0.0378*{zetat}*{gmt}*(v/mV-{vhalft})) / ({qtl}*{qt}*{a0t}*(1+a{name})) *ms : second 
+        a{name} = 1/(1+ exp(0.0378*{zetat}*(vclip/mV-{vhalft}))) : 1
+	tau_l{name} = exp(0.0378*{zetat}*{gmt}*(vclip/mV-{vhalft})) / ({qtl}*{qt}*{a0t}*(1+a{name})) *ms : second 
 	l{name}_inf = 1/(1+a{name}) : 1
         dl{name}/dt = -(l{name} - l{name}_inf)/tau_l{name} : 1
         """
@@ -437,7 +439,7 @@ class MuscarinicPotassiumCurrent(MembraneCurrent):
         I{name} = g{name} * (v - {E_K}*mV) : amp/meter**2
         g{name} = gbar_{name} * n{name} : siemens/meter**2
         gbar_{name} : siemens/meter**2
-        a{name} = {Ra} * (v/mV - {tha}) / (1 - exp(-(v/mV - {tha})/{qa})) : 1
+        a{name} = {Ra} * (vclip/mV - {tha}) / (1 - exp(-(vclip/mV - {tha})/{qa})) : 1
         b{name} = {Rb} : 1
 	tau_n{name} = 1/{tadj}/(a{name}+b{name})*ms : second 
 	n{name}_inf = a{name}/(a{name}+b{name}) : 1
@@ -515,9 +517,11 @@ class CalciumConcentrationDynamics:
         self.params['contributing_currents'] = contributing_currents
 
 
-        # drive_channel = -0.05182136/{depth}*({contributing_currents})/mA*cm**2*nmolar/ms : mmolar/second
+
+        # drive_channel = -0.5182*({contributing_currents})/mA*cm**2*mmolar/ms : mmolar/second
+        
         self.equations ="""
-        drive_channel = -0.5182*({contributing_currents})/mA*cm**2*mmolar/ms : mmolar/second
+        drive_channel = -10000/96485.309/2/{depth}*({contributing_currents})/(mA/cm**2)*mmolar/ms : mmolar/second
 	dInternalCalcium/dt = clip(drive_channel, 0, inf)+({cainf}*mmolar-InternalCalcium)/{taur}/ms : mmolar"""
         self.code = self.equations.format(**self.params)
         
@@ -581,7 +585,7 @@ if __name__=='__main__':
     # dendrites
     # neuron.dend.gbar_Na = 40*1e-12*siemens/um**2
     neuron.dend.gbar_K = 30*1e-12*siemens/um**2
-    # neuron.dend.distal.gbar_Na = 40*1e-12*siemens/um**2
+    neuron.dend.distal.gbar_Na = 40*1e-12*siemens/um**2
     neuron.dend.distal.gbar_K = 30*1e-12*siemens/um**2
 
     ## -- HIGH-VOLTAGE-ACTIVATION CALCIUM CURRENT -- ##
