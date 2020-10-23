@@ -11,7 +11,7 @@ gamma = F/(R*T)  # R=gas constant, F=Faraday constant
 Equation_String= '''
 Im = + 0*amp/meter**2 : amp/meter**2
 I_inj : amp (point current)
-vclip = clip(v, -80, 20) : volt
+vclip = v
 '''
 
 #########################################
@@ -285,20 +285,20 @@ class SodiumChannelCurrent(MembraneCurrent):
     Author: Zach Mainen, Salk Institute, 1994, zach@salk.edu    
 
     ---------------------------
-
     """
+    
     def __init__(self, name='Na', params=None):
 
         self.equations = """
         I{name} = g{name} * (v - {E_Na}*mV) : amp/meter**2
         gbar_{name} : siemens/meter**2
         g{name} = gbar_{name} * {tadj} * m{name}**3 *h{name} : siemens/meter**2
-	a_m{name} = {Ra}/ms*{qa}/exprel(-(clip(vclip/mV+{vshift},-120,100)-{tha})/{qa}): 1/second
-	b_m{name} = {Rb}/ms*{qa}/exprel(-(-clip(vclip/mV+{vshift},-120,100)+{tha})/{qa}): 1/second
+	a_m{name} = {Ra}/ms*{qa}/exprel(-(vclip/mV+{vshift}-{tha})/{qa}): 1/second
+	b_m{name} = {Rb}/ms*{qa}/exprel(-(-vclip/mV+{vshift}+{tha})/{qa}): 1/second
 	tau_m{name} = 1/{tadj}/(a_m{name}+b_m{name}) : second
 	m{name}_inf = a_m{name}/(a_m{name}+b_m{name}) : 1
-	a_h{name} = {Rd}/ms*{qi}/exprel(-(clip(vclip/mV+{vshift},-120,100)-{thi1})/{qi}): 1/second
-	b_h{name} = {Rg}/ms*{qi}/exprel(-(-clip(vclip/mV+{vshift},-120,100)+{thi2})/{qi}): 1/second
+	a_h{name} = {Rd}/ms*{qi}/exprel(-((vclip/mV+{vshift})-{thi1})/{qi}): 1/second
+	b_h{name} = {Rg}/ms*{qi}/exprel(-(-(vclip/mV+{vshift})+{thi2})/{qi}): 1/second
 	tau_h{name} = 1/{tadj}/(a_h{name}+b_h{name}) : second
 	h{name}_inf = 1/(1+exp((clip(vclip/mV+{vshift}, -120, 100)-{thinf})/{qinf})) : 1
         dm{name}/dt = -(m{name} - m{name}_inf)/tau_m{name} : 1
@@ -348,7 +348,7 @@ class CalciumDependentPotassiumCurrent(MembraneCurrent):
     def __init__(self, name='KCa', params=None):
 
         self.equations = """
-        I{name} = g{name} * (v - {E_K}*mV) : amp/meter**2
+        I{name} = g{name} * (vclip - {E_K}*mV) : amp/meter**2
         g{name} = gbar_{name} * {tadj}* n{name} : siemens/meter**2
         gbar_{name} : siemens/meter**2
         a{name} = {Ra} * (InternalCalcium/({InternalCalcium0}*uM))**{ExpCai} : 1
@@ -517,12 +517,11 @@ class CalciumConcentrationDynamics:
         self.params['contributing_currents'] = contributing_currents
 
 
-
         # drive_channel = -0.5182*({contributing_currents})/mA*cm**2*mmolar/ms : mmolar/second
         
         self.equations ="""
         drive_channel = -10000/96485.309/2/{depth}*({contributing_currents})/(mA/cm**2)*mmolar/ms : mmolar/second
-	dInternalCalcium/dt = clip(drive_channel, 0, inf)+({cainf}*mmolar-InternalCalcium)/{taur}/ms : mmolar"""
+	dInternalCalcium/dt = clip(drive_channel, 0*mmolar/ms, inf*mmolar/ms)+({cainf}*mmolar-InternalCalcium)/{taur}/ms : mmolar"""
         self.code = self.equations.format(**self.params)
         
     def insert(self, eqs):
@@ -546,20 +545,22 @@ if __name__=='__main__':
     # Starting from an empty equation string:
     Equation_String= '''
     Im = + 0*amp/meter**2 : amp/meter**2
-    I_inj : amp (point current)'''
+    I_inj : amp (point current)
+    vclip = clip(v, -80*mV, 0*mV) : volt
+    '''
 
     # calcium dynamics following: HighVoltageActivationCalciumCurrent + LowThresholdCalciumCurrent
-    Equation_String = CalciumConcentrationDynamics(contributing_currents='IT+IHVACa',
-                                             name='CaDynamics').insert(Equation_String)
+    # Equation_String = CalciumConcentrationDynamics(contributing_currents='IT+IHVACa',
+    #                                          name='CaDynamics').insert(Equation_String)
     
     # intrinsic currents
-    CURRENTS = [PassiveCurrent(name='Pas'),
-                PotassiumChannelCurrent(name='K'),
-                SodiumChannelCurrent(name='Na'),
-                HighVoltageActivationCalciumCurrent(name='HVACa'),
-                LowThresholdCalciumCurrent(name='T'),
-                MuscarinicPotassiumCurrent(name='Musc'),
-                CalciumDependentPotassiumCurrent(name='KCa')]
+    CURRENTS = [PassiveCurrent(name='Pas')]#,
+                # PotassiumChannelCurrent(name='K'),
+                # SodiumChannelCurrent(name='Na'),
+                # HighVoltageActivationCalciumCurrent(name='HVACa'),
+                # LowThresholdCalciumCurrent(name='T'),
+                # MuscarinicPotassiumCurrent(name='Musc'),
+                # CalciumDependentPotassiumCurrent(name='KCa')]
     
     for current in CURRENTS:
         Equation_String = current.insert(Equation_String)
@@ -583,6 +584,7 @@ if __name__=='__main__':
     ## -- PASSIVE PROPS -- ##
     neuron.gbar_Pas = 1e-4*siemens/cm**2
 
+    """
     ## -- SPIKE PROPS (Na & Kv) -- ##
     # soma
     neuron.gbar_Na = 1500*1e-12*siemens/um**2
@@ -616,6 +618,7 @@ if __name__=='__main__':
     soma_loc, dend_loc = 0, 2
     mon = StateMonitor(neuron, ['v', 'I_inj', 'InternalCalcium'], record=[soma_loc, dend_loc])
 
+    """
 
     run(100*ms)
     neuron.main.I_inj = 300*pA
