@@ -52,7 +52,7 @@ def get_connectivity_and_synapses_matrix(NAME, number=2, SI_units=False, verbose
     else:
         if verbose:
             print('====================================================')
-            print('------------ NETWORK NOT RECOGNIZED !! ---------------')
+            print('------------ NETWORK NOT RECOGNIZED !! -------------')
             print('====================================================')
 
     if SI_units:
