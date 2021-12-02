@@ -88,9 +88,14 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         # incorporating into Brian2 objects
         spikes = brian2.SpikeGeneratorGroup(NTWK['POPS'][ipop].N, indices, times*brian2.ms)
         # sorted = True, see "deal_with_multiple_spikes_per_bin"
-        pre_increment = 'G'+afferent_pop+target_pop+' += w'
-        synapse = brian2.Synapses(spikes, NTWK['POPS'][ipop], on_pre=pre_increment,\
-                                        model='w:siemens')
+
+        if ('psyn_%s_%s' % (afferent_pop, target_pop) in Model):
+            psyn = Model['psyn_%s_%s' % (afferent_pop, target_pop)] # probability of release
+            on_pre = 'G%s%s_post+=(rand()<%.3f)*w' % (afferent_pop, target_pop, psyn)
+        else:
+            on_pre = 'G'+afferent_pop+target_pop+' += w'
+
+        synapse = brian2.Synapses(spikes, NTWK['POPS'][ipop], model='w:siemens', on_pre=on_pre)
         synapse.connect('i==j')
         synapse.w = Qsyn*brian2.nS
 

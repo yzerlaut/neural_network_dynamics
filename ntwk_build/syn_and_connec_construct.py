@@ -98,8 +98,12 @@ def random_connections(NTWK):
 
     for ii, jj in itertools.product(range(len(NTWK['POPS'])), range(len(NTWK['POPS']))):
         if (NTWK['M'][ii,jj]['pconn']>0) and (NTWK['M'][ii,jj]['Q']!=0):
-            CONN[ii,jj] = brian2.Synapses(NTWK['POPS'][ii], NTWK['POPS'][jj], model='w:siemens',\
-                               on_pre='G'+NTWK['M'][ii,jj]['name']+'_post+=w')
+            if ('psyn' in NTWK['M'][ii,jj]) and (NTWK['M'][ii,jj]['psyn']<1):
+                on_pre = 'G%s_post+=(rand()<%.3f)*w' % (NTWK['M'][ii,jj]['name'], NTWK['M'][ii,jj]['psyn']) # proba of release
+            else:
+                on_pre = 'G%s_post+=w' % NTWK['M'][ii,jj]['name']
+                
+            CONN[ii,jj] = brian2.Synapses(NTWK['POPS'][ii], NTWK['POPS'][jj], model='w:siemens', on_pre=on_pre)
             # CONN[ii,jj].connect(p=NTWK['M'][ii,jj]['pconn'], condition='i!=j')
             # N.B. the brian2 settings does weird things (e.g. it creates synchrony)
             # so we draw manually the connection to fix synaptic numbers
@@ -150,10 +154,10 @@ def random_distance_dependent_connections(NTWK):
 
     for ii, jj in itertools.product(range(len(NTWK['POPS'])), range(len(NTWK['POPS']))):
         if (NTWK['M'][ii,jj]['pconn']>0) and (NTWK['M'][ii,jj]['Q']!=0):
-            if 'psyn' in NTWK['M'][ii,jj]:
-                on_pre = 'G%s_post+=(rand()>%.3f)*w' % ('G'+NTWK['M'][ii,jj]['name'], NTWK['M'][ii,jj]['psyn'])
+            if ('psyn' in NTWK['M'][ii,jj]) and (NTWK['M'][ii,jj]['psyn']<1):
+                on_pre = 'G%s_post+=(rand()<%.3f)*w' % (NTWK['M'][ii,jj]['name'], NTWK['M'][ii,jj]['psyn'])
             else:
-                on_pre = 'G%s_post+=(rand()>%.3f)*w' % 'G'+NTWK['M'][ii,jj]['name']
+                on_pre = 'G%s_post+=w' % NTWK['M'][ii,jj]['name']
                 
             CONN[ii,jj] = brian2.Synapses(NTWK['POPS'][ii], NTWK['POPS'][jj], model='w:siemens', on_pre=on_pre)
             # CONN[ii,jj].connect(p=NTWK['M'][ii,jj]['pconn'], condition='i!=j')
@@ -206,20 +210,19 @@ def get_syn_and_conn_matrix(Model, POPULATIONS,
             print('-----> set to Exc by default')
             Erev, Ts = Model['Ee'], Model['Tse']
 
+        pconn, Qsyn, psyn = 0., 0., 1. # by default
         if ('p_'+source_pop+'_'+target_pop in Model) and ('Q_'+source_pop+'_'+target_pop in Model):
             pconn, Qsyn = Model['p_'+source_pop+'_'+target_pop], Model['Q_'+source_pop+'_'+target_pop]
-        else:
-            if verbose:
-                print('No connection for:', source_pop,'->', target_pop)
-            pconn, Qsyn = 0., 0.
+        if ('psyn_'+source_pop+'_'+target_pop in Model):
+            psyn = Model['psyn_'+source_pop+'_'+target_pop] # probability of release
+
+        if (pconn==0) and verbose:
+            print('No connection for:', source_pop,'->', target_pop)
                 
         M[i, j] = {'pconn': pconn, 'Q': Qsyn,
-                   'Erev': Erev, 'Tsyn': Ts,
+                   'Erev': Erev, 'Tsyn': Ts, 'psyn':psyn,
                    'name':source_pop+target_pop}
 
-        if ('psyn_'+source_pop+'_'+target_pop in Model):
-            M[i, j] = Model['psyn_'+source_pop+'_'+target_pop]
-        
         # in case conductance-current mixture
         if ('alpha_'+source_pop+'_'+target_pop in Model) and ('V0' in Model):
             M[i,j]['alpha'], M[i,j]['V0'] = Model['alpha_'+source_pop+'_'+target_pop], Model['V0']
