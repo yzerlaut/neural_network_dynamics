@@ -5,11 +5,8 @@ from PIL import Image # BITMAP (png, jpg, ...)
 import numpy as np
 import matplotlib.pylab as plt
 
-from datavyz.main import graph_env
+from datavyz import graph_env_manuscript as ge
 from analyz.processing.signanalysis import gaussian_smoothing
-
-# initialize graphical environment:
-ge = graph_env('manuscript')
 
 
 def find_pop_keys(data):
@@ -117,7 +114,7 @@ def input_rate_subplot(data, ax,
     """
     ned to be improved to cover different afferent->target sets of waveforms
     """
-    colors=['k', graph_env.brown, graph_env.kaki]
+    colors=['k', plt.cm.tab10(5), plt.cm.tab10(6)]
     
     rates, afferents, afferents_targets = {}, [], []
     for key in data:

@@ -24,7 +24,7 @@ Model = {
     'N_Exc':400, 'N_Inh':100, 'N_DsInh':50, 'N_AffExc':50,
     # synaptic weights
     'Q_Exc_Exc':1., 'Q_Exc_Inh':1., 
-    'Q_AffExc_Exc':3., 'Q_AffExc_Inh':3., 'Q_AffExc_DsInh':3., 
+    'Q_AffExc_Exc':3., 'Q_AffExc_Inh':3., 'Q_AffExc_DsInh':3.,
     'Q_Inh_Exc':10., 'Q_Inh_Inh':10.,
     'Q_DsInh_Inh':10., 
     # synaptic time constants
@@ -138,5 +138,3 @@ else:
     ntwk.write_as_hdf5(NTWK, filename='visual_input_data.h5')
     print('Results of the simulation are stored as:', 'visual_input_data.h5')
     print('--> Run \"python visual_input.py plot\" to plot the results')
-
-
