@@ -243,7 +243,7 @@ class earlyVis_model:
 
         based on t_screen, no need to have it faster that this
         """
-        if icell_range is 'all':
+        if icell_range=='all':
             icell_range = np.arange(self.Ncells, dtype=int)
             
         RF_filtered = np.zeros((len(icell_range), len(self.t_screen)))

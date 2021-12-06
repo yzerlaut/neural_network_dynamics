@@ -1,6 +1,9 @@
 numpy
+matplotlib
 scipy
 argparse
 brian2
+scikit-learn
+scikit-image
 git+https://github.com/yzerlaut/datavyz
 git+https://github.com/yzerlaut/analyz
