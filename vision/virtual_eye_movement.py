@@ -58,7 +58,7 @@ class virtual_eye_movement:
         
         self.t = t
 
-        if eye_movement_key is 'saccadic':
+        if eye_movement_key=='saccadic':
             self.init_saccadic_eye_movement(seed+3)
         else:
             self.init_fixed_gaze_at_center()
