@@ -1,10 +1,6 @@
 import sys, pathlib, os
 import numpy as np
 
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-import main as ntwk # my custom layer on top of Brian2
-
-
 def get_compartment_list(morpho,
                          inclusion_condition='True'):
     """
@@ -95,7 +91,7 @@ def find_conditions(SEGMENTS,
 if __name__=='__main__':
 
     sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-    import main as ntwk # my custom layer on top of Brian2
+    import ntwk # my custom layer on top of Brian2
 
     filename = os.path.join(str(pathlib.Path(__file__).resolve().parent),
                             'morphologies',

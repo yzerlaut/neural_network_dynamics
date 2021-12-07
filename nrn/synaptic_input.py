@@ -2,7 +2,7 @@ import sys, pathlib, os
 import numpy as np
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-import main as ntwk # my custom layer on top of Brian2
+import ntwk # my custom layer on top of Brian2
 
 def spread_synapses_on_morpho(SEGMENTS, density,
                               cond = None,

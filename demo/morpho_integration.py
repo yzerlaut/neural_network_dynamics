@@ -1,19 +1,17 @@
 import sys, pathlib, os
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-import main as ntwk
+import ntwk, nrn
 
 import numpy as np
 
+from datavyz import graph_env_screen as ge
 from datavyz.nrn_morpho import *
-from datavyz.main import graph_env
 
-ge = graph_env('screen')
-
-filename = os.path.join(pathlib.Path(__file__).resolve().parents[1], 'single_cell_integration', 'morphologies', 'Jiang_et_al_2015', 'L5pyr-j140408b.CNG.swc')
+filename = os.path.join(pathlib.Path(__file__).resolve().parents[1], 'nrn', 'morphologies', 'Jiang_et_al_2015', 'L5pyr-j140408b.CNG.swc')
 morpho = ntwk.Morphology.from_swc_file(filename)
 
-COMP_LIST = get_compartment_list(morpho)
-SEGMENT_LIST = get_segment_list(morpho)
+COMP_LIST = nrn.morpho_analysis.get_compartment_list(morpho)
+SEGMENT_LIST = nrn.morpho_analysis.compute_segments(morpho)
 
 gL = 1e-4*ntwk.siemens/ntwk.cm**2
 EL = -70*ntwk.mV

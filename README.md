@@ -1,4 +1,4 @@
-# Neural network dynamics
+# Neural Network Dynamics
 
 *Theoretical analysis and numerical simulations of the emergent dynamics in spiking neural networks*
 
@@ -6,16 +6,17 @@ Network simulations toolkit built as a layer on top of the [brian2 simulator](ht
 
 ## Aim 
 
-Build a  module that would put under a common framework the following aspects of neural network dynamics:
+Build a module that would put under a common framework the following aspects of neural network dynamics:
 
-- mean-field predictions of network dynamics
-- numerical simulations of Adexp models of arbitrary population number and connectivity matrices with flexible intrinsic currents
-- cellular dynamics simulations of morphologically-detailed models
+- perform numerical simulations of networks of Adexp single neuron models
+- customize network and cellular features such as connectivity matrices or intrinsic currents
+- compute mean-field predictions of network dynamics
+- investigate cellular integration in morphologically-detailed models
 
 
 ## Installation
 
-Using =git= to clone the repository and "pip" to install the package in your python environment:
+Using `git` to clone the repository and "pip" to install the package in your python environment:
 
 ```
 git clone https://github.com/yzerlaut/neural_network_dynamics.git
@@ -86,12 +87,20 @@ plt.show()
 ```
 
 <p align="center">
-  <img src="docs/RS-FS.png"/>
+  <img src="doc/RS-FS.png"/>
 </p>
 
 ## Examples/demo
 
 See the [demo folder](./demo/) for more examples
+
+
+
+
+
+
+
+
 
 
 

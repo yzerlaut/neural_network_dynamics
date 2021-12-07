@@ -1,15 +1,13 @@
-import os
+import sys, pathlib, os
 import numpy as np
 
-import sys, pathlib, os
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-import main as nrn
+import nrn, ntwk
 
 tstop = 600
 
-import numpy as np
 Model = {
-    'morpho_file':'../single_cell_integration/morphologies/Jiang_et_al_2015/L23pyr-j150407a.CNG.swc',  
+    'morpho_file':'nrn/morphologies/Jiang_et_al_2015/L23pyr-j150407a.CNG.swc',  
     ##################################################
     # ---------- BIOPHYSICAL PROPS ----------------- #
     ##################################################
@@ -177,7 +175,7 @@ else:
                                                                     density_factor=1./100./1e-12,
                                                                                 verbose=True)
 
-    Espike_IDs, Espike_times = nrn.spikes_from_time_varying_rate(t, 0*t+2.5, N=Nsyn_Exc)
+    Espike_IDs, Espike_times = ntwk.stim.spikes_from_time_varying_rate(t, 0*t+2.5, N=Nsyn_Exc)
 
     Estim, ES = nrn.process_and_connect_event_stimulation(neuron,
                                                           Espike_IDs, Espike_times,
@@ -189,7 +187,7 @@ else:
                                                                                 0.15,
                                                                         density_factor=1./100./1e-12,
                                                                                  verbose=True)
-    Ispike_IDs, Ispike_times = nrn.spikes_from_time_varying_rate(t, 0*t+5., N=Nsyn_Inh)
+    Ispike_IDs, Ispike_times = ntwk.stim.spikes_from_time_varying_rate(t, 0*t+5., N=Nsyn_Inh)
     Istim, IS = nrn.process_and_connect_event_stimulation(neuron,
                                                            Ispike_IDs, Ispike_times,
                                                            pre_to_iseg_Inh,
