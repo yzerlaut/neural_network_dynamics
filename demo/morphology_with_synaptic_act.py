@@ -55,7 +55,7 @@ if sys.argv[-1]=='plot':
     ge.scatter(data['Ispike_times'], data['Espike_IDs'].max()*1.2+data['Ispike_IDs'], color=ge.red,
                ax=AX[2], no_set=True, ms=3)
     ge.set_plot(AX[2], [], xlim=[0, data['t'][-1]])
-    fig.savefig('/home/yann/Desktop/trace.svg')
+    ge.save_on_desktop(fig, 'trace.svg')
     ge.show()
 
 else:
