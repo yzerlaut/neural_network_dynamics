@@ -1,0 +1,3 @@
+from .syn_and_connec_construct import build_populations as populations
+from .syn_and_connec_construct import build_up_recurrent_connections as recurrent_connections
+from .syn_and_connec_library import *

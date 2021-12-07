@@ -4,10 +4,10 @@ This script connects the different synapses to a target neuron
 import brian2
 import numpy as np
 import itertools, string, sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-from cells.cell_library import get_neuron_params
-from cells.cell_construct import get_membrane_equation
-from cells.cell_construct import built_up_neuron_params
+
+from ..cells.cell_library import get_neuron_params
+from ..cells.cell_construct import get_membrane_equation
+from ..cells.cell_construct import built_up_neuron_params
 
 def collect_and_run(NTWK, verbose=False, INTERMEDIATE_INSTRUCTIONS=[]):
     """

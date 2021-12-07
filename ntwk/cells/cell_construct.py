@@ -4,8 +4,8 @@ This file construct the equations for brian2
 import numpy as np
 import brian2
 import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-from neural_network_dynamics.cells.cell_library import get_neuron_params, built_up_neuron_params
+# sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
+from .cell_library import get_neuron_params, built_up_neuron_params
 
 def get_membrane_equation(neuron_params, synaptic_array,\
                           return_equations=False,

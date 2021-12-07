@@ -4,9 +4,10 @@ adapted from http://brian2.readthedocs.io/en/2.0b4/examples/COBAHH.html
 """
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+
 import numpy as np
 import matplotlib.pylab as plt
-import main as ntwk
+import ntwk
 
 ################################################################
 ## ------ Construct populations with their equations -------- ##
@@ -47,24 +48,24 @@ Model = {
 if sys.argv[-1]=='plot':
     
     ## load file
-    data = ntwk.load_dict_from_hdf5('coba_LIF_data.h5')
+    data = ntwk.recording.load_dict_from_hdf5('coba_LIF_data.h5')
     print('excitatory firing activity: ', 1e3*len(data['iRASTER_Exc'])/data['tstop']/data['N_Exc'])
     print('inhibitory firing activity: ', 1e3*len(data['iRASTER_Inh'])/data['tstop']/data['N_Inh'])
     
     # ## plot
-    fig, _ = ntwk.raster_and_Vm_plot(data, smooth_population_activity=10.)
+    fig, _ = ntwk.plots.raster_and_Vm_plot(data, smooth_population_activity=10.)
     
     plt.show()
 
 else:
     ## we build and run the simulation
-    NTWK = ntwk.build_populations(Model, ['Exc', 'Inh'],
+    NTWK = ntwk.build.populations(Model, ['Exc', 'Inh'],
                                   with_raster=True, with_Vm=4,
                                   # with_synaptic_currents=True,
                                   # with_synaptic_conductances=True,
                                   verbose=True)
 
-    ntwk.build_up_recurrent_connections(NTWK, SEED=5, verbose=True)
+    ntwk.build.recurrent_connections(NTWK, SEED=5, verbose=True)
 
     ################################################################
     ## --------------- Initial Condition ------------------------ ##
@@ -83,7 +84,7 @@ else:
     # ## ----- Run ----- ##
     # #####################
     network_sim = ntwk.collect_and_run(NTWK, verbose=True)
-    ntwk.write_as_hdf5(NTWK, filename='coba_LIF_data.h5')
+    ntwk.recording.write_as_hdf5(NTWK, filename='coba_LIF_data.h5')
 
     print('Results of the simulation are stored as:', 'coba_LIF_data.h5')
     print('--> Run \"python coba_LIF.py plot\" to plot the results')
