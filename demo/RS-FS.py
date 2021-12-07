@@ -1,8 +1,9 @@
 import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 import numpy as np
 import matplotlib.pylab as plt
-import main as ntwk
+
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+import ntwk
 
 
 ################################################################
@@ -30,7 +31,7 @@ Model = {
     'p_Inh_Exc':0.05, 'p_Inh_Inh':0.05, 
     'p_AffExc_Exc':0.5, 'p_AffExc_Inh':0.5, 
     # simulation parameters
-    'dt':0.1, 'tstop': 500., 'SEED':3, # low by default, see later
+    'dt':0.1, 'tstop': 1500., 'SEED':3, # low by default, see later
     ## ---------------------------------------------------------------------------------
     # === cellular properties (based on AdExp), population by population ===
     # --> Excitatory population (Exc, recurrent excitation)
@@ -49,23 +50,23 @@ if sys.argv[-1]=='plot':
     # ######################
     
     ## load file
-    data = ntwk.load_dict_from_hdf5('RS-FS_data.h5')
+    data = ntwk.recording.load_dict_from_hdf5('RS-FS_data.h5')
 
     # ## plot
-    fig, _ = ntwk.activity_plots(data)
+    fig, _ = ntwk.plots.activity_plots(data)
     
     plt.show()
     
 else:
     
-    NTWK = ntwk.build_populations(Model, ['Exc', 'Inh'],
+    NTWK = ntwk.build.populations(Model, ['Exc', 'Inh'],
                                   AFFERENT_POPULATIONS=['AffExc'],
                                   with_raster=True, with_Vm=4,
                                   # with_synaptic_currents=True,
                                   # with_synaptic_conductances=True,
                                   verbose=True)
 
-    ntwk.build_up_recurrent_connections(NTWK, SEED=5, verbose=True)
+    ntwk.build.recurrent_connections(NTWK, SEED=5, verbose=True)
 
     #######################################
     ########### AFFERENT INPUTS ###########
@@ -75,7 +76,7 @@ else:
     t_array = ntwk.arange(int(Model['tstop']/Model['dt']))*Model['dt']
     # # # afferent excitation onto cortical excitation and inhibition
     for i, tpop in enumerate(['Exc', 'Inh']): # both on excitation and inhibition
-        ntwk.construct_feedforward_input(NTWK, tpop, 'AffExc',
+        ntwk.stim.construct_feedforward_input(NTWK, tpop, 'AffExc',
                                          t_array, faff+0.*t_array,
                                          verbose=True,
                                          SEED=int(37*faff+i)%37)
@@ -84,14 +85,14 @@ else:
     ################################################################
     ## --------------- Initial Condition ------------------------ ##
     ################################################################
-    ntwk.initialize_to_rest(NTWK)
+    ntwk.build.initialize_to_rest(NTWK)
 
     #####################
     ## ----- Run ----- ##
     #####################
     network_sim = ntwk.collect_and_run(NTWK, verbose=True)
     
-    ntwk.write_as_hdf5(NTWK, filename='RS-FS_data.h5')
+    ntwk.recording.write_as_hdf5(NTWK, filename='RS-FS_data.h5')
     print('Results of the simulation are stored as:', 'RS-FS_data.h5')
     print('--> Run \"python RS-FS.py plot\" to plot the results')
 

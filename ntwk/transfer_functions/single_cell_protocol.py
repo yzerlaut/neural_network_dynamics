@@ -1,10 +1,10 @@
 import os, sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 
 import numpy as np
 import itertools
 
-import main as ntwk
+import ntwk
 
 def my_logspace(x1, x2, n):
     return np.logspace(np.log(x1)/np.log(10), np.log(x2)/np.log(10), n)
@@ -36,21 +36,21 @@ def run_sim(Model,
             aff_pops_discard_self.append(p)
 
     # note that number of neurons become number of different seeds
-    NTWK = ntwk.build_populations(Model, [Model['NRN_KEY']],
+    NTWK = ntwk.build.populations(Model, [Model['NRN_KEY']],
                                   NEURONS = [{'name':Model['NRN_KEY'], 'N':Model['N_SEED']}],
                                   AFFERENT_POPULATIONS=aff_pops_discard_self,
                                   with_Vm=with_Vm, with_raster=True,
                                   with_synaptic_currents=with_synaptic_currents)
 
-    ntwk.initialize_to_rest(NTWK) # (fully quiescent State as initial conditions)
+    ntwk.build.initialize_to_rest(NTWK) # (fully quiescent State as initial conditions)
 
     SPKS, SYNAPSES, PRESPKS = [], [], []
 
     for i, afferent_pop in enumerate(Model['POP_STIM']):
         rate_array = RATES['F_'+afferent_pop]+0.*t_array
-        ntwk.construct_feedforward_input(NTWK, Model['NRN_KEY'], afferent_pop,
-                                         t_array, rate_array,
-                                         SEED=i+Model['SEED'])
+        ntwk.stim.construct_feedforward_input(NTWK, Model['NRN_KEY'], afferent_pop,
+                                              t_array, rate_array,
+                                              SEED=i+Model['SEED'])
 
     sim = ntwk.collect_and_run(NTWK)
 
@@ -131,8 +131,6 @@ def generate_transfer_function(Model,\
     
 if __name__=='__main__':
 
-    from neural_network_dynamics.transfer_functions.plots import *
-    
     # import the model defined in root directory
     sys.path.append(os.path.join(\
                                  str(pathlib.Path(__file__).resolve().parents[1]),

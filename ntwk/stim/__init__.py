@@ -1,0 +1,1 @@
+from .connect_afferent_input import construct_feedforward_input

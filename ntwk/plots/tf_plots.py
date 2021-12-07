@@ -1,5 +1,4 @@
 import numpy as np
-import datavyz
 
 from matplotlib.cm import copper
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
@@ -21,7 +20,7 @@ def plot_single_cell_sim(data, XTICKS = None,
     
     # graph settings
     if ge is None:
-        ge = datavyz.main.graph_env()
+        from datavyz import ge
     if len(COLORS)==0:
         COLORS = [ge.green, ge.red, ge.blue, ge.orange]+ge.colors[4:]
 
@@ -85,7 +84,7 @@ def make_tf_plot_2_variables(data,
 
     # graph settings
     if ge is None:
-        ge = datavyz.main.graph_env()
+        from datavyz import ge
     if ax is None:
         fig, ax, acb = ge.figure(**fig_args)
     else:

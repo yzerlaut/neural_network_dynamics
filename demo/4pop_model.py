@@ -1,8 +1,9 @@
 import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 import numpy as np
 import matplotlib.pylab as plt
-import main as ntwk
+
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+import ntwk
 
 ################################################################
 ## ------ Construct populations with their equations -------- ##
@@ -58,21 +59,21 @@ if sys.argv[-1]=='plot':
     # ######################
     
     ## load file
-    data = ntwk.load_dict_from_hdf5('4pop_model_data.h5')
+    data = ntwk.recording.load_dict_from_hdf5('4pop_model_data.h5')
 
     # ## plot
-    fig, _ = ntwk.raster_and_Vm_plot(data, smooth_population_activity=10.)
+    fig, _ = ntwk.plots.raster_and_Vm_plot(data, smooth_population_activity=10.)
     
     plt.show()
 else:
-    NTWK = ntwk.build_populations(Model, ['Thal', 'Exc', 'Inh', 'DsInh'],
+    NTWK = ntwk.build.populations(Model, ['Thal', 'Exc', 'Inh', 'DsInh'],
                                   AFFERENT_POPULATIONS=['AffExc'],
                                   with_raster=True, with_Vm=4,
                                   # with_synaptic_currents=True,
                                   # with_synaptic_conductances=True,
                                   verbose=True)
 
-    ntwk.build_up_recurrent_connections(NTWK, SEED=5, verbose=True)
+    ntwk.build.recurrent_connections(NTWK, SEED=5, verbose=True)
 
     #######################################
     ########### AFFERENT INPUTS ###########
@@ -81,7 +82,7 @@ else:
     faff = 1.
     t_array = ntwk.arange(int(Model['tstop']/Model['dt']))*Model['dt']
     # # # afferent excitation onto thalamic excitation
-    ntwk.construct_feedforward_input(NTWK, 'Thal', 'AffExc',
+    ntwk.stim.construct_feedforward_input(NTWK, 'Thal', 'AffExc',
                                          t_array, faff+0.*t_array,
                                          verbose=True,
                                          SEED=int(38*faff)%37)
@@ -90,14 +91,14 @@ else:
     ################################################################
     ## --------------- Initial Condition ------------------------ ##
     ################################################################
-    ntwk.initialize_to_rest(NTWK)
+    ntwk.build.initialize_to_rest(NTWK)
 
     #####################
     ## ----- Run ----- ##
     #####################
-    network_sim = ntwk.collect_and_run(NTWK, verbose=True)
+    ntwk.collect_and_run(NTWK, verbose=True)
 
-    ntwk.write_as_hdf5(NTWK, filename='4pop_model_data.h5')
+    ntwk.recording.write_as_hdf5(NTWK, filename='4pop_model_data.h5')
     print('Results of the simulation are stored as:', '4pop_model_data.h5')
     print('--> Run \"python 4pop_model.py plot\" to plot the results')
 

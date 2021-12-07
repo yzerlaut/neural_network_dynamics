@@ -6,8 +6,7 @@ import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 import brian2, string
 import numpy as np
-from ntwk_stim.poisson_generator import spikes_from_time_varying_rate,\
-    deal_with_multiple_spikes_per_bin
+from .poisson_generator import spikes_from_time_varying_rate, deal_with_multiple_spikes_per_bin
 
 
 def translate_aff_spikes_into_syn_target_events(source_ids, source_times,

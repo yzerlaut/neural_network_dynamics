@@ -1,10 +1,9 @@
 import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 import numpy as np
 import matplotlib.pylab as plt
-import main as ntwk
 
-import datavyz
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+import ntwk
 
 ################################################################
 ## ------ Construct populations with their equations -------- ##
@@ -51,11 +50,17 @@ if sys.argv[-1]=='plot':
     # ## ----- Plot ----- ##
     # ######################
     data = np.load('tf_data.npy', allow_pickle=True).item()
-    ntwk.make_tf_plot_2_variables(data,
-                                  xkey='F_Exc', ckey='F_Inh',
-                                  ylim=[1e-1, 100], yticks=[0.1, 1, 10], yticks_labels=['0.01', '0.1', '1', '10'], ylabel='$\\nu_{out}$ (Hz)',
-                                  xticks=[0.1, 1, 10], xticks_labels=['0.1', '1', '10'], xlabel='$\\nu_{e}$ (Hz)')
+    ntwk.plots.tf_2_variables(data,
+                              xkey='F_Exc', ckey='F_Inh',
+                              ylim=[1e-1, 100],
+                              yticks=[0.1, 1, 10],
+                              yticks_labels=['0.01', '0.1', '1', '10'],
+                              ylabel='$\\nu_{out}$ (Hz)',
+                              xticks=[0.1, 1, 10],
+                              xticks_labels=['0.1', '1', '10'],
+                              xlabel='$\\nu_{e}$ (Hz)')
     ntwk.show()
+    
 else:
 
     Model['filename'] = 'tf_data.npy'
@@ -65,8 +70,10 @@ else:
     Model['POP_STIM'] = ['Exc', 'Inh']
     Model['F_Exc_array'] = np.logspace(-1, 2, 40)
     Model['F_Inh_array'] = np.logspace(-1, 2, 10)
-    ntwk.generate_transfer_function(Model)
+    ntwk.transfer_functions.generate(Model)
     print('Results of the simulation are stored as:', 'tf_data.npy')
     # print('--> Run \"python 3pop_model.py plot\" to plot the results')
 
 
+
+    
