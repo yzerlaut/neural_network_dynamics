@@ -1,10 +1,9 @@
 import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 import numpy as np
 import matplotlib.pylab as plt
-import main as ntwk
 
-import datavyz
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+import ntwk
 
 ################################################################
 ## ------ Construct populations with their equations -------- ##
@@ -62,24 +61,23 @@ if sys.argv[-1]=='plot':
     # ######################
     
     ## load file
-    data = ntwk.load_dict_from_hdf5('sinusoidal_input_data.h5')
-    data['iRASTER_L4Exc'] = data['iRASTER_PRE1']
-    data['tRASTER_L4Exc'] = data['tRASTER_PRE1']
+    data = ntwk.recording.load_dict_from_hdf5('sinusoidal_input_data.h5')
+
     # # ## plot
-    fig, _ = ntwk.activity_plots(data,
+    fig, _ = ntwk.plots.activity_plots(data,
                                  POP_KEYS = ['L23Exc', 'PVInh', 'SOMInh', 'VIPInh'],
                                  COLORS = ['green', 'red', 'orange', 'purple'],
                                  smooth_population_activity=10.)
     plt.show()
 else:
-    NTWK = ntwk.build_populations(Model, ['L23Exc', 'PVInh', 'SOMInh', 'VIPInh'],
+    NTWK = ntwk.build.populations(Model, ['L23Exc', 'PVInh', 'SOMInh', 'VIPInh'],
                                   AFFERENT_POPULATIONS=['L4Exc'],
                                   with_raster=True,
                                   with_Vm=4,
                                   with_pop_act=True,
                                   verbose=True)
 
-    ntwk.build_up_recurrent_connections(NTWK, SEED=5, verbose=True)
+    ntwk.build.recurrent_connections(NTWK, SEED=5, verbose=True)
 
     #######################################
     ########### AFFERENT INPUTS ###########
@@ -91,7 +89,7 @@ else:
 
     # # # afferent excitation onto cortical excitation and inhibition
     for i, tpop in enumerate(['L23Exc', 'PVInh', 'SOMInh', 'VIPInh']): # both on excitation and inhibition
-        ntwk.construct_feedforward_input(NTWK, tpop, 'L4Exc',
+        ntwk.stim.construct_feedforward_input(NTWK, tpop, 'L4Exc',
                                          t_array, faff,
                                          verbose=True,
                                          SEED=int(i)%37)
@@ -99,13 +97,13 @@ else:
     ################################################################
     ## --------------- Initial Condition ------------------------ ##
     ################################################################
-    ntwk.initialize_to_rest(NTWK)
+    ntwk.build.initialize_to_rest(NTWK)
 
     #####################
     ## ----- Run ----- ##
     #####################
     network_sim = ntwk.collect_and_run(NTWK, verbose=True)
 
-    ntwk.write_as_hdf5(NTWK, filename='sinusoidal_input_data.h5')
+    ntwk.recording.write_as_hdf5(NTWK, filename='sinusoidal_input_data.h5')
     print('Results of the simulation are stored as:', 'sinusoidal_input_data.h5')
     print('--> Run \"python sinusoidal_input.py plot\" to plot the results')

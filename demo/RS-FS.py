@@ -53,8 +53,16 @@ if sys.argv[-1]=='plot':
     data = ntwk.recording.load_dict_from_hdf5('RS-FS_data.h5')
 
     # ## plot
-    fig, _ = ntwk.plots.activity_plots(data)
-    
+    fig, AX = ntwk.plots.activity_plots(data)
+
+    for ax in AX:
+        ax.fill_between([0,350],
+                        np.ones(2)*ax.get_ylim()[0],
+                        np.ones(2)*ax.get_ylim()[1], color='gray', alpha=.2, lw=0)
+    AX[0].annotate(' transient dyn.', (0,.95), xycoords='axes fraction',
+                   va='top', color='gray', fontsize=8)
+    AX[0].annotate(' stim.', (1000,4), ha='center', fontsize=9)
+    fig.savefig('doc/RS-FS.png')
     plt.show()
     
 else:
@@ -62,8 +70,6 @@ else:
     NTWK = ntwk.build.populations(Model, ['Exc', 'Inh'],
                                   AFFERENT_POPULATIONS=['AffExc'],
                                   with_raster=True, with_Vm=4,
-                                  # with_synaptic_currents=True,
-                                  # with_synaptic_conductances=True,
                                   verbose=True)
 
     ntwk.build.recurrent_connections(NTWK, SEED=5, verbose=True)
@@ -72,15 +78,14 @@ else:
     ########### AFFERENT INPUTS ###########
     #######################################
 
-    faff = 4.
     t_array = ntwk.arange(int(Model['tstop']/Model['dt']))*Model['dt']
+    Faff_array = 4.+4*np.exp(-(t_array-1000)**2/2/100**2)
+    
     # # # afferent excitation onto cortical excitation and inhibition
     for i, tpop in enumerate(['Exc', 'Inh']): # both on excitation and inhibition
         ntwk.stim.construct_feedforward_input(NTWK, tpop, 'AffExc',
-                                         t_array, faff+0.*t_array,
-                                         verbose=True,
-                                         SEED=int(37*faff+i)%37)
-
+                                              t_array, Faff_array,
+                                              verbose=True, SEED=32)
 
     ################################################################
     ## --------------- Initial Condition ------------------------ ##

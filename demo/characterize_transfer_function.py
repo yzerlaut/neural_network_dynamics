@@ -46,19 +46,22 @@ Model = {
 
 
 if sys.argv[-1]=='plot':
+    
     # ######################
     # ## ----- Plot ----- ##
     # ######################
     data = np.load('tf_data.npy', allow_pickle=True).item()
     ntwk.plots.tf_2_variables(data,
-                              xkey='F_Exc', ckey='F_Inh',
-                              ylim=[1e-1, 100],
-                              yticks=[0.1, 1, 10],
-                              yticks_labels=['0.01', '0.1', '1', '10'],
-                              ylabel='$\\nu_{out}$ (Hz)',
-                              xticks=[0.1, 1, 10],
-                              xticks_labels=['0.1', '1', '10'],
-                              xlabel='$\\nu_{e}$ (Hz)')
+                              xkey='F_Exc', ckey='F_Inh')
+    # ntwk.plots.tf_2_variables(data,
+    #                           xkey='F_Exc', ckey='F_Inh',
+    #                           ylim=[1e-1, 100],
+    #                           yticks=[0.01, 0.1, 1, 10],
+    #                           yticks_labels=['0.01', '0.1', '1', '10'],
+    #                           ylabel='$\\nu_{out}$ (Hz)',
+    #                           xticks=[0.1, 1, 10],
+    #                           xticks_labels=['0.1', '1', '10'],
+    #                           xlabel='$\\nu_{e}$ (Hz)')
     ntwk.show()
     
 else:

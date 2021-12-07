@@ -74,7 +74,7 @@ def make_tf_plot_2_variables(data,
                              cscale='log',
                              xlabel='$\\nu_{e}$ (Hz)',
                              cmap=copper, ax=None, acb=None, ge=None,
-                             fig_args={'with_space_for_bar_legend':True},
+                             fig_args={'with_bar_legend':True},
                              with_top_label=False,
                              ms=2, lw_th=2, alpha_th=0.7,
                              with_theory=False, th_discret=20):
@@ -143,8 +143,8 @@ def make_tf_plot_2_variables(data,
 
     cb = ge.build_bar_legend_continuous(acb , cmap,
                                         bounds = [F1.min(), F1.max()],
-                                        label=ckey_label,
                                         scale='log')
+    cb.set_label(ckey_label)#, labelpad=labelpad, fontsize=fontsize, color=color)
 
     return fig, ax, acb
 
