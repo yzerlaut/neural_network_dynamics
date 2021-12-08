@@ -41,6 +41,7 @@ def collect_and_run(NTWK, verbose=False, INTERMEDIATE_INSTRUCTIONS=[]):
 
 def build_up_recurrent_connections(NTWK, SEED=1,
                                    with_ring_geometry=False,
+                                   store_connections=False,
                                    verbose=False):
     """
     Construct the synapses from the connectivity matrix
@@ -55,7 +56,7 @@ def build_up_recurrent_connections(NTWK, SEED=1,
     if with_ring_geometry:
         NTWK['REC_SYNAPSES'] = random_distance_dependent_connections(NTWK)
     else:
-        NTWK['REC_SYNAPSES'] = random_connections(NTWK)
+        NTWK['REC_SYNAPSES'] = random_connections(NTWK, store_connections=store_connections)
 
 
 def build_fixed_aff_to_pop_matrix(afferent_pop, target_pop,
@@ -91,11 +92,13 @@ def build_fixed_afference(NTWK,
             NTWK['M_conn_%s_%s' % (afferent_pop, target_pop)] = build_fixed_aff_to_pop_matrix(afferent_pop, target_pop,
                                                                                               NTWK['Model'], SEED=(SEED+1)*i+j+i*j)
 
-def random_connections(NTWK):
+def random_connections(NTWK, store_connections=False):
     
     CONN = np.empty((len(NTWK['POPS']), len(NTWK['POPS'])), dtype=object)
     CONN2 = []
 
+    if store_connections:
+        NTWK['connections'] = np.empty((len(NTWK['POPS']), len(NTWK['POPS'])), dtype=object)
     for ii, jj in itertools.product(range(len(NTWK['POPS'])), range(len(NTWK['POPS']))):
         if (NTWK['M'][ii,jj]['pconn']>0) and (NTWK['M'][ii,jj]['Q']!=0):
             if ('psyn' in NTWK['M'][ii,jj]) and (NTWK['M'][ii,jj]['psyn']<1):
@@ -121,6 +124,8 @@ def random_connections(NTWK):
             CONN[ii,jj].connect(i=i_rdms, j=j_fixed) 
             CONN[ii,jj].w = NTWK['M'][ii,jj]['Q']*brian2.nS
             CONN2.append(CONN[ii,jj])
+            if store_connections:
+                NTWK['connections'][ii,jj] = {'i':i_rdms, 'j':j_fixed}
 
     return CONN2
 

@@ -27,7 +27,10 @@ def write_as_hdf5(NTWK, filename='data.h5',
             data['POP_ACT_'+name] = NTWK['POP_ACT'][ii].rate/brian2.Hz
 
         if ('VMS' in NTWK) and ('VMS' not in KEY_NOT_TO_RECORD):
-            data['VMS_'+name] = np.array([vv.V/brian2.mV for vv in NTWK['VMS'][ii]])
+            data['VMS_'+name] = np.array(NTWK['VMS'][ii].V/brian2.mV)
+            # data['VMS_'+name] = np.array([vv.V/brian2.mV for vv in NTWK['VMS'][ii]])
+            # if len(data['VMS_'+name])==0:
+            #     data['VMS_'+name] = np.array(NTWK['VMS'][ii].V/brian2.mV)
 
         if ('ISYNe' in NTWK) and ('ISYNe' not in KEY_NOT_TO_RECORD):
             data['ISYNe_'+name] = np.array([vv.Ie/brian2.pA for vv in NTWK['ISYNe'][ii]])

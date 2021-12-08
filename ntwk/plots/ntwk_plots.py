@@ -39,7 +39,7 @@ def raster_subplot(data, ax,
         n += data['N_%s' % tpop]
         
     graph_env.set_plot(ax, xlim=tzoom, ylabel='neuron ID',
-                xticks_labels=[], yticks=[0,n], ylim=[0,n])
+                       xticks_labels=[], yticks=[0,n], ylim=[0,n])
 
 
 def membrane_potential_subplots(data, AX,
@@ -387,6 +387,15 @@ def pop_act(data,
     return ax
 
 
+def find_spikes_from_Vm(t, Vm, data, pop_key):
+    threshold, reset = data[pop_key+'_Vthre'], data[pop_key+'_Vreset']
+    if pop_key+'_delta_v' in data:
+        threshold += data[pop_key+'_delta_v']
+    # adding spikes
+    tspikes = t[1:][np.argwhere((Vm[1:]-Vm[:-1])<(.9*(reset-threshold)))]
+    return tspikes, threshold
+    
+
 def few_Vm_plot(data,
                 POP_KEYS = None, COLORS=None, NVMS=None,
                 tzoom=[0, np.inf],
@@ -399,7 +408,7 @@ def few_Vm_plot(data,
     if COLORS is None:
         COLORS = ['C'+str(i) for i in range(len(POP_KEYS))]
     if NVMS is None:
-        NVMS = np.array([range(len(data['VMS_'+pop_key])) for pop_key in POP_KEYS])
+        NVMS = np.array([range(len(data['VMS_'+pop_key])) for pop_key in POP_KEYS], dtype=object)
         
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
 
@@ -411,14 +420,13 @@ def few_Vm_plot(data,
 
     nn = 0
     for VmID, pop_key, color in zip(NVMS, POP_KEYS, COLORS):
-        threshold, rest = data[pop_key+'_Vthre'], data[pop_key+'_El']
-        if pop_key+'_delta_v' in data:
-            threshold += data[pop_key+'_delta_v']
+        rest = data[pop_key+'_El']
         for i in VmID:
             nn+=1
-            ax.plot(t[cond], data['VMS_'+pop_key][i][cond]+shift*nn, color=color, lw=lw)
+            Vm = data['VMS_'+pop_key][i].flatten()
+            ax.plot(t[cond], Vm[cond]+shift*nn, color=color, lw=lw)
             # adding spikes
-            tspikes = data['tRASTER_'+str(pop_key)][np.argwhere(data['iRASTER_'+str(pop_key)]==i).flatten()]
+            tspikes, threshold = find_spikes_from_Vm(t, Vm, data, pop_key)
             Scond = (tspikes>tzoom[0]) & (tspikes<tzoom[1])
             for ts in tspikes[Scond]:
                 ax.plot([ts, ts], shift*nn+np.array([threshold, vpeak]), '--', color=color, lw=lw)
@@ -433,8 +441,8 @@ def few_Vm_plot(data,
                  lw=2, color='k')
     ax.annotate(str(int(Vbar))+' mV',
                  (-0.1, 0.5), rotation=90, fontsize=12, xycoords='axes fraction')
-    set_plot(ax, [], xticks=[], yticks=[],
-             xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
+    ge.set_plot(ax, [], xticks=[], yticks=[],
+                xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
     
     return ax
 
