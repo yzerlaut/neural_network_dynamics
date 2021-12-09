@@ -14,7 +14,7 @@ def get_scan(Model,
     
     data = zf.read(filename.replace('.zip', '_Model.npz'))
     with open(filename.replace('.zip', '_Model.npz'), 'wb') as f: f.write(data)
-    Model = dict(np.load(filename.replace('.zip', '_Model.npz')).items())
+    Model = dict(np.load(filename.replace('.zip', '_Model.npz'), allow_pickle=True).items())
 
     if filenames_only:
         print('/!\ datafiles have to be unziped before /!\ ')
@@ -23,9 +23,10 @@ def get_scan(Model,
         DATA = []
         for fn in (Model['PARAMS_SCAN'].all()['FILENAMES']):
             print(fn)
-            data = zf.read(fn)
-            with open(fn, 'wb') as f: f.write(data)
-            with open(fn, 'rb') as f: data = load_dict_from_hdf5(fn)
+            # data = zf.read(fn)
+            # with open(fn, 'wb') as f: f.write(data)
+            with open(fn, 'rb') as f:
+                data = load_dict_from_hdf5(fn)
             DATA.append(data)
         return Model, dict(Model['PARAMS_SCAN'].all()), DATA
 
