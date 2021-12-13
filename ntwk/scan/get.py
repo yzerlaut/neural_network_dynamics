@@ -6,7 +6,8 @@ from analyz.IO.hdf5 import load_dict_from_hdf5
 
 def get_scan(Model,
              filename=None,
-             filenames_only=False):
+             filenames_only=False,
+             verbose=True):
 
     if filename is None:
         filename=str(Model['zip_filename'])
@@ -22,13 +23,19 @@ def get_scan(Model,
     else:
         DATA = []
         for fn in (Model['PARAMS_SCAN'].all()['FILENAMES']):
-            print(fn)
+            if verbose:
+                print('- including "%s" ' % fn)
             # data = zf.read(fn)
             # with open(fn, 'wb') as f: f.write(data)
             with open(fn, 'rb') as f:
                 data = load_dict_from_hdf5(fn)
             DATA.append(data)
-        return Model, dict(Model['PARAMS_SCAN'].all()), DATA
+            
+        PARAMS_SCAN = {} # array for read-out as np.array 
+        for k, v in dict(Model['PARAMS_SCAN'].all()).items():
+            PARAMS_SCAN[k] = np.array(v)
+            
+        return Model, PARAMS_SCAN, DATA
 
 if __name__=='__main__':
 

@@ -82,6 +82,13 @@ def get_mean_pop_act(data, pop='Exc', tdiscard=200):
     cond = t>tdiscard
     return data['POP_ACT_'+pop][cond].mean()
 
+def get_std_pop_act(data, pop='Exc', tdiscard=200):
+    
+    t = np.arange(int(data['tstop']/data['dt']))*data['dt']
+    cond = t>tdiscard
+    return data['POP_ACT_'+pop][cond].std()
+
+
 def get_currents_and_balance(data, pop='Exc', tdiscard=200, Vreset=-70):
     
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
