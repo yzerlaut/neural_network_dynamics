@@ -1,6 +1,8 @@
 import numpy as np
 from itertools import combinations # for cross correlations
 from scipy.stats import skew
+import elephant, neo, quantities # eletrophysiology analysis toolkit
+
 # for smoothing
 from scipy.ndimage.filters import gaussian_filter1d
 
@@ -34,9 +36,19 @@ def get_CV_spiking(data, pop='Exc'):
         return 0
 
 def get_synchrony_of_spiking(data, pop='Exc',
-                             Tbin=2, Nmax_pairs=4000,
-                             seed=23, tzoom=[-np.inf, np.inf]):
-    """see Kumar et al. 2008
+                             Tbin=2,
+                             method='spk-trains-cross-correl',
+                             Nmax_pairs=4000,
+                             tzoom=[-np.inf, np.inf],
+                             seed=23):
+    """
+    Different methods:
+
+    - Spike Train Cross-Correlation: 'spk-trains-cross-correl'
+            * see Kumar et al. 2008
+    - Spike Time Tiling Coefficient
+            * Cutts & Eglen. Detecting pairwise correlations in spike trains: an objective comparison of methods and application to the study of retinal waves. 
+              Journal of Neuroscience, 34(43):14288–14303, 2014
 
     we introduce a limiting number of pairs for fast computation"""
 
@@ -69,12 +81,21 @@ def get_synchrony_of_spiking(data, pop='Exc',
             i, j = couples[rdm_picks[r]]
             tspikes_i = tspikes[np.argwhere(ispikes==i).flatten()]
             tspikes_j = tspikes[np.argwhere(ispikes==j).flatten()]
-            spk_train_i, _ = np.histogram(tspikes_i, bins=new_t)
-            spk_train_j, _ = np.histogram(tspikes_j, bins=new_t)
-            SYNCH.append(np.corrcoef(spk_train_i, spk_train_j)[0,1])
+            if method=='spk-trains-cross-correl':
+                spk_train_i, _ = np.histogram(tspikes_i, bins=new_t)
+                spk_train_j, _ = np.histogram(tspikes_j, bins=new_t)
+                SYNCH.append(np.corrcoef(spk_train_i, spk_train_j)[0,1])
+            elif method in ['spk-time-tiling-coef', 'STTC']:
+                spk_train_i = neo.SpikeTrain(tspikes_i, t_stop=data['tstop'], units='ms')
+                spk_train_j = neo.SpikeTrain(tspikes_j, t_stop=data['tstop'], units='ms')
+                SYNCH.append(elephant.spike_train_correlation.spike_time_tiling_coefficient(spk_train_i, spk_train_j, dt=Tbin*quantities.ms))
+            else:
+                SYNCH.append(0)
+                
         return np.array(SYNCH).mean()
     else:
         return 0
+
     
 def get_mean_pop_act(data, pop='Exc', tdiscard=200):
     
