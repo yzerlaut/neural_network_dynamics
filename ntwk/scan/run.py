@@ -72,7 +72,7 @@ def run_scan(Model, KEYS, VALUES,
     
 if __name__=='__main__':
 
-    Model = {'data_folder': 'data/', 'SEED':0, 'x':2, 'zip_filename':'data.zip'}
+    Model = {'data_folder': 'data/', 'SEED':0, 'x':2, 'zip_filename':'data/data.zip'}
     import sys, pathlib
     sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
     from analyz.IO.hdf5 import save_dict_to_hdf5, load_dict_from_hdf5
