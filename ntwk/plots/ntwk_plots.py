@@ -27,13 +27,15 @@ def find_num_of_key(data,pop_key):
 
 def raster_subplot(data, ax,
                    POP_KEYS, COLORS, tzoom,
-                   graph_env):
+                   graph_env,
+                   spike_subsampling=10):
 
     n = 0
     for i, tpop in enumerate(POP_KEYS):
 
         cond = (data['tRASTER_%s' % tpop]>tzoom[0]) & (data['tRASTER_%s' % tpop]<tzoom[1])
-        ax.plot(data['tRASTER_%s' % tpop][cond], n+data['iRASTER_%s' % tpop][cond],
+        ax.plot(data['tRASTER_%s' % tpop][cond][::spike_subsampling],
+                n+data['iRASTER_%s' % tpop][cond][::spike_subsampling],
                    'o', ms=1, c=COLORS[i], alpha=.5)
         ax.plot(tzoom[1]*np.ones(2), [n,n+data['N_%s' % tpop]], 'w.', ms=0.01)
         n += data['N_%s' % tpop]
@@ -46,6 +48,7 @@ def membrane_potential_subplots(data, AX,
                                 POP_KEYS, COLORS, tzoom,
                                 graph_env,
                                 subsampling=1,
+                                clip_spikes=False,
                                 Vm_is_the_last_one=True):
     
     for i, tpop in enumerate(POP_KEYS):
@@ -56,7 +59,12 @@ def membrane_potential_subplots(data, AX,
             cond = (t>=tzoom[0]) & (t<=tzoom[1])
             
             for v in data['VMS_%s' % tpop]:
-                AX[i].plot(t[cond][::subsampling], v[::subsampling], '-', lw=1, c=COLORS[i])
+                if clip_spikes:
+                    tspikes, threshold = find_spikes_from_Vm(t, v, data, tpop) # getting spikes
+                    tt, vv = clip_spikes_from_Vm(t[cond], v[cond], tspikes)
+                    AX[i].plot(tt[::subsampling], vv[::subsampling], '-', lw=1, c=COLORS[i])
+                else:
+                    AX[i].plot(t[cond][::subsampling], v[::subsampling], '-', lw=1, c=COLORS[i])
                 
             graph_env.annotate(AX[i], ' %s' % tpop, (1.,.5), xycoords='axes fraction',
                         color=COLORS[i], bold=True, size='large')
@@ -149,6 +157,7 @@ def activity_plots(data,
                    pop_act_log_scale=False,
                    subsampling=2,
                    graph_env=ge, ax=None,
+                   Vm_plot_args=dict(subsampling=2),
                    fig_args=dict(hspace=0.5, right = 5.)):
 
     AE = [[[4,1]],
@@ -160,11 +169,11 @@ def activity_plots(data,
     for pop in POP_KEYS:
         if ('VMS_%s' % pop) in data:
             AE.append([[4,1]])
-        Vm_is_the_last_one = True
+        Vm_plot_args['Vm_is_the_last_one'] = True
             
     if ('POP_ACT_%s' % pop) in data: # just checking on the last one
         AE.append([[4,2]])
-        Vm_is_the_last_one = False
+        Vm_plot_args['Vm_is_the_last_one'] = False
         
     tzoom=[np.max([tzoom[0], 0.]), np.min([tzoom[1], data['tstop']])]
 
@@ -183,8 +192,7 @@ def activity_plots(data,
     if ('VMS_%s' % pop) in data:
         membrane_potential_subplots(data, AX[2:],
                                     POP_KEYS, COLORS, tzoom,
-                                    graph_env, subsampling=subsampling,
-                                    Vm_is_the_last_one=Vm_is_the_last_one)
+                                    graph_env, **Vm_plot_args)
     if ('POP_ACT_%s' % pop) in data:
         population_activity_subplot(data, AX[-1],
                                     POP_KEYS, COLORS,
@@ -395,10 +403,19 @@ def find_spikes_from_Vm(t, Vm, data, pop_key):
     tspikes = t[1:][np.argwhere((Vm[1:]-Vm[:-1])<(.9*(reset-threshold)))]
     return tspikes, threshold
     
+def clip_spikes_from_Vm(t, Vm, tspikes,
+                        clip_window=10):
 
+    clipped = np.zeros(len(t), dtype=bool)
+    for ts in tspikes:
+        clipped[(t>=ts) & (t<ts+clip_window)] = True
+    return t[~clipped], Vm[~clipped]
+
+    
 def few_Vm_plot(data,
                 POP_KEYS = None, COLORS=None, NVMS=None,
                 tzoom=[0, np.inf],
+                clip_spikes=False,
                 vpeak=-40, vbottom=-80, shift=20.,
                 Tbar=50., Vbar=20.,
                 lw=1, ax=None):
@@ -424,9 +441,13 @@ def few_Vm_plot(data,
         for i in VmID:
             nn+=1
             Vm = data['VMS_'+pop_key][i].flatten()
-            ax.plot(t[cond], Vm[cond]+shift*nn, color=color, lw=lw)
+            tspikes, threshold = find_spikes_from_Vm(t, Vm, data, pop_key) # getting spikes
+            if clip_spikes:
+                tt, vv = clip_spikes_from_Vm(t[cond], Vm[cond], tspikes)
+                ax.plot(tt, vv+shift*nn, color=color, lw=lw)
+            else:
+                ax.plot(t[cond], Vm[cond]+shift*nn, color=color, lw=lw)
             # adding spikes
-            tspikes, threshold = find_spikes_from_Vm(t, Vm, data, pop_key)
             Scond = (tspikes>tzoom[0]) & (tspikes<tzoom[1])
             for ts in tspikes[Scond]:
                 ax.plot([ts, ts], shift*nn+np.array([threshold, vpeak]), '--', color=color, lw=lw)
