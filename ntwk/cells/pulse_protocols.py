@@ -1,8 +1,7 @@
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-from graphs.my_graph import *
-from neural_network_dynamics.cells.cell_library import *
-from neural_network_dynamics.cells.cell_construct import *
+from ntwk.cells.cell_library import *
+from ntwk.cells.cell_construct import *
 
 def current_pulse_sim(args, params=None, verbose=False):
     
@@ -76,11 +75,11 @@ if __name__=='__main__':
                         action="store_true")
     args = parser.parse_args()
 
-    from graphs.my_graph import graphs
-    mg = graphs()
+    import datavyz
     
-    from graphs.single_cell_plots import *
-    response_to_current_pulse(mg, *current_pulse_sim(vars(args)))
+    datavyz.single_cell_plots.response_to_current_pulse(datavyz.graph_env_screen,
+                                                        *current_pulse_sim(vars(args)))
+    
     # VMS, II, SPIKES = [], [], []
     # for amp in [-50, 50, 200]:
     #     args.amp = amp
@@ -103,4 +102,4 @@ if __name__=='__main__':
     # fig, ax = mg.response_to_multiple_current_pulse(t, VMS, II, SPIKES)
     # fig.suptitle('$\delta$=%imV' % delta)
     # fig.savefig(desktop+'fig+%i.svg' % delta)
-    mg.show()
+    datavyz.ge.show()
