@@ -28,15 +28,16 @@ def find_num_of_key(data,pop_key):
 def raster_subplot(data, ax,
                    POP_KEYS, COLORS, tzoom,
                    graph_env,
-                   spike_subsampling=10):
+                   subsampling=10,
+                   ms=1):
 
     n = 0
     for i, tpop in enumerate(POP_KEYS):
 
         cond = (data['tRASTER_%s' % tpop]>tzoom[0]) & (data['tRASTER_%s' % tpop]<tzoom[1])
-        ax.plot(data['tRASTER_%s' % tpop][cond][::spike_subsampling],
-                n+data['iRASTER_%s' % tpop][cond][::spike_subsampling],
-                   'o', ms=1, c=COLORS[i], alpha=.5)
+        ax.plot(data['tRASTER_%s' % tpop][cond][::subsampling],
+                n+data['iRASTER_%s' % tpop][cond][::subsampling],
+                   'o', ms=ms, c=COLORS[i], alpha=.5)
         ax.plot(tzoom[1]*np.ones(2), [n,n+data['N_%s' % tpop]], 'w.', ms=0.01)
         n += data['N_%s' % tpop]
         
@@ -158,6 +159,7 @@ def activity_plots(data,
                    subsampling=2,
                    graph_env=ge, ax=None,
                    Vm_plot_args=dict(subsampling=2),
+                   raster_plot_args=dict(subsampling=10),
                    fig_args=dict(hspace=0.5, right = 5.)):
 
     AE = [[[4,1]],
@@ -187,7 +189,7 @@ def activity_plots(data,
                        graph_env)
     raster_subplot(data, AX[1],
                    POP_KEYS, COLORS, tzoom,
-                   graph_env)
+                   graph_env, **raster_plot_args)
 
     if ('VMS_%s' % pop) in data:
         membrane_potential_subplots(data, AX[2:],
@@ -315,6 +317,7 @@ def raster(data,
            NMAXS = None,
            tzoom=[0, np.inf],
            Nnrn=500, Tbar=50,
+           graph_env=ge,
            ms=1, ax=None):
 
     if POP_KEYS is None:
@@ -342,9 +345,9 @@ def raster(data,
     ax.plot([tzoom[0],tzoom[0]+Tbar], [0, 0], lw=5, color='gray')
     ax.annotate(str(Tbar)+' ms',
                  (0., -0.1), fontsize=12, xycoords='axes fraction')
-    set_plot(ax, [], yticks=[], xticks=[],
-             xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])],
-             ylim=[0, NMAXS.sum()])
+    graph_env.set_plot(ax, [], yticks=[], xticks=[],
+                       xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])],
+                       ylim=[0, NMAXS.sum()])
     return ax
 
 ######################################
