@@ -23,6 +23,12 @@ git clone https://github.com/yzerlaut/neural_network_dynamics.git
 pip install -r neural_network_dynamics/requirements.txt
 ```
 
+Note you might want to use the code compilation to C code for speed, so you will need the `gcc` compiler, e.g. on ubuntu/debian, get it with:
+```
+sudo apt install build-essential
+```
+
+
 ## Usage
 
 ```
