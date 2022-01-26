@@ -65,7 +65,7 @@ def membrane_potential_subplots(data, AX,
                     tt, vv = clip_spikes_from_Vm(t[cond], v[cond], tspikes)
                     AX[i].plot(tt[::subsampling], vv[::subsampling], '-', lw=1, c=COLORS[i])
                 else:
-                    AX[i].plot(t[cond][::subsampling], v[::subsampling], '-', lw=1, c=COLORS[i])
+                    AX[i].plot(t[cond][::subsampling], v[cond][::subsampling], '-', lw=1, c=COLORS[i])
                 
             graph_env.annotate(AX[i], ' %s' % tpop, (1.,.5), xycoords='axes fraction',
                         color=COLORS[i], bold=True, size='large')
@@ -80,6 +80,40 @@ def membrane_potential_subplots(data, AX,
         else:
             graph_env.set_plot(AX[i], ylabel='Vm (mV)', xlim=tzoom, xticks_labels=[])
 
+def Vm_subplots_mean_with_single_trace(data, AX,
+                                       POP_KEYS, COLORS, tzoom,
+                                       graph_env,
+                                       traces_ID=None,
+                                       subsampling=1,
+                                       clip_spikes=False):
+
+    if traces_ID is None:
+        traces_ID = np.zeros(len(POP_KEYS), dtype=int)
+        
+    for i, tpop in enumerate(POP_KEYS):
+        
+        t = np.arange(len(data['VMS_%s' % tpop][0]))*data['dt']
+        cond = (t>=tzoom[0]) & (t<=tzoom[1])
+        
+        if ('VMS_%s' % tpop) in data:
+
+            # mean
+            V = np.array(data['VMS_%s' % tpop])
+            graph_env.plot(t[::subsampling], V.mean(axis=0)[::subsampling],
+                           sy=V.std(axis=0)[::subsampling],
+                           lw=0.5, color=COLORS[i], ax=AX[i], no_set=True)
+            
+            # single trace
+            v = data['VMS_%s' % tpop][traces_ID[i]]
+
+            if clip_spikes:
+                tspikes, threshold = find_spikes_from_Vm(t, v, data, tpop) # getting spikes
+                tt, vv = clip_spikes_from_Vm(t[cond], v[cond], tspikes)
+                AX[i].plot(tt[::subsampling], vv[::subsampling], '-', lw=1, c=COLORS[i])
+            else:
+                AX[i].plot(t[cond][::subsampling], v[cond][::subsampling], '-', lw=1, c=COLORS[i])
+                
+            
 def population_activity_subplot(data, ax,
                                 POP_KEYS, COLORS, tzoom,
                                 graph_env,
