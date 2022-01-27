@@ -1,6 +1,7 @@
+import sys, pathlib, os
+
 import numpy as np
-import sys, pathlib
-import brian2, os
+import brian2
 
 from analyz.IO import hdf5
 
@@ -67,6 +68,9 @@ def write_as_hdf5(NTWK, filename='data.h5',
         for jj in range(len(NTWK['iRASTER_PRE'])):
             data['iRASTER_PRE'+str(jj)] = np.array(NTWK['iRASTER_PRE'][jj], dtype=np.int)
             data['tRASTER_PRE'+str(jj)] = np.array(NTWK['tRASTER_PRE'][jj]/brian2.ms, dtype=np.float)
-            
+
+    # create parent folder if it doesn't exist:
+    pathlib.Path(os.path.dirname(filename)).mkdir(parents=True, exist_ok=True)
+    
     hdf5.save_dict_to_hdf5(data, filename)
     
