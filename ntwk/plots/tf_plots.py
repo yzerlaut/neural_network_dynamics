@@ -9,8 +9,9 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 
 from theory.tf import TF
 
-def plot_single_cell_sim(data, XTICKS = None,
-                         ge=None,
+def plot_single_cell_sim(data,
+                         graph_env=None,
+                         XTICKS = None,
                          fig_args={'figsize':(1.8,.6), 'hspace':.5, 'right':.5, 'left':.6},
                          COLORS = [],
                          savefig='',
@@ -19,8 +20,9 @@ def plot_single_cell_sim(data, XTICKS = None,
                          subsampling=2):
     
     # graph settings
-    if ge is None:
-        from datavyz import ge
+    if graph_env is None:
+        from datavyz import graph_env_manuscript as graph_env
+        
     if len(COLORS)==0:
         COLORS = [ge.green, ge.red, ge.blue, ge.orange]+ge.colors[4:]
 
@@ -52,13 +54,14 @@ def plot_single_cell_sim(data, XTICKS = None,
     for tt in data['tspikes']:
         ax3.plot([tt,tt], [Vthre, Vthre+dVthre], ':', lw=1, color='k')
         
-    ge.set_plot(ax1, ['left'], yticks=[], ylabel='%i\npresynaptic\n neurons' % j, xlim=[t[0], t[-1]])
-    ge.set_plot(ax2, ['left'], ylabel='$I_{syn}$ (pA)', xlim=[t[0], t[-1]])
-    ge.set_plot(ax3, xlabel='time (ms)', ylabel='$V_m$ (mV)', xlim=[t[0], t[-1]])
+    graph_env.set_plot(ax1, ['left'], yticks=[], ylabel='%i\npresynaptic\n neurons' % j, xlim=[t[0], t[-1]])
+    graph_env.set_plot(ax2, ['left'], ylabel='$I_{syn}$ (pA)', xlim=[t[0], t[-1]])
+    graph_env.set_plot(ax3, xlabel='time (ms)', ylabel='$V_m$ (mV)', xlim=[t[0], t[-1]])
     
     return fig, [ax1, ax2, ax3]
 
 def make_tf_plot_2_variables(data,
+                             graph_env=None,
                              xkey='F_RecExc', ckey='F_RecInh', output_key='Fout',
                              cond=None,
                              ckey_label='$\\nu_{i}$ (Hz)',
@@ -73,7 +76,7 @@ def make_tf_plot_2_variables(data,
                              xscale='log',
                              cscale='log',
                              xlabel='$\\nu_{e}$ (Hz)',
-                             cmap=copper, ax=None, acb=None, ge=None,
+                             cmap=copper, ax=None, acb=None,
                              fig_args={'with_bar_legend':True},
                              with_top_label=False,
                              ms=2, lw_th=2, alpha_th=0.7,
@@ -83,13 +86,13 @@ def make_tf_plot_2_variables(data,
     Fout_mean, Fout_std = data[output_key+'_mean'], data[output_key+'_std']
 
     # graph settings
-    if ge is None:
-        from datavyz import ge
+    if graph_env is None:
+        from datavyz import graph_env_manuscript as graph_env
+        
     if ax is None:
-        fig, ax, acb = ge.figure(**fig_args)
+        fig, ax, acb = graph_env.figure(**fig_args)
     else:
         fig = None
-
 
     if cond is None:
         cond = np.ones(len(data[xkey]), dtype=bool)
@@ -127,7 +130,7 @@ def make_tf_plot_2_variables(data,
     if with_top_label:
         ax.set_title(col_key_label+'='+str(round(f1,1))+col_key_unit)
         
-    ge.set_plot(ax,
+    graph_env.set_plot(ax,
                 xlim=xlim,
                 ylim=ylim,
                 xticks=xticks,
@@ -141,9 +144,9 @@ def make_tf_plot_2_variables(data,
 
     F1_ticks, F1_ticks_labels = [], []
 
-    cb = ge.build_bar_legend_continuous(acb , cmap,
-                                        bounds = [F1.min(), F1.max()],
-                                        scale='log')
+    cb = graph_env.build_bar_legend_continuous(acb , cmap,
+                                               bounds = [F1.min(), F1.max()],
+                                               scale='log')
     cb.set_label(ckey_label)#, labelpad=labelpad, fontsize=fontsize, color=color)
 
     return fig, ax, acb

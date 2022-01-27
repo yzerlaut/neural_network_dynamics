@@ -1,6 +1,6 @@
 # Neural Network Dynamics
 
-*Theoretical analysis and numerical simulations of the emergent dynamics in spiking neural networks*
+*Theoretical analysis and numerical simulations to study the emergent dynamics in spiking neural networks*
 
 Network simulations toolkit built as a layer on top of the [brian2 simulator](https://brian2.readthedocs.io/en/stable/).
 
