@@ -69,7 +69,7 @@ def connectivity_matrix(Model, graph_env=None,
     
     for i, source_pop in enumerate(REC_POPS+AFF_POPS):
         for j, target_pop in enumerate(REC_POPS):
-            if 'p_%s_%s' % (source_pop, target_pop) in Model:
+            if ('p_%s_%s' % (source_pop, target_pop) in Model) and (Model['p_%s_%s' % (source_pop, target_pop)]>0):
                 pconnMatrix[i,j] = Model['p_%s_%s' % (source_pop, target_pop)]
             else:
                 if blank_zero:
@@ -613,12 +613,10 @@ def few_Vm_plot(data,
             ax.plot([t[cond][0], t[cond][-1]], shift*nn+np.array([rest, rest]), ':', color=color, lw=lw)
 
     y0 = ax.get_ylim()[0]
-    ax.plot([tzoom[0],tzoom[0]+Tbar], y0*np.ones(2),
-                 lw=2, color='k')
+    ax.plot([tzoom[0],tzoom[0]+Tbar], y0*np.ones(2), lw=lw, color='k')
     ax.annotate(str(int(Tbar))+' ms',
                  (0., -0.1), fontsize=12, xycoords='axes fraction')
-    ax.plot([tzoom[0],tzoom[0]], y0+np.arange(2)*Vbar,
-                 lw=2, color='k')
+    ax.plot([tzoom[0],tzoom[0]], y0+np.arange(2)*Vbar, lw=lw, color='k')
     ax.annotate(str(int(Vbar))+' mV',
                  (-0.1, 0.5), rotation=90, fontsize=12, xycoords='axes fraction')
     if graph_env is not None:
