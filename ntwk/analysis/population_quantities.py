@@ -1,6 +1,7 @@
 import numpy as np
 from itertools import combinations # for cross correlations
 from scipy.stats import skew
+from brian2 import ms
 import elephant, neo, quantities # eletrophysiology analysis toolkit
 
 # for smoothing
@@ -30,7 +31,7 @@ def get_spike_times_and_indices(data, pop):
         i=0
         while data['NEURONS'][i]['name']!=pop:
             i+=1
-        tspikes = data['RASTER'][i].t/ntwk.ms
+        tspikes = data['RASTER'][i].t/ms
         ispikes = np.array(data['RASTER'][i].i, dtype=int)
 
     if tspikes is None:
@@ -67,7 +68,8 @@ def get_synchrony_of_spiking(data, pop='Exc',
             * Cutts & Eglen. Detecting pairwise correlations in spike trains: an objective comparison of methods and application to the study of retinal waves. 
               Journal of Neuroscience, 34(43):14288–14303, 2014
 
-    we introduce a limiting number of pairs for fast computation"""
+    we introduce a limiting number of pairs for fast computation
+    """
 
     np.random.seed(seed)
 
