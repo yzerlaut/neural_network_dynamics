@@ -20,10 +20,27 @@ def smooth_population_activity(rate_array, dt, Tsmoothing):
         print('/!\ SMOOTHING AT THAT TIME SCALE UNPOSSIBLE, dt is %s and Tsmoothing is %s' % (dt, Tsmoothing))
         return rate_array
 
+def get_spike_times_and_indices(data, pop):
+    
+    ispikes, tspikes = None, None
+    if ('iRASTER_%s'%pop in data) and ('tRASTER_%s'%pop in data):
+        ispikes, tspikes = data['iRASTER_'+pop], data['tRASTER_'+pop]
+    elif 'NEURONS' in data:
+        # loop over populations
+        i=0
+        while data['NEURONS'][i]['name']!=pop:
+            i+=1
+        tspikes = NTWK['RASTER'][i].t/ntwk.ms
+        ispikes = np.array(NTWK['RASTER'][i].i, dtype=int)
+
+    if tspikes is None:
+        print(' /!\ failed to fetch spike times and indices for pop. "%s"' % pop)
+        
+    return ispikes, tspikes
     
 def get_CV_spiking(data, pop='Exc'):
     """see Kumar et al. 2008"""
-    ispikes, tspikes = data['iRASTER_'+pop], data['tRASTER_'+pop]
+    ispikes, tspikes = get_spike_times_and_indices(data, pop)
     CV = []
     for i in np.unique(ispikes):
         tspikes_i = tspikes[np.argwhere(ispikes==i).flatten()]
@@ -54,15 +71,8 @@ def get_synchrony_of_spiking(data, pop='Exc',
 
     np.random.seed(seed)
 
-    n, Ntot = 0, 0
-    while str(n) in data.keys():
-        if (data[str(n)]['name']==pop):
-            Ntot = int(data[str(n)]['N'])
-        n+=1
-    if Ntot==0:
-        print('key not recognized in neural_net_dyn.macro_quantities.get_synchrony_of_spiking !!')
-
-    ispikes, tspikes = data['iRASTER_'+pop], data['tRASTER_'+pop]
+    ispikes, tspikes = get_spike_times_and_indices(data, pop)
+    
     # in case we focus on a subset of the temporal dynamics (none by default)
     cond = (tspikes>tzoom[0]) & (tspikes<tzoom[1])
     ispikes, tspikes = ispikes[cond], tspikes[cond]
