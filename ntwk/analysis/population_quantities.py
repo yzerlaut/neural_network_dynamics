@@ -30,8 +30,8 @@ def get_spike_times_and_indices(data, pop):
         i=0
         while data['NEURONS'][i]['name']!=pop:
             i+=1
-        tspikes = NTWK['RASTER'][i].t/ntwk.ms
-        ispikes = np.array(NTWK['RASTER'][i].i, dtype=int)
+        tspikes = data['RASTER'][i].t/ntwk.ms
+        ispikes = np.array(data['RASTER'][i].i, dtype=int)
 
     if tspikes is None:
         print(' /!\ failed to fetch spike times and indices for pop. "%s"' % pop)
