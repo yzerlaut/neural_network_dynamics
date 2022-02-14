@@ -3,7 +3,7 @@ import sys, pathlib, os
 import numpy as np
 import brian2
 
-from .hdf5 import load_dict_from_hdf5
+from .hdf5 import save_dict_to_hdf5
 
 def write_as_hdf5(NTWK, filename='data.h5',
                   ARRAY_KEYS=[], SINGLE_VALUES_KEYS=[],
@@ -23,7 +23,7 @@ def write_as_hdf5(NTWK, filename='data.h5',
         
         if ('RASTER' in NTWK) and ('RASTER' not in KEY_NOT_TO_RECORD):
             data['tRASTER_'+name] = NTWK['RASTER'][ii].t/brian2.ms
-            data['iRASTER_'+name] = np.array(NTWK['RASTER'][ii].i, dtype=np.int)
+            data['iRASTER_'+name] = np.array(NTWK['RASTER'][ii].i, dtype=int)
 
         if ('POP_ACT' in NTWK) and ('POP_ACT' not in KEY_NOT_TO_RECORD):
             data['POP_ACT_'+name] = NTWK['POP_ACT'][ii].rate/brian2.Hz
@@ -62,13 +62,13 @@ def write_as_hdf5(NTWK, filename='data.h5',
 
     
     if ('iRASTER_PRE_in_terms_of_Pre_Pop' in NTWK) and ('iRASTER_PRE_in_terms_of_Pre_Pop' not in KEY_NOT_TO_RECORD):
-        data['iRASTER_PRE_in_terms_of_Pre_Pop'] = np.array(NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'], dtype=np.int)
-        data['tRASTER_PRE_in_terms_of_Pre_Pop'] = np.array(NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'], dtype=np.float)
+        data['iRASTER_PRE_in_terms_of_Pre_Pop'] = np.array(NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'], dtype=int)
+        data['tRASTER_PRE_in_terms_of_Pre_Pop'] = np.array(NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'], dtype=float)
 
     if ('iRASTER_PRE' in NTWK) and ('iRASTER_PRE' not in KEY_NOT_TO_RECORD):
         for jj in range(len(NTWK['iRASTER_PRE'])):
-            data['iRASTER_PRE'+str(jj)] = np.array(NTWK['iRASTER_PRE'][jj], dtype=np.int)
-            data['tRASTER_PRE'+str(jj)] = np.array(NTWK['tRASTER_PRE'][jj]/brian2.ms, dtype=np.float)
+            data['iRASTER_PRE'+str(jj)] = np.array(NTWK['iRASTER_PRE'][jj], dtype=int)
+            data['tRASTER_PRE'+str(jj)] = np.array(NTWK['tRASTER_PRE'][jj]/brian2.ms, dtype=float)
 
     ## OTHER KEYS
     for array_key in ARRAY_KEYS:
@@ -80,5 +80,5 @@ def write_as_hdf5(NTWK, filename='data.h5',
     # create parent folder if it doesn't exist:
     pathlib.Path(os.path.dirname(filename)).mkdir(parents=True, exist_ok=True)
     
-    hdf5.save_dict_to_hdf5(data, filename)
+    save_dict_to_hdf5(data, filename)
     
