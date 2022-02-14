@@ -3,7 +3,7 @@ import sys, pathlib, os
 import numpy as np
 import brian2
 
-import hdf5
+from .hdf5 import load_dict_from_hdf5
 
 def write_as_hdf5(NTWK, filename='data.h5',
                   ARRAY_KEYS=[], SINGLE_VALUES_KEYS=[],
