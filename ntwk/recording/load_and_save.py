@@ -6,7 +6,7 @@ import brian2
 import hdf5
 
 def write_as_hdf5(NTWK, filename='data.h5',
-                  ARRAY_KEYS=[], SINGLE_VALUES_KEYS=[]
+                  ARRAY_KEYS=[], SINGLE_VALUES_KEYS=[],
                   KEY_NOT_TO_RECORD=[]):
 
     data = {'dt':NTWK['dt']*np.ones(1), 'tstop':NTWK['tstop']*np.ones(1)}
