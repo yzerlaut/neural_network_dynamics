@@ -3,9 +3,10 @@ import sys, pathlib, os
 import numpy as np
 import brian2
 
-from analyz.IO import hdf5
+import hdf5
 
 def write_as_hdf5(NTWK, filename='data.h5',
+                  ARRAY_KEYS=[], SINGLE_VALUES_KEYS=[]
                   KEY_NOT_TO_RECORD=[]):
 
     data = {'dt':NTWK['dt']*np.ones(1), 'tstop':NTWK['tstop']*np.ones(1)}
@@ -69,6 +70,13 @@ def write_as_hdf5(NTWK, filename='data.h5',
             data['iRASTER_PRE'+str(jj)] = np.array(NTWK['iRASTER_PRE'][jj], dtype=np.int)
             data['tRASTER_PRE'+str(jj)] = np.array(NTWK['tRASTER_PRE'][jj]/brian2.ms, dtype=np.float)
 
+    ## OTHER KEYS
+    for array_key in ARRAY_KEYS:
+        data[array_key] = np.array(NTWK[array_key])
+        
+    for single_value_key in SINGLE_VALUES_KEYS:
+        data[single_value_key] = np.array([NTWK[single_value_key]])
+    
     # create parent folder if it doesn't exist:
     pathlib.Path(os.path.dirname(filename)).mkdir(parents=True, exist_ok=True)
     
