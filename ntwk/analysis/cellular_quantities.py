@@ -3,6 +3,7 @@ import matplotlib.pylab as plt
 from itertools import combinations # for cross correlations
 import sys, pathlib
 from scipy.stats import skew
+from brian2 import mV
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 from analyz.processing.signanalysis import get_acf_time
 
@@ -15,8 +16,29 @@ def get_firing_rate(data, pop='Exc',
         FR.append(len(tspikes[tspikes>tdiscard])/(data['tstop']-tdiscard))
     return 1e3*np.array(FR) # from ms to s -> Hz
 
+
+def get_Vm(data, pop,
+           mean=False,
+           std=False):
+    
+    VMs = None
+    if ('iRASTER_%s'%pop in data) and ('tRASTER_%s'%pop in data):
+        VMs = data['VMS_'+name]
+    elif 'VMS' in data:
+        # loop over populations
+        i=0
+        while data['NEURONS'][i]['name']!=pop:
+            i+=1
+        VMs = np.array(data['VMS'][ii].V/mV)
+
+    if tspikes is None:
+        print(' /!\ failed to fetch Vms for pop. "%s"' % pop)
+        
+    return VMs
+
 def get_Vm_fluct_props(data, pop='Exc',
                        tdiscard=200,
+                       tmax=None,
                        twindow=None):
 
     if twindow is None:
@@ -25,13 +47,15 @@ def get_Vm_fluct_props(data, pop='Exc',
         except KeyError:
             print('Refractory period not found, set as 5ms')
             twindow = 5
-            
+
+    if tmax is None:
+        tmax = data['tstop']
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
 
     MUV, SV, SKV, TV = [], [], [], []
     
     for i in range(len(data['VMS_'+pop])):
-        cond = (t>tdiscard)
+        cond = (t>tdiscard) & (t<tmax)
         # then removing spikes
         tspikes = data['tRASTER_'+str(pop)][np.argwhere(data['iRASTER_'+str(pop)]==i).flatten()]
         for ts in tspikes:
