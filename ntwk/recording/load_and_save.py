@@ -46,19 +46,21 @@ def write_as_hdf5(NTWK, filename='data.h5',
         if ('GSYNi' in NTWK) and ('GSYNi' not in KEY_NOT_TO_RECORD):
             data['GSYNi_'+name] = np.array([vv.Gi/brian2.nS for vv in NTWK['GSYNi'][ii]])
 
-        for aff_pop in NTWK['AFFERENT_POPULATIONS']:
-            rate_key = 'Rate_%s_%s' % (aff_pop, name)
-            if rate_key in NTWK:
-                data[rate_key] = np.array(NTWK[rate_key], dtype=float)
+        if 'Rate_AFF_POP' not in KEY_NOT_TO_RECORD:
+            for aff_pop in NTWK['AFFERENT_POPULATIONS']:
+                rate_key = 'Rate_%s_%s' % (aff_pop, name)
+                if rate_key in NTWK:
+                    data[rate_key] = np.array(NTWK[rate_key], dtype=float)
 
             
-    for aff_pop in NTWK['AFFERENT_POPULATIONS']:
-        try:
-            # in case the aff pop spikes were explicitely written in NTWK (see visual_input.py in demo)
-            data['tRASTER_'+aff_pop] = NTWK['tRASTER_'+aff_pop]
-            data['iRASTER_'+aff_pop] = NTWK['iRASTER_'+aff_pop]
-        except BaseException as e:
-            pass
+    if 'Raster_AFF_POP' not in KEY_NOT_TO_RECORD:
+        for aff_pop in NTWK['AFFERENT_POPULATIONS']:
+            try:
+                # in case the aff pop spikes were explicitely written in NTWK (see visual_input.py in demo)
+                data['tRASTER_'+aff_pop] = NTWK['tRASTER_'+aff_pop]
+                data['iRASTER_'+aff_pop] = NTWK['iRASTER_'+aff_pop]
+            except BaseException as e:
+                pass
 
     
     if ('iRASTER_PRE_in_terms_of_Pre_Pop' in NTWK) and ('iRASTER_PRE_in_terms_of_Pre_Pop' not in KEY_NOT_TO_RECORD):
