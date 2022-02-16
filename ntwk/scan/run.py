@@ -8,6 +8,7 @@ def run_scan(Model, KEYS, VALUES,
              running_sim_func_args={},
              fix_missing_only=False,
              parallelize=True,
+             Nmax_simultaneous_processes=None,
              scan_seed=10):
 
     np.random.seed(scan_seed)
@@ -54,13 +55,17 @@ def run_scan(Model, KEYS, VALUES,
         i+=1
 
     if parallelize:
+        if Nmax_simultaneous_processes is None:
+            Nmax_simultaneous_processes = int(mp.cpu_count())
+        print('parallelizing %i processes over %i cores' % (len(PROCESSES), Nmax_simultaneous_processes))
         # Run processes
-        for p in PROCESSES:
-            p.start()
-        # # Exit the completed processes
-        for p in PROCESSES:
-            p.join()
-
+        for i in range(len(PROCESSES)//Nmax_simultaneous_processes+1):
+            for p in PROCESSES[Nmax_simultaneous_processes*i:Nmax_simultaneous_processes*(i+1)]:
+                p.start()
+            # # Exit the completed processes
+            for p in PROCESSES[Nmax_simultaneous_processes*i:Nmax_simultaneous_processes*(i+1)]:
+                p.join()
+            print('multiprocessing loop: %i/%i' % (i, len(PROCESSES)//Nmax_simultaneous_processes))
     # writing the parameters
     np.savez(Model['zip_filename'].replace('.zip', '_Model.npz'), **Model)
     zf.write(Model['zip_filename'].replace('.zip', '_Model.npz'))
@@ -74,14 +79,12 @@ def run_scan(Model, KEYS, VALUES,
 if __name__=='__main__':
 
     Model = {'data_folder': 'data/', 'SEED':0, 'x':2, 'zip_filename':'data/data.zip'}
-    import sys, pathlib
+    import sys, pathlib, time
     sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
     from analyz.IO.hdf5 import save_dict_to_hdf5, load_dict_from_hdf5
     def running_sim_func(Model, a=0):
         NTWK = {'Model':Model, 'dt':0.1, 'tstop':1, 'NEURONS':[]}
-        j = 0
-        while j<1e3:
-            j+=1
+        time.sleep(a)
         save_dict_to_hdf5(NTWK, filename=Model['filename'])
 
     import time
@@ -90,14 +93,14 @@ if __name__=='__main__':
     print(' Without parallelization')
     run_scan(Model, ['SEED', 'x'],
              [np.arange(3), np.arange(5, 8)],
-             running_sim_func, running_sim_func_args={'a':3},
+             running_sim_func, running_sim_func_args={'a':0.2},
              parallelize=False)
     print("--- %s seconds ---" % (time.time() - start_time))        
     print('-----------------------------------')
     start_time = time.time()
     print(' With parallelization')
     run_scan(Model, ['SEED', 'x'],
-             [np.arange(3), np.arange(5, 8)],
-             running_sim_func, running_sim_func_args={'a':3},
+             [np.arange(4), np.arange(4)],
+             running_sim_func, running_sim_func_args={'a':5},
              parallelize=True)
     print("--- %s seconds ---" % (time.time() - start_time))        
