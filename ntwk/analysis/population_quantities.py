@@ -1,7 +1,7 @@
 import numpy as np
 from itertools import combinations # for cross correlations
 from scipy.stats import skew
-from brian2 import ms
+from brian2 import ms, Hz
 import elephant, neo, quantities # eletrophysiology analysis toolkit
 
 # for smoothing
@@ -21,16 +21,23 @@ def smooth_population_activity(rate_array, dt, Tsmoothing):
         print('/!\ SMOOTHING AT THAT TIME SCALE UNPOSSIBLE, dt is %s and Tsmoothing is %s' % (dt, Tsmoothing))
         return rate_array
 
+def find_pop_index(data, pop):
+    # loop over populations
+    i=0
+    while data['NEURONS'][i]['name']!=pop and (i<100):
+        i+=1
+    if i>99:
+        print(' /!\  population not found  /!\  ')
+        i=None
+    return i
+
 def get_spike_times_and_indices(data, pop):
     
     ispikes, tspikes = None, None
     if ('iRASTER_%s'%pop in data) and ('tRASTER_%s'%pop in data):
         ispikes, tspikes = data['iRASTER_'+pop], data['tRASTER_'+pop]
     elif 'NEURONS' in data:
-        # loop over populations
-        i=0
-        while data['NEURONS'][i]['name']!=pop:
-            i+=1
+        i = find_pop_index(data, pop)
         tspikes = data['RASTER'][i].t/ms
         ispikes = np.array(data['RASTER'][i].i, dtype=int)
 
@@ -109,17 +116,28 @@ def get_synchrony_of_spiking(data, pop='Exc',
         return 0
 
     
-def get_mean_pop_act(data, pop='Exc', tdiscard=200):
-    
+def get_mean_pop_act(data, pop='Exc',
+                     tdiscard=200, tmax=None):
+
+    if tmax is None:
+        tmax = data['tstop']
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
-    cond = t>tdiscard
-    return data['POP_ACT_'+pop][cond].mean()
+    cond = (t>tdiscard) & (t<=tmax)
+    if 'POP_ACT_'+pop in data:
+        return data['POP_ACT_'+pop][cond].mean()
+    elif 'POP_ACT' in data:
+        return data['POP_ACT'][find_pop_index(data, pop)].rate/Hz
 
 def get_std_pop_act(data, pop='Exc', tdiscard=200):
     
+    if tmax is None:
+        tmax = data['tstop']
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
-    cond = t>tdiscard
-    return data['POP_ACT_'+pop][cond].std()
+    cond = (t>tdiscard) & (t<=tmax)
+    if 'POP_ACT_'+pop in data:
+        return data['POP_ACT_'+pop][cond].std()
+    elif 'POP_ACT' in data:
+        return data['POP_ACT'][find_pop_index(data, pop)].rate/Hz
 
 
 def get_currents_and_balance(data, pop='Exc', tdiscard=200, Vreset=-70):
