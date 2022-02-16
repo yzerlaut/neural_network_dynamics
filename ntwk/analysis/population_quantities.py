@@ -126,9 +126,10 @@ def get_mean_pop_act(data, pop='Exc',
     if 'POP_ACT_'+pop in data:
         return data['POP_ACT_'+pop][cond].mean()
     elif 'POP_ACT' in data:
-        return data['POP_ACT'][find_pop_index(data, pop)].rate/Hz
+        return np.mean(data['POP_ACT'][find_pop_index(data, pop)].rate/Hz)
 
-def get_std_pop_act(data, pop='Exc', tdiscard=200):
+def get_std_pop_act(data, pop='Exc',
+                    tdiscard=200, tmax=None):
     
     if tmax is None:
         tmax = data['tstop']
@@ -137,7 +138,7 @@ def get_std_pop_act(data, pop='Exc', tdiscard=200):
     if 'POP_ACT_'+pop in data:
         return data['POP_ACT_'+pop][cond].std()
     elif 'POP_ACT' in data:
-        return data['POP_ACT'][find_pop_index(data, pop)].rate/Hz
+        return np.std(data['POP_ACT'][find_pop_index(data, pop)].rate/Hz)
 
 
 def get_currents_and_balance(data, pop='Exc', tdiscard=200, Vreset=-70):
