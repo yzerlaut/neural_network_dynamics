@@ -31,7 +31,7 @@ def run_scan(Model, KEYS, VALUES,
     i=0
     for VAL in product(*VALUES):
         Model = Model.copy()
-        FN = Model['data_folder']+'sim'
+        FN = Model['data_folder']+os.path.basename(Model['zip_filename']).replace('.zip', '')
         for key, val in zip(KEYS, VAL):
             Model[key] = val
             FN += '_'+key+'_'+str(val)
@@ -66,6 +66,8 @@ def run_scan(Model, KEYS, VALUES,
             for p in PROCESSES[Nmax_simultaneous_processes*i:Nmax_simultaneous_processes*(i+1)]:
                 p.join()
             print('multiprocessing loop: %i/%i' % (i, len(PROCESSES)//Nmax_simultaneous_processes))
+            print('   n=%i/%i' % (i*len(PROCESSES), len(PROCESSES)))
+            
     # writing the parameters
     np.savez(Model['zip_filename'].replace('.zip', '_Model.npz'), **Model)
     zf.write(Model['zip_filename'].replace('.zip', '_Model.npz'))
