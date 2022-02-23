@@ -124,20 +124,25 @@ def connectivity_matrix(Model, graph_env=None,
 def raster_subplot(data, ax,
                    POP_KEYS, COLORS, tzoom,
                    graph_env=None,
+                   Nmax_per_pop_cond=None,
                    subsampling=10,
                    ms=1):
 
     graph_env=check_graph_environment(graph_env)
-    
+
+    if Nmax_per_pop_cond is None:
+        Nmax_per_pop_cond = []
+        for pop in POP_KEYS:
+            Nmax_per_pop_cond.append(data['N_%s' % pop])
     n = 0
     for i, tpop in enumerate(POP_KEYS):
 
-        cond = (data['tRASTER_%s' % tpop]>tzoom[0]) & (data['tRASTER_%s' % tpop]<tzoom[1])
+        cond = (data['tRASTER_%s' % tpop]>tzoom[0]) & (data['tRASTER_%s' % tpop]<tzoom[1]) & (data['iRASTER_%s' % tpop]<Nmax_per_pop_cond[i])
         ax.plot(data['tRASTER_%s' % tpop][cond][::subsampling],
                 n+data['iRASTER_%s' % tpop][cond][::subsampling],
                    'o', ms=ms, c=COLORS[i], alpha=.5)
-        ax.plot(tzoom[1]*np.ones(2), [n,n+data['N_%s' % tpop]], 'w.', ms=0.01)
-        n += data['N_%s' % tpop]
+        ax.plot(tzoom[1]*np.ones(2), [n,n+Nmax_per_pop_cond[i]], 'w.', ms=0.01)
+        n += Nmax_per_pop_cond[i]
         
     graph_env.set_plot(ax, xlim=tzoom, ylabel='neuron ID',
                        xticks_labels=[], yticks=[0,n], ylim=[0,n])
@@ -573,9 +578,8 @@ def few_Vm_plot(data,
                 tzoom=[0, np.inf],
                 clip_spikes=False,
                 vpeak=-40, vbottom=-80, shift=20.,
-                Tbar=50., Vbar=20.,
+                bar_scales_args=dict(Xbar=50, Xbar_label='50ms', Ybar=20, Ybar_label='20mV'),
                 lw=1, ax=None):
-
 
     graph_env=check_graph_environment(graph_env)
     
@@ -612,16 +616,11 @@ def few_Vm_plot(data,
                 ax.plot([ts, ts], shift*nn+np.array([threshold, vpeak]), '--', color=color, lw=lw)
             ax.plot([t[cond][0], t[cond][-1]], shift*nn+np.array([rest, rest]), ':', color=color, lw=lw)
 
-    y0 = ax.get_ylim()[0]
-    ax.plot([tzoom[0],tzoom[0]+Tbar], y0*np.ones(2), lw=lw, color='k')
-    ax.annotate(str(int(Tbar))+' ms',
-                 (0., -0.1), fontsize=12, xycoords='axes fraction')
-    ax.plot([tzoom[0],tzoom[0]], y0+np.arange(2)*Vbar, lw=lw, color='k')
-    ax.annotate(str(int(Vbar))+' mV',
-                 (-0.1, 0.5), rotation=90, fontsize=12, xycoords='axes fraction')
     if graph_env is not None:
         graph_env.set_plot(ax, [], xticks=[], yticks=[],
                     xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
+    if bar_scales_args is not None:
+        graph_env.draw_bar_scales(ax, **bar_scales_args)
     
     return ax
 
