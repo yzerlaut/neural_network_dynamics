@@ -263,6 +263,7 @@ def input_rate_subplot(data, ax,
                        POP_KEYS, COLORS,
                        tzoom,
                        graph_env=None,
+                       with_label=True,
                        subsampling=2):
 
     """
@@ -286,9 +287,11 @@ def input_rate_subplot(data, ax,
         for i, afferent in enumerate(rates):
             t = np.arange(len(rates[afferent]))*data['dt']
             cond = (t>tzoom[0]) & (t<tzoom[1])
-            ll.append(ax.plot(t[cond][::subsampling], rates[afferent][cond][::subsampling], label=afferent, color=colors[i]))
+            ll.append(ax.plot(t[cond][::subsampling], rates[afferent][cond][::subsampling],
+                              label=afferent, color=colors[i]))
 
-        ax.legend(frameon=False, fontsize=graph_env.fontsize)
+        if with_label:
+            ax.legend(frameon=False, fontsize=graph_env.fontsize)
         
         graph_env.set_plot(ax, ['left'],
                            ylabel='input (Hz)',
@@ -471,7 +474,10 @@ def raster(data,
            NMAXS = None,
            tzoom=[0, np.inf],
            graph_env=None,
-           Nnrn=500, Tbar=50,
+           bar_scales_args=dict(Xbar=50, Xbar_label='50ms',
+                                Ybar=500, Ybar_label='500 neurons',
+                                loc='bottom-left'),
+           subsampling=1,
            ms=1, ax=None):
 
     graph_env=check_graph_environment(graph_env)
@@ -492,18 +498,16 @@ def raster(data,
     for n, pop_key, color, nmax in zip(range(len(NMAXS)), POP_KEYS, COLORS, NMAXS):
         try:
             cond = (data['tRASTER_'+pop_key]>tzoom[0]) & (data['tRASTER_'+pop_key]<tzoom[1]) & (data['iRASTER_'+pop_key]<nmax)
-            ax.plot(data['tRASTER_'+pop_key][cond], NMAXS[:n].sum()+data['iRASTER_'+pop_key][cond], '.', color=color, ms=ms)
+            ax.plot(data['tRASTER_'+pop_key][cond][::subsampling], np.sum(NMAXS[:n])+data['iRASTER_'+pop_key][cond][::subsampling], '.', color=color, ms=ms)
         except ValueError:
             pass
-    ax.plot(tzoom[0]*np.ones(2), [0, Nnrn], lw=5, color='gray')
-    ax.annotate(str(Nnrn)+' neurons',\
-                 (-0.1, 0.5), rotation=90, fontsize=12, xycoords='axes fraction')
-    ax.plot([tzoom[0],tzoom[0]+Tbar], [0, 0], lw=5, color='gray')
-    ax.annotate(str(Tbar)+' ms',
-                 (0., -0.1), fontsize=12, xycoords='axes fraction')
+
     graph_env.set_plot(ax, [], yticks=[], xticks=[],
                        xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])],
-                       ylim=[0, NMAXS.sum()])
+                       ylim=[0, np.sum(NMAXS)])
+    if bar_scales_args is not None:
+        graph_env.draw_bar_scales(ax, **bar_scales_args)
+    
     return ax
 
 ######################################
@@ -579,6 +583,7 @@ def few_Vm_plot(data,
                 clip_spikes=False,
                 vpeak=-40, vbottom=-80, shift=20.,
                 bar_scales_args=dict(Xbar=50, Xbar_label='50ms', Ybar=20, Ybar_label='20mV'),
+                subsampling=1,
                 lw=1, ax=None):
 
     graph_env=check_graph_environment(graph_env)
@@ -607,9 +612,10 @@ def few_Vm_plot(data,
             tspikes, threshold = find_spikes_from_Vm(t, Vm, data, pop_key) # getting spikes
             if clip_spikes:
                 tt, vv = clip_spikes_from_Vm(t[cond], Vm[cond], tspikes)
-                ax.plot(tt, vv+shift*nn, color=color, lw=lw)
+                ax.plot(tt[::subsampling], vv[::subsampling]+shift*nn, color=color, lw=lw)
             else:
-                ax.plot(t[cond], Vm[cond]+shift*nn, color=color, lw=lw)
+                ax.plot(t[cond][::subsampling], Vm[cond][::subsampling]+shift*nn,
+                        color=color, lw=lw)
             # adding spikes
             Scond = (tspikes>tzoom[0]) & (tspikes<tzoom[1])
             for ts in tspikes[Scond]:
