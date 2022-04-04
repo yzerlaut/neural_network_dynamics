@@ -100,62 +100,62 @@ See the [demo folder](./demo/) for more examples
 
 ## Content
 
-### 1. [Network Dynamics](./ntwk)
+### [1. Network Dynamics](./ntwk)
 
-   Organized into different parts:
+Organized into different parts:
 
-   #### a. Simulations:
+- Simulations:
    
-      - [cells](./ntwk/cells/)
-         The list of cells available. See [./ntwk/cells/README.md](cells)
+   - [cells](./ntwk/cells/)
+   The list of cells available. See [./ntwk/cells/README.md](cells)
 
-      - [build](./ntwk/build/)
-      	Build the network elements and architecture (equations, connectivity, ...)
+   - [build](./ntwk/build/)
+   Build the network elements and architecture (equations, connectivity, ...)
 
-      - [stim](./ntwk/stim/)
-      Stimulate the network with afferent activity.
+   - [stim](./ntwk/stim/)
+   Stimulate the network with afferent activity.
 
-      - [recording](./ntwk/recording/)
-      The recording module. 
+   - [recording](./ntwk/recording/)
+   The recording module. 
 
-      - [scan](./ntwk/scan/)
-      Perform parameter scans
+   - [scan](./ntwk/scan/)
+   Perform parameter scans
 
-      - [analysis](./ntwk/analysis/)
-      Tools to analyze network simulations
+   - [analysis](./ntwk/analysis/)
+   Tools to analyze network simulations
 
-      - [plots](./ntwk/plots/)
-      Plot network simulation results.
+   - [plots](./ntwk/plots/)
+   Plot network simulation results.
 
 
-   #### b. Theory
+- Theory
 
-      - [theory](./ntwk/theory/)
-      Implementation of the mean-field approach to network dynamics characterization.
-      Based on the Markovian approach formulated in El Boustani & Destexhe, Neural Comp (2009)
+  - [theory](./ntwk/theory/)
+  Implementation of the mean-field approach to network dynamics characterization.
+  Based on the Markovian approach formulated in El Boustani & Destexhe, Neural Comp (2009)
 
-      - [transfer_functions](./ntwk/transfer_functions/).
-      The core of the mean-field approach.
-      The function that accounts for the statistical "rate-behavior" of a population of neurons in the network.
-       Procedure to make semi-analytical characterizations of transfer functions. See Zerlaut et al. (2017) JCNS
+  - [transfer_functions](./ntwk/transfer_functions/).
+  The core of the mean-field approach.
+  The function that accounts for the statistical "rate-behavior" of a population of neurons in the network.
+  Procedure to make semi-analytical characterizations of transfer functions. See Zerlaut et al. (2017) JCNS
   
 
-   #### c. Configs	
+- Configs	
 
-      - [./ntwk/configs/](configs).
-      Stores some cellular and configurations to be easily re-used.
+  - [./ntwk/configs/](configs).
+  Stores some cellular and configurations to be easily re-used.
 
 
-2. [Single Cell Integration](./nrn)
+## [2. Single Cell Integration](./nrn)
 
-   ### a. Morphologies
-       See the [available morphologies](./nrn/morphologies)
+- Morphologies
+  See the [available morphologies](./nrn/morphologies)
        
-   ### b. Synaptic Inputs
-       See the [synaptic inputs propertuies](./nrn/synaptic_input.py)
+- Synaptic Inputs
+  See the [synaptic inputs propertuies](./nrn/synaptic_input.py)
    
-   ### c. Active Mechanisms
-       See the [active mechanisms propertuies](./nrn/active_mechanisms.py)
+- Active Mechanisms
+  See the [active mechanisms propertuies](./nrn/active_mechanisms.py)
 
 
 
