@@ -107,71 +107,70 @@ Organized into different parts:
 - Simulations:
    
    - [cells](./ntwk/cells/)
-   
-   The list of cells available. See ("cells")[./ntwk/cells/README.md]
+     The list of cells available. See ("cells")[./ntwk/cells/README.md]
 
    - [build](./ntwk/build/)
    
-   Build the network elements and architecture (equations, connectivity, ...)
+     Build the network elements and architecture (equations, connectivity, ...)
 
    - [stim](./ntwk/stim/)
    
-   Stimulate the network with afferent activity.
+     Stimulate the network with afferent activity.
 
    - [recording](./ntwk/recording/)
    
-   The recording module. 
+     The recording module. 
 
    - [scan](./ntwk/scan/)
    
-   Perform parameter scans.
+     Perform parameter scans.
 
    - [analysis](./ntwk/analysis/)
    
-   Tools to analyze network simulations
+     Tools to analyze network simulations
 
    - [plots](./ntwk/plots/)
    
-   Plot network simulation results.
+     Plot network simulation results.
 
 
 - Theory
 
   - [theory](./ntwk/theory/)
   
-  Implementation of the mean-field approach to network dynamics characterization.
+     Implementation of the mean-field approach to network dynamics characterization.
   
-  Based on the Markovian approach formulated in El Boustani & Destexhe, Neural Comp (2009)
+     Based on the Markovian approach formulated in El Boustani & Destexhe, Neural Comp (2009)
 
   - [transfer_functions](./ntwk/transfer_functions/).
   
-  The core of the mean-field approach.
+     The core of the mean-field approach.
   
-  The function that accounts for the statistical "rate-behavior" of a population of neurons in the network.
+     The function that accounts for the statistical "rate-behavior" of a population of neurons in the network.
   
-  Procedure to make semi-analytical characterizations of transfer functions. See Zerlaut et al. (2017) JCNS
+     Procedure to make semi-analytical characterizations of transfer functions. See Zerlaut et al. (2017) JCNS
   
 
 - Configs	
 
   - [./ntwk/configs/](configs).
   
-  Stores some cellular and configurations to be easily re-used.
+    Stores some cellular and configurations to be easily re-used.
 
 
 ## [2. Single Cell Integration](./nrn)
 
 - Morphologies
 
-  See the [available morphologies](./nrn/morphologies)
+	See the [available morphologies](./nrn/morphologies)
        
 - Synaptic Inputs
 
-  See the [synaptic inputs properties](./nrn/synaptic_input.py)
+	See the [synaptic inputs properties](./nrn/synaptic_input.py)
    
 - Active Mechanisms
 
-  See the [active mechanisms propertuies](./nrn/active_mechanisms.py)
+  	See the [active mechanisms properties](./nrn/active_mechanisms.py)
 
 
 
