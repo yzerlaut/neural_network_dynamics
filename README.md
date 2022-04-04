@@ -6,7 +6,7 @@ Network simulations toolkit built as a layer on top of the [brian2 simulator](ht
 
 ## Purpose
 
-Build *a common framework* to study the following aspects of neural network dynamics:
+Build __*a common framework*__ to study the following aspects of neural network dynamics:
 
 - numerical simulations of networks of Adexp single neuron models
 - customized network and cellular features such as connectivity matrices or intrinsic currents
@@ -168,8 +168,9 @@ Organized into different parts:
   	See the [active mechanisms properties](./nrn/active_mechanisms.py)
 
 
+## [3. Vision](./vision)
 
-
+   in progress [...]
 
 
 
