@@ -98,16 +98,63 @@ plt.show()
 
 see the [demo script](./demo/RS-FS.py)
 
-## Theoretical analysis of population dynamics
-
-## Single cell integration
-
 ## Examples/demo
 
 See the [demo folder](./demo/) for more examples
 
+## Content
+
+1. [Network Dynamics](./ntwk)
+
+   Organized into different parts:
+
+   a. Simulations:
+   
+      - [./ntwk/cells/](cells)
+         The list of cells available. See [./ntwk/cells/README.md](cells)
+
+      - [./ntwk/build/](build)
+      	Build the network elements and architecture (equations, connectivity, ...)
+
+      - [./ntwk/stim/](stim)
+      Stimulate the network with afferent activity.
+
+      - [./ntwk/recording/](scan)
+      The recording module. See [./ntwk/recording/README.md](cells)
+
+      - [./ntwk/scan/](scan)
+      Perform parameter scans
+
+      - [./ntwk/analysis/](analysis)
+      Tools to analyze network simulations
+
+      - [./ntwk/plots/](plots)
+      Plot network simulation results.
 
 
+   b. Theory
+
+      - [./ntwk/theory/](theory).
+      Implementation of the mean-field approach to network dynamics characterization.
+      Based on the Markovian approach formulated in El Boustani & Destexhe, Neural Comp (2009)
+
+      - [./ntwk/transfer_functions/](transfer_functions).
+      The core of the mean-field approach.
+      The function that accounts for the statistical "rate-behavior" of a population of neurons in the network.
+       Procedure to make semi-analytical characterizations of transfer functions. See Zerlaut et al. (2017) JCNS
+  
+
+  c. Configs
+
+      - [./ntwk/configs/](configs).
+      Stores some cellular and configurations to be easily re-used.
+
+
+2. [Single Cell Integration](./nrn)
+
+   a. Morphologies
+   b. Synaptic Inputs
+   c. Active Mechanisms
 
 
 
