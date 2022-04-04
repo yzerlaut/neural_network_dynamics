@@ -6,12 +6,12 @@ Network simulations toolkit built as a layer on top of the [brian2 simulator](ht
 
 ## Aim 
 
-Build a module that would put under a common framework the following aspects of neural network dynamics:
+*A common framework to study the following aspects of neural network dynamics*:
 
-- perform numerical simulations of networks of Adexp single neuron models
-- customize network and cellular features such as connectivity matrices or intrinsic currents
-- compute mean-field predictions of network dynamics
-- investigate cellular integration in morphologically-detailed models
+- numerical simulations of networks of Adexp single neuron models
+- customized network and cellular features such as connectivity matrices or intrinsic currents
+- mean-field predictions of network dynamics
+- cellular integration in morphologically-detailed models
 
 
 ## Installation
@@ -23,11 +23,7 @@ git clone https://github.com/yzerlaut/neural_network_dynamics.git
 pip install -r neural_network_dynamics/requirements.txt
 ```
 
-Note you might want to use the code compilation to C code for speed, so you will need the `gcc` compiler, e.g. on ubuntu/debian, get it with:
-```
-sudo apt install build-essential
-```
-
+Note you might want to use the code compilation to C code for speed, so you will need the `gcc` compiler, e.g. on ubuntu/debian, get it with `sudo apt install build-essential`.
 
 ## Usage
 
@@ -104,47 +100,47 @@ See the [demo folder](./demo/) for more examples
 
 ## Content
 
-1. [Network Dynamics](./ntwk)
+### 1. [Network Dynamics](./ntwk)
 
    Organized into different parts:
 
-   a. Simulations:
+   #### a. Simulations:
    
-      - [./ntwk/cells/](cells)
+      - [cells](./ntwk/cells/)
          The list of cells available. See [./ntwk/cells/README.md](cells)
 
-      - [./ntwk/build/](build)
+      - [build](./ntwk/build/)
       	Build the network elements and architecture (equations, connectivity, ...)
 
-      - [./ntwk/stim/](stim)
+      - [stim](./ntwk/stim/)
       Stimulate the network with afferent activity.
 
-      - [./ntwk/recording/](scan)
-      The recording module. See [./ntwk/recording/README.md](cells)
+      - [recording](./ntwk/recording/)
+      The recording module. 
 
-      - [./ntwk/scan/](scan)
+      - [scan](./ntwk/scan/)
       Perform parameter scans
 
-      - [./ntwk/analysis/](analysis)
+      - [analysis](./ntwk/analysis/)
       Tools to analyze network simulations
 
-      - [./ntwk/plots/](plots)
+      - [plots](./ntwk/plots/)
       Plot network simulation results.
 
 
-   b. Theory
+   #### b. Theory
 
-      - [./ntwk/theory/](theory).
+      - [theory](./ntwk/theory/)
       Implementation of the mean-field approach to network dynamics characterization.
       Based on the Markovian approach formulated in El Boustani & Destexhe, Neural Comp (2009)
 
-      - [./ntwk/transfer_functions/](transfer_functions).
+      - [transfer_functions](./ntwk/transfer_functions/).
       The core of the mean-field approach.
       The function that accounts for the statistical "rate-behavior" of a population of neurons in the network.
        Procedure to make semi-analytical characterizations of transfer functions. See Zerlaut et al. (2017) JCNS
   
 
-  c. Configs
+   #### c. Configs	
 
       - [./ntwk/configs/](configs).
       Stores some cellular and configurations to be easily re-used.
@@ -152,9 +148,14 @@ See the [demo folder](./demo/) for more examples
 
 2. [Single Cell Integration](./nrn)
 
-   a. Morphologies
-   b. Synaptic Inputs
-   c. Active Mechanisms
+   ### a. Morphologies
+       See the [available morphologies](./nrn/morphologies)
+       
+   ### b. Synaptic Inputs
+       See the [synaptic inputs propertuies](./nrn/synaptic_input.py)
+   
+   ### c. Active Mechanisms
+       See the [active mechanisms propertuies](./nrn/active_mechanisms.py)
 
 
 
