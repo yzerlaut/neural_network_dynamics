@@ -4,9 +4,9 @@
 
 Network simulations toolkit built as a layer on top of the [brian2 simulator](https://brian2.readthedocs.io/en/stable/).
 
-## Aim 
+## Purpose
 
-*A common framework to study the following aspects of neural network dynamics*:
+Build *a common framework* to study the following aspects of neural network dynamics:
 
 - numerical simulations of networks of Adexp single neuron models
 - customized network and cellular features such as connectivity matrices or intrinsic currents
@@ -107,54 +107,70 @@ Organized into different parts:
 - Simulations:
    
    - [cells](./ntwk/cells/)
-   The list of cells available. See [./ntwk/cells/README.md](cells)
+   
+   The list of cells available. See ("cells")[./ntwk/cells/README.md]
 
    - [build](./ntwk/build/)
+   
    Build the network elements and architecture (equations, connectivity, ...)
 
    - [stim](./ntwk/stim/)
+   
    Stimulate the network with afferent activity.
 
    - [recording](./ntwk/recording/)
+   
    The recording module. 
 
    - [scan](./ntwk/scan/)
-   Perform parameter scans
+   
+   Perform parameter scans.
 
    - [analysis](./ntwk/analysis/)
+   
    Tools to analyze network simulations
 
    - [plots](./ntwk/plots/)
+   
    Plot network simulation results.
 
 
 - Theory
 
   - [theory](./ntwk/theory/)
+  
   Implementation of the mean-field approach to network dynamics characterization.
+  
   Based on the Markovian approach formulated in El Boustani & Destexhe, Neural Comp (2009)
 
   - [transfer_functions](./ntwk/transfer_functions/).
+  
   The core of the mean-field approach.
+  
   The function that accounts for the statistical "rate-behavior" of a population of neurons in the network.
+  
   Procedure to make semi-analytical characterizations of transfer functions. See Zerlaut et al. (2017) JCNS
   
 
 - Configs	
 
   - [./ntwk/configs/](configs).
+  
   Stores some cellular and configurations to be easily re-used.
 
 
 ## [2. Single Cell Integration](./nrn)
 
 - Morphologies
+
   See the [available morphologies](./nrn/morphologies)
        
 - Synaptic Inputs
-  See the [synaptic inputs propertuies](./nrn/synaptic_input.py)
+
+  See the [synaptic inputs properties](./nrn/synaptic_input.py)
    
 - Active Mechanisms
+
   See the [active mechanisms propertuies](./nrn/active_mechanisms.py)
 
 
