@@ -2,7 +2,7 @@
 
 > *Theoretical analysis and numerical simulations to study the emergent dynamics in spiking neural networks*
 
-Network simulations toolkit built as a layer on top of the [**Brian2**](https://brian2.readthedocs.io/en/stable/) simulator.
+Network simulations toolkit built as a layer on top of the [**Brian2** simulator](https://brian2.readthedocs.io/en/stable/).
 
 ## Purpose
 
