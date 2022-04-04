@@ -107,7 +107,8 @@ Organized into different parts:
 - Simulations:
    
    - [cells](./ntwk/cells/)
-     The list of cells available. See ("cells")[./ntwk/cells/README.md]
+   
+     The list of cells available. See ["cells"](./ntwk/cells/README.md)
 
    - [build](./ntwk/build/)
    
@@ -138,22 +139,16 @@ Organized into different parts:
 
   - [theory](./ntwk/theory/)
   
-     Implementation of the mean-field approach to network dynamics characterization.
-  
-     Based on the Markovian approach formulated in El Boustani & Destexhe, Neural Comp (2009)
+     Implementation of the mean-field approach to network dynamics characterization. Based on the Markovian approach formulated in [El Boustani & Destexhe (2009) Neural Comp](https://doi.org/10.1162/neco.2009.02-08-710).
 
   - [transfer_functions](./ntwk/transfer_functions/).
   
-     The core of the mean-field approach.
-  
-     The function that accounts for the statistical "rate-behavior" of a population of neurons in the network.
-  
-     Procedure to make semi-analytical characterizations of transfer functions. See Zerlaut et al. (2017) JCNS
+     The core of the mean-field approach. The function that accounts for the statistical "rate-behavior" of a population of neurons in the network. Procedure to make semi-analytical characterizations of transfer functions. See [Zerlaut et al. (2016) J. Physiol](https://physoc.onlinelibrary.wiley.com/doi/full/10.1113/JP272317) for the transfer function characterization and [Zerlaut et al. (2018) J. Comp. Neurosci.](https://link.springer.com/article/10.1007/s10827-017-0668-2) for its use in predicting network dynamics.
   
 
 - Configs	
 
-  - [./ntwk/configs/](configs).
+  - [configs](./ntwk/configs/).
   
     Stores some cellular and configurations to be easily re-used.
 
