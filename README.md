@@ -1,6 +1,6 @@
 # Neural Network Dynamics
 
-*Theoretical analysis and numerical simulations to study the emergent dynamics in spiking neural networks*
+  > *Theoretical analysis and numerical simulations to study the emergent dynamics in spiking neural networks*
 
 Network simulations toolkit built as a layer on top of the [brian2 simulator](https://brian2.readthedocs.io/en/stable/).
 
@@ -95,6 +95,12 @@ plt.show()
 <p align="center">
   <img src="doc/RS-FS.png"/>
 </p>
+
+see the [demo script](./demo/RS-FS.py)
+
+## Theoretical analysis of population dynamics
+
+## Single cell integration
 
 ## Examples/demo
 
