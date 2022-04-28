@@ -1,17 +1,17 @@
 # Neural Network Dynamics
 
-*Theoretical analysis and numerical simulations to study the emergent dynamics in spiking neural networks*
+> *Theoretical analysis and numerical simulations to study the emergent dynamics in spiking neural networks*
 
-Network simulations toolkit built as a layer on top of the [brian2 simulator](https://brian2.readthedocs.io/en/stable/).
+Network simulations toolkit built as a layer on top of the [**Brian2** simulator](https://brian2.readthedocs.io/en/stable/).
 
-## Aim 
+## Purpose
 
-Build a module that would put under a common framework the following aspects of neural network dynamics:
+Build __*a common framework*__ to study the following aspects of neural network dynamics:
 
-- perform numerical simulations of networks of Adexp single neuron models
-- customize network and cellular features such as connectivity matrices or intrinsic currents
-- compute mean-field predictions of network dynamics
-- investigate cellular integration in morphologically-detailed models
+- numerical simulations of networks of Adexp single neuron models
+- customized network and cellular features such as connectivity matrices or intrinsic currents
+- mean-field predictions of network dynamics
+- cellular integration in morphologically-detailed models
 
 
 ## Installation
@@ -23,11 +23,7 @@ git clone https://github.com/yzerlaut/neural_network_dynamics.git
 pip install -r neural_network_dynamics/requirements.txt
 ```
 
-Note you might want to use the code compilation to C code for speed, so you will need the `gcc` compiler, e.g. on ubuntu/debian, get it with:
-```
-sudo apt install build-essential
-```
-
+Note you might want to use the code compilation to C code for speed, so you will need the `gcc` compiler, e.g. on ubuntu/debian, get it with `sudo apt install build-essential`.
 
 ## Usage
 
@@ -96,16 +92,85 @@ plt.show()
   <img src="doc/RS-FS.png"/>
 </p>
 
+see the [demo script](./demo/RS-FS.py)
+
 ## Examples/demo
 
 See the [demo folder](./demo/) for more examples
 
+## Content
+
+### [1. Network Dynamics](./ntwk)
+
+Organized into different parts:
+
+- Simulations:
+   
+   - [cells](./ntwk/cells/)
+   
+     The list of cells available. See ["cells"](./ntwk/cells/README.md)
+
+   - [build](./ntwk/build/)
+   
+     Build the network elements and architecture (equations, connectivity, ...)
+
+   - [stim](./ntwk/stim/)
+   
+     Stimulate the network with afferent activity.
+
+   - [recording](./ntwk/recording/)
+   
+     The recording module. 
+
+   - [scan](./ntwk/scan/)
+   
+     Perform parameter scans.
+
+   - [analysis](./ntwk/analysis/)
+   
+     Tools to analyze network simulations
+
+   - [plots](./ntwk/plots/)
+   
+     Plot network simulation results.
 
 
+- Theory
+
+  - [theory](./ntwk/theory/)
+  
+     Implementation of the mean-field approach to network dynamics characterization. Based on the Markovian approach formulated in [El Boustani & Destexhe (2009) Neural Comp](https://doi.org/10.1162/neco.2009.02-08-710).
+
+  - [transfer_functions](./ntwk/transfer_functions/).
+  
+     The core of the mean-field approach. The function that accounts for the statistical "rate-behavior" of a population of neurons in the network. Procedure to make semi-analytical characterizations of transfer functions. See [Zerlaut et al. (2016) J. Physiol](https://physoc.onlinelibrary.wiley.com/doi/full/10.1113/JP272317) for the transfer function characterization and [Zerlaut et al. (2018) J. Comp. Neurosci.](https://link.springer.com/article/10.1007/s10827-017-0668-2) for its use in predicting network dynamics.
+  
+
+- Configs	
+
+  - [configs](./ntwk/configs/).
+  
+    Stores some cellular and configurations to be easily re-used.
 
 
+## [2. Single Cell Integration](./nrn)
+
+- Morphologies
+
+	See the [available morphologies](./nrn/morphologies)
+       
+- Synaptic Inputs
+
+	See the [synaptic inputs properties](./nrn/synaptic_input.py)
+   
+- Active Mechanisms
+
+  	See the [active mechanisms properties](./nrn/active_mechanisms.py)
 
 
+## [3. Vision](./vision)
+
+   in progress [...]
 
 
 
