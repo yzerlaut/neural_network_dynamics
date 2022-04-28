@@ -500,7 +500,8 @@ def raster(data,
     for n, pop_key, color, nmax in zip(range(len(NMAXS)), POP_KEYS, COLORS, NMAXS):
         try:
             cond = (data['tRASTER_'+pop_key]>tzoom[0]) & (data['tRASTER_'+pop_key]<tzoom[1]) & (data['iRASTER_'+pop_key]<nmax)
-            ax.plot(data['tRASTER_'+pop_key][cond][::subsampling], np.sum(NMAXS[:n])+data['iRASTER_'+pop_key][cond][::subsampling], '.', color=color, ms=ms)
+            #ax.plot(data['tRASTER_'+pop_key][cond][::subsampling], np.sum(NMAXS[:n])+data['iRASTER_'+pop_key][cond][::subsampling], '.', color=color, ms=ms)
+            ge.scatter(data['tRASTER_'+pop_key][cond][::subsampling], np.sum(NMAXS[:n])+data['iRASTER_'+pop_key][cond][::subsampling], color=color, ms=ms, ax=ax, no_set=True)
         except ValueError:
             pass
 
