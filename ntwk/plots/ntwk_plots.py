@@ -141,7 +141,7 @@ def raster_subplot(data, ax,
 
         graph_env.scatter(data['tRASTER_%s' % tpop][cond][::subsampling],
                           n+data['iRASTER_%s' % tpop][cond][::subsampling],
-                          ms=ms, c=COLORS[i], ax=ax, no_set=True)
+                          ms=ms, color=COLORS[i], ax=ax, no_set=True)
 
         ax.plot(tzoom[1]*np.ones(2), [n,n+Nmax_per_pop_cond[i]], 'w.', ms=0.01)
         n += Nmax_per_pop_cond[i]
