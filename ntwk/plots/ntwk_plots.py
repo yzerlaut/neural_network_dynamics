@@ -135,7 +135,6 @@ def raster_subplot(data, ax,
             Nmax_per_pop_cond.append(data['N_%s' % pop])
     n = 0
     for i, tpop in enumerate(POP_KEYS):
-
         cond = (data['tRASTER_%s' % tpop]>tzoom[0]) &\
                 (data['tRASTER_%s' % tpop]<tzoom[1]) &\
                 (data['iRASTER_%s' % tpop]<Nmax_per_pop_cond[i])
