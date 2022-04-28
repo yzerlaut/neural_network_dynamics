@@ -144,11 +144,8 @@ def raster_subplot(data, ax,
 
         ax.plot(data['tRASTER_%s' % tpop][cond][::subsampling],
                 n+data['iRASTER_%s' % tpop][cond][::subsampling],
-<<<<<<< HEAD
-                   marker='.', ms=ms, c=COLORS[i], lw=0)
-=======
-                '.', ms=ms, c=COLORS[i])
->>>>>>> a3fa8e1215fb471634c7a6766ac91bf3a6dd17ab
+                marker='.', ms=ms, c=COLORS[i], lw=0)
+
         ax.plot(tzoom[1]*np.ones(2), [n,n+Nmax_per_pop_cond[i]], 'w.', ms=0.01)
         n += Nmax_per_pop_cond[i]
         
