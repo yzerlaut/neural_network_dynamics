@@ -135,12 +135,13 @@ def raster_subplot(data, ax,
         for pop in POP_KEYS:
             Nmax_per_pop_cond.append(data['N_%s' % pop])
     n = 0
+    print(3)
     for i, tpop in enumerate(POP_KEYS):
 
         cond = (data['tRASTER_%s' % tpop]>tzoom[0]) & (data['tRASTER_%s' % tpop]<tzoom[1]) & (data['iRASTER_%s' % tpop]<Nmax_per_pop_cond[i])
         ax.plot(data['tRASTER_%s' % tpop][cond][::subsampling],
                 n+data['iRASTER_%s' % tpop][cond][::subsampling],
-                   'o', ms=ms, c=COLORS[i], alpha=.5)
+                   marker='.', ms=ms, c=COLORS[i], lw=0)
         ax.plot(tzoom[1]*np.ones(2), [n,n+Nmax_per_pop_cond[i]], 'w.', ms=0.01)
         n += Nmax_per_pop_cond[i]
         
