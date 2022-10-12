@@ -48,8 +48,10 @@ Model = {
     'Inh_a':0., 'Inh_b': 0., 'Inh_tauw':1e9,
 }
 
-StimPattern = {'indices':np.arange(50),
-               'times':np.ones(50)*50}
+StimPattern = {'indices':[], 'times':[]}
+for event in range(3):
+    StimPattern['times'] += list(30*(1+event*np.ones(50)))
+    StimPattern['indices'] += list(range(50))
 
 if sys.argv[-1]=='plot':
 
