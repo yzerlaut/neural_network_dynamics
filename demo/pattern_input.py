@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pylab as plt
 import ntwk
 
-
 ################################################################
 ## ------ Construct populations with their equations -------- ##
 ## ------------- with recurrent connections ----------------- ##
@@ -61,6 +60,14 @@ if sys.argv[-1]=='plot':
     
     ## load file
     data = ntwk.recording.load_dict_from_hdf5('pattern_input_data.h5')
+
+    # plot input patterm
+    fig, ax = plt.subplots(1)
+    ax.set_title('stim. pattern')
+    ax.plot(data['AffExcTV_times'], data['AffExcTV_indices'], 'ko', ms=1)
+    ax.set_xlim([0, Model['tstop']])
+    ax.set_xlabel('time (ms)')
+    ax.set_ylabel('nrn ID')
 
     # ## plot
     fig, _ = ntwk.plots.raster_and_Vm_plot(data, smooth_population_activity=10.)
@@ -121,7 +128,16 @@ else:
     #####################
     network_sim = ntwk.collect_and_run(NTWK, verbose=True)
 
-    ntwk.recording.write_as_hdf5(NTWK, filename='pattern_input_data.h5')
+    ######################
+    ## ----- Write ---- ##
+    ######################
+
+    NTWK['AffExcTV_indices'] = StimPattern['indices']
+    NTWK['AffExcTV_times'] = StimPattern['times']
+    ntwk.recording.write_as_hdf5(NTWK, 
+                                 ARRAY_KEYS=['AffExcTV_indices', 'AffExcTV_times'],
+                                 filename='pattern_input_data.h5')
+
     print('Results of the simulation are stored as:', 'pattern_input_data.h5')
     print('--> Run \"python pattern_input_data.py plot\" to plot the results')
     

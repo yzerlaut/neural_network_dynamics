@@ -117,16 +117,6 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         NTWK['tRASTER_PRE'] = [times]
 
 
-    
-    # if 'iRASTER_PRE_in_terms_of_Pre_Pop' in NTWK.keys():
-    #     NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'].append(pre_indices)
-    #     NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'].append(pre_times)
-    # else: # we create the key
-    #     NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'] = [pre_indices]
-    #     NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'] = [pre_times]
-
-
-
         
 if __name__=='__main__':
 
