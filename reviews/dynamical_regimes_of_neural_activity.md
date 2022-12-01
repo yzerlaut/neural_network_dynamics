@@ -1,7 +1,4 @@
-<--- 
-+title: Dynamical Regimes of Cortical Activity: A Review of the Insights from the Theoretical Analysis of Spiking Networks
-+author: Y.Zerlaut
--->
+# Dynamical Regimes of Cortical Activity: A Review of the Insights from the Theoretical Analysis of Spiking Networks
 
 ## Abstract
 
@@ -44,12 +41,18 @@ The definition of those three terms are the following:
 The reason behind this classification is that activity can be:
 
 - Irregular, Asynchronous, Non-Rhythmic (fully desynchronized activity, e.g. high-arousal wakefulness)
+
 - Irregular, Synchronous, Non-Rhythmic (stochastic Up & Down states, e.g. deep anesthesia)
+
 - Irregular, Synchronous, Rhythmic (regular Up & Down states dynamics, e.g. SWS)
+
 - Regular, Synchronous, Rhythmic (Epilespy)
+
 - Regular, asynchronous, Rhythmic (Epilespy)
 
+
 Not possible:
+
 - Regular, Synchronous, Non-Rhythmic (non-rhythmicity implies irregularity)
 
 
