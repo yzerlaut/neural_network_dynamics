@@ -105,7 +105,7 @@ See the [demo folder](./demo/) for more examples
 
 Organized into different parts:
 
-- Simulations:
+#### Simulations:
    
    - [cells](./ntwk/cells/)
    
@@ -136,7 +136,7 @@ Organized into different parts:
      Plot network simulation results.
 
 
-- Theory
+#### Theory
 
   - [theory](./ntwk/theory/)
   
