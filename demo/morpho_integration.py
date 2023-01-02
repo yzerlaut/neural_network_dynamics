@@ -4,7 +4,8 @@ import ntwk, nrn
 
 import numpy as np
 
-from datavyz import graph_env_screen as ge
+from datavyz import graph_env
+ge = graph_env('screen')
 from datavyz.nrn_morpho import *
 
 filename = os.path.join(pathlib.Path(__file__).resolve().parents[1], 'nrn', 'morphologies', 'Jiang_et_al_2015', 'L5pyr-j140408b.CNG.swc')
