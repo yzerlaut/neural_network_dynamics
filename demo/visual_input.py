@@ -1,8 +1,9 @@
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+
 import numpy as np
 import matplotlib.pylab as plt
-import main as ntwk
+import ntwk
 
 from vision.earlyVis_model import earlyVis_model
 from vision.stimuli import visual_stimulus
@@ -60,20 +61,20 @@ if sys.argv[-1]=='plot':
     # ## ----- Plot ----- ##
     # ######################
     
-    # vision_model = ntwk.earlyVis_model(from_file='drifting-grating-data.npz')
-    # ps = ntwk.vision_plot(model=vision_model)
-    # fig0 = ps.protocol_plot()
+    vision_model = earlyVis_model(from_file='drifting-grating-data.npz')
+    ps = vision_plot(model=vision_model)
+    fig0 = ps.protocol_plot()
 
     
     ## load file
-    data = ntwk.load_dict_from_hdf5('visual_input_data.h5')
+    # data = ntwk.recording.load_dict_from_hdf5('visual_input_data.h5')
 
-    print(data['iRASTER_AffExc'])
-    print(data['tRASTER_AffExc'])
+    # print(data['iRASTER_AffExc'])
+    # print(data['tRASTER_AffExc'])
     
     # ## plot
-    fig, _ = ntwk.raster_and_Vm_plot(data, ['Exc', 'Inh', 'DsInh', 'AffExc'], smooth_population_activity=10.)
-    ntwk.show()
+    # fig, _ = ntwk.plots.raster_and_Vm_plot(data, ['Exc', 'Inh', 'DsInh', 'AffExc'], smooth_population_activity=10.)
+    # ntwk.show()
     
 else:
 

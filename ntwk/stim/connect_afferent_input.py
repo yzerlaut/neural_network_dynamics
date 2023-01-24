@@ -82,7 +82,7 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         times = np.concatenate([times, times2, additional_spikes['times']])
                 
         # insuring no more than one prespike per bin
-        # indices, times = deal_with_multiple_spikes_per_bin(indices, times, t, verbose=verbose)
+        indices, times = deal_with_multiple_spikes_per_bin(indices, times, t, verbose=verbose)
 
         # incorporating into Brian2 objects
         spikes = brian2.SpikeGeneratorGroup(NTWK['POPS'][ipop].N, indices, times*brian2.ms)
@@ -115,16 +115,6 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
     else: # we create the key
         NTWK['iRASTER_PRE'] = [indices]
         NTWK['tRASTER_PRE'] = [times]
-
-
-    
-    # if 'iRASTER_PRE_in_terms_of_Pre_Pop' in NTWK.keys():
-    #     NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'].append(pre_indices)
-    #     NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'].append(pre_times)
-    # else: # we create the key
-    #     NTWK['iRASTER_PRE_in_terms_of_Pre_Pop'] = [pre_indices]
-    #     NTWK['tRASTER_PRE_in_terms_of_Pre_Pop'] = [pre_times]
-
 
 
         

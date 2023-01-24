@@ -129,18 +129,20 @@ def raster_subplot(data, ax,
                    ms=1):
 
     graph_env=check_graph_environment(graph_env)
-
     if Nmax_per_pop_cond is None:
         Nmax_per_pop_cond = []
         for pop in POP_KEYS:
             Nmax_per_pop_cond.append(data['N_%s' % pop])
     n = 0
     for i, tpop in enumerate(POP_KEYS):
+        cond = (data['tRASTER_%s' % tpop]>tzoom[0]) &\
+                (data['tRASTER_%s' % tpop]<tzoom[1]) &\
+                (data['iRASTER_%s' % tpop]<Nmax_per_pop_cond[i])
 
-        cond = (data['tRASTER_%s' % tpop]>tzoom[0]) & (data['tRASTER_%s' % tpop]<tzoom[1]) & (data['iRASTER_%s' % tpop]<Nmax_per_pop_cond[i])
-        ax.plot(data['tRASTER_%s' % tpop][cond][::subsampling],
-                n+data['iRASTER_%s' % tpop][cond][::subsampling],
-                   'o', ms=ms, c=COLORS[i], alpha=.5)
+        graph_env.scatter(data['tRASTER_%s' % tpop][cond][::subsampling],
+                          n+data['iRASTER_%s' % tpop][cond][::subsampling],
+                          ms=ms, color=COLORS[i], ax=ax, no_set=True)
+
         ax.plot(tzoom[1]*np.ones(2), [n,n+Nmax_per_pop_cond[i]], 'w.', ms=0.01)
         n += Nmax_per_pop_cond[i]
         
@@ -498,7 +500,8 @@ def raster(data,
     for n, pop_key, color, nmax in zip(range(len(NMAXS)), POP_KEYS, COLORS, NMAXS):
         try:
             cond = (data['tRASTER_'+pop_key]>tzoom[0]) & (data['tRASTER_'+pop_key]<tzoom[1]) & (data['iRASTER_'+pop_key]<nmax)
-            ax.plot(data['tRASTER_'+pop_key][cond][::subsampling], np.sum(NMAXS[:n])+data['iRASTER_'+pop_key][cond][::subsampling], '.', color=color, ms=ms)
+            #ax.plot(data['tRASTER_'+pop_key][cond][::subsampling], np.sum(NMAXS[:n])+data['iRASTER_'+pop_key][cond][::subsampling], '.', color=color, ms=ms)
+            graph_env.scatter(data['tRASTER_'+pop_key][cond][::subsampling], np.sum(NMAXS[:n])+data['iRASTER_'+pop_key][cond][::subsampling], color=color, ms=ms, ax=ax, no_set=True)
         except ValueError:
             pass
 
