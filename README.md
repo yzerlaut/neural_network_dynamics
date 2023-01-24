@@ -2,8 +2,6 @@
 
 > *Theoretical analysis and numerical simulations to study the emergent dynamics in spiking neural networks*
 
-Network simulations toolkit built as a layer on top of the [**Brian2** simulator](https://brian2.readthedocs.io/en/stable/).
-
 ## Purpose
 
 Build __*a common framework*__ to study the following aspects of neural network dynamics:
@@ -13,6 +11,9 @@ Build __*a common framework*__ to study the following aspects of neural network 
 - mean-field predictions of network dynamics
 - cellular integration in morphologically-detailed models
 
+## Numerical simulations 
+
+Both the spiking network and single cell simulation toolkit are built as a layer on top of the [**Brian2** simulator](https://brian2.readthedocs.io/en/stable/).
 
 ## Installation
 
@@ -104,7 +105,7 @@ See the [demo folder](./demo/) for more examples
 
 Organized into different parts:
 
-- Simulations:
+#### Simulations:
    
    - [cells](./ntwk/cells/)
    
@@ -135,7 +136,7 @@ Organized into different parts:
      Plot network simulation results.
 
 
-- Theory
+#### Theory
 
   - [theory](./ntwk/theory/)
   
