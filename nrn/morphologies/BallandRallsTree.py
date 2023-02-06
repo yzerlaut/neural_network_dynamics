@@ -61,5 +61,6 @@ def get_comp_list_at_level(i, morpho):
 
 if __name__=='__main__':
 
-    BRT = build_morpho()
+    BRT = build_morpho(Nbranch=5)
+    print(BRT.topology())
 
