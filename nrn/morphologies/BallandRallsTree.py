@@ -20,7 +20,7 @@ def build_morpho(L=100,
                            y=np.zeros(2)*um)
 
 
-    for b in range(2, Nbranch):
+    for b in range(2, Nbranch+1):
 
         comps = get_comp_list_at_level(b-1, morpho)
 
