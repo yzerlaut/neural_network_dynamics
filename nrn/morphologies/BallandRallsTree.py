@@ -3,19 +3,19 @@ import itertools
 import numpy as np
 
 
-def build_morpho(branch_legnth=100,
-                 diameter_soma=10,
-                 diameter_root=2,
+def build_morpho(branch_length=100,
+                 soma_radius=5,
+                 root_diameter=2,
                  Nbranch = 10,
                  Nperbranch=10):
 
     
-    morpho = Soma(diameter=diameter_soma*um, 
+    morpho = Soma(diameter=2*soma_radius*um, 
                   x=[0]*um, 
                   y=[0]*um)
     morpho.Nbranch = Nbranch
 
-    morpho.root = Cylinder(diameter=diameter_root*um, 
+    morpho.root = Cylinder(diameter=root_diameter*um, 
                            n=Nperbranch,
                            x=np.linspace(0, branch_length, 2)*um, 
                            y=np.zeros(2)*um)
@@ -27,11 +27,11 @@ def build_morpho(branch_legnth=100,
 
         for c in comps:
 
-            setattr(c, 'L', Cylinder(diameter=diameter_root*(2/3)**(b-1)*um,
+            setattr(c, 'L', Cylinder(diameter=root_diameter*(2/3)**(b-1)*um,
                                      n=Nperbranch,
                                      x=(branch_length*b+np.linspace(0, branch_length, 2))*um,
                                      y=c.y[0]-np.ones(2)*um))
-            setattr(c, 'R', Cylinder(diameter=diameter_root*(2/3)**(b-1)*um,
+            setattr(c, 'R', Cylinder(diameter=root_diameter*(2/3)**(b-1)*um,
                                      n=Nperbranch,
                                      x=(branch_length*b+np.linspace(0, branch_length, 2))*um,
                                      y=c.y[0]+np.ones(2)*um))
