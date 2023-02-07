@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pylab as plt
 
 from utils.signal_processing import gaussian_smoothing
+from utils import plot_tools as pt
 
 def find_pop_keys(data, with_Aff_keys=False):
     ii, pops = 0, []
@@ -40,14 +41,12 @@ def connectivity_matrix(Model, graph_env=None,
                         nticks=4,
                         ax=None):
 
-    graph_env=check_graph_environment(graph_env)
-
     if (REC_POPS is None) and (AFF_POPS is None):
         REC_POPS, AFF_POPS = find_pop_keys(Model, with_Aff_keys=True)
     elif ('REC_POPS' in Model) and ('AFF_POPS' in Model):
         REC_POPS, AFF_POPS = list(Model['REC_POPS']), list(Model['AFF_POPS'])
     if COLORS is None:
-        COLORS = graph_env.colors
+        COLORS = [pt.cm.tab10(i) for i in range(10)]
         
     pconnMatrix = np.zeros((len(REC_POPS)+len(AFF_POPS), len(REC_POPS)))
     
@@ -107,12 +106,10 @@ def connectivity_matrix(Model, graph_env=None,
 
 def raster_subplot(data, ax,
                    POP_KEYS, COLORS, tzoom,
-                   graph_env=None,
                    Nmax_per_pop_cond=None,
                    subsampling=10,
                    ms=1):
 
-    graph_env=check_graph_environment(graph_env)
     if Nmax_per_pop_cond is None:
         Nmax_per_pop_cond = []
         for pop in POP_KEYS:
@@ -123,25 +120,27 @@ def raster_subplot(data, ax,
                 (data['tRASTER_%s' % tpop]<tzoom[1]) &\
                 (data['iRASTER_%s' % tpop]<Nmax_per_pop_cond[i])
 
-        graph_env.scatter(data['tRASTER_%s' % tpop][cond][::subsampling],
-                          n+data['iRASTER_%s' % tpop][cond][::subsampling],
-                          ms=ms, color=COLORS[i], ax=ax, no_set=True)
+        pt.scatter(data['tRASTER_%s' % tpop][cond][::subsampling],
+                   n+data['iRASTER_%s' % tpop][cond][::subsampling],
+                   s=ms, color=COLORS[i])
 
         ax.plot(tzoom[1]*np.ones(2), [n,n+Nmax_per_pop_cond[i]], 'w.', ms=0.01)
         n += Nmax_per_pop_cond[i]
         
-    graph_env.set_plot(ax, xlim=tzoom, ylabel='neuron ID',
-                       xticks_labels=[], yticks=[0,n], ylim=[0,n])
+    ax.axis('off')
+    ax.set_xlim(tzoom)
+    ax.set_ylim([0,n])
+    ax.set_ylabel('neuron ID')
+    
+    # graph_env.set_plot(ax, xlim=tzoom, ylabel='neuron ID',
+                       # xticks_labels=[], yticks=[0,n], ylim=[0,n])
 
 
 def membrane_potential_subplots(data, AX,
                                 POP_KEYS, COLORS, tzoom,
-                                graph_env=None,
                                 subsampling=1,
                                 clip_spikes=False,
                                 Vm_is_the_last_one=True):
-    
-    graph_env=check_graph_environment(graph_env)
     
     for i, tpop in enumerate(POP_KEYS):
         
@@ -158,18 +157,18 @@ def membrane_potential_subplots(data, AX,
                 else:
                     AX[i].plot(t[cond][::subsampling], v[cond][::subsampling], '-', lw=1, c=COLORS[i])
                 
-            graph_env.annotate(AX[i], ' %s' % tpop, (1.,.5), xycoords='axes fraction',
-                        color=COLORS[i], bold=True, size='large')
+            AX[i].annotate(' %s' % tpop, (1.,.5), xycoords='axes fraction',
+                           color=COLORS[i])
         else:
 
-            graph_env.annotate(AX[i], '$V_m$ of %s not recorded' % tpop,
-                               (.5,.5), xycoords='axes fraction',
-                               color=COLORS[i], bold=True, size='large', ha='center', va='center')
+            AX[i].annotate('$V_m$ of %s not recorded' % tpop,
+                           (.5,.5), xycoords='axes fraction',
+                           color=COLORS[i], ha='center', va='center')
 
+        AX[i].set_xlim(tzoom)
+        AX[i].set_ylabel('Vm (mV)')
         if tpop==POP_KEYS[-1] and Vm_is_the_last_one:
-            graph_env.set_plot(AX[i], xlabel='time (ms)', ylabel='Vm (mV)', xlim=tzoom)
-        else:
-            graph_env.set_plot(AX[i], ylabel='Vm (mV)', xlim=tzoom, xticks_labels=[])
+            AX[i].set_xlabel('time (ms)')
 
 def Vm_subplots_mean_with_single_trace(data, AX,
                                        POP_KEYS, COLORS, tzoom,
@@ -319,7 +318,7 @@ def activity_plots(data,
     tzoom=[np.max([tzoom[0], 0.]), np.min([tzoom[1], data['tstop']])]
 
     if COLORS is None:
-        COLORS = graph_env.colors
+        COLORS = [pt.cm.tab10(i) for i in range(10)]
 
     fig, AX = graph_env.figure(axes_extents=AE, **fig_args)
 
@@ -350,40 +349,41 @@ def raster_and_Vm_plot(data,
                        POP_KEYS = None,
                        COLORS = None,
                        tzoom=[0, np.inf],
-                       graph_env=None, ax=None,
+                       figsize=(4,2),
                        smooth_population_activity=0.,
                        Vm_subsampling=2):
 
-    graph_env=check_graph_environment(graph_env)
-    
-    AE = [[[4,2]]] # axes extent
+    fig, ax = pt.figure(figsize=figsize)
+
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
         
+    n, fig2 = 0, None
     for pop in POP_KEYS:
         if ('VMS_%s' % pop) in data:
-            AE.append([[4,1]])
+            n+=1
+        fig2, ax2 = pt.figure(axes=(1,n),
+                              figsize=(figsize[0],figsize[1]/2*n),
+                              keep_shape=False)
+
 
     tzoom=[np.max([tzoom[0], 0.]), np.min([tzoom[1], data['tstop']])]
 
     if COLORS is None:
-        COLORS = graph_env.colors
+        COLORS = [pt.cm.tab10(i) for i in range(10)]
 
-    fig, AX = graph_env.figure(axes_extents=AE, hspace=0.5, right = 5.)
 
     if ('VMS_%s' % pop) in data:
-        raster_subplot(data, AX[0],
-                       POP_KEYS, COLORS, tzoom,
-                       graph_env)
-        membrane_potential_subplots(data, AX[1:],
+        raster_subplot(data, ax,
+                       POP_KEYS, COLORS, tzoom)
+        membrane_potential_subplots(data, ax2,
                                     POP_KEYS, COLORS, tzoom,
-                                    graph_env=graph_env, subsampling=Vm_subsampling)
+                                    subsampling=Vm_subsampling)
     else:
-        raster_subplot(data, AX,
-                       POP_KEYS, COLORS, tzoom,
-                       graph_env)
+        raster_subplot(data, ax,
+                       POP_KEYS, COLORS, tzoom)
 
-    return fig, AX
+    return fig, fig2
 
 
 def twin_plot_raster_pop_act(data,
@@ -401,7 +401,7 @@ def twin_plot_raster_pop_act(data,
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
     if COLORS is None:
-        COLORS = graph_env.colors
+        COLORS = [pt.cm.tab10(i) for i in range(10)]
         
     tzoom=[np.max([tzoom[0], 0.]), np.min([tzoom[1], data['tstop']])]
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
@@ -510,12 +510,10 @@ def pop_act(data,
             lw=2,
             graph_env=None, ax=None):
 
-    graph_env=check_graph_environment(graph_env)
-    
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
     if COLORS is None:
-        COLORS = graph_env.colors
+        COLORS = [pt.cm.tab10(i) for i in range(10)]
         
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
     cond = (t>tzoom[0]) & (t<tzoom[1])
