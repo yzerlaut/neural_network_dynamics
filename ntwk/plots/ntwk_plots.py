@@ -3,7 +3,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 
 from PIL import Image # BITMAP (png, jpg, ...)
 import numpy as np
-import matplotlib.pylab as plt
+from matplotlib.pylab import figure, subplot2grid
 
 from utils.signal_processing import gaussian_smoothing
 from utils import plot_tools as pt
@@ -36,7 +36,7 @@ def connectivity_matrix(Model, graph_env=None,
                         REC_POPS=None,
                         AFF_POPS=None,
                         COLORS=None,
-                        colormap=plt.cm.viridis,
+                        colormap=pt.cm.viridis,
                         blank_zero=False,
                         nticks=4,
                         ax=None):
@@ -90,7 +90,8 @@ def connectivity_matrix(Model, graph_env=None,
                                ticks=ticks,
                                ticks_labels=['%.1f'%t for t in ticks],
                                label='$p_{conn}$ (%)', size='small')
-    
+   
+
     graph_env.set_plot(ax,
                 ['left', 'bottom'],
                 tck_outward=0,
@@ -108,7 +109,7 @@ def raster_subplot(data, ax,
                    POP_KEYS, COLORS, tzoom,
                    Nmax_per_pop_cond=None,
                    subsampling=10,
-                   ms=1):
+                   ms=0.5):
 
     if Nmax_per_pop_cond is None:
         Nmax_per_pop_cond = []
@@ -120,17 +121,21 @@ def raster_subplot(data, ax,
                 (data['tRASTER_%s' % tpop]<tzoom[1]) &\
                 (data['iRASTER_%s' % tpop]<Nmax_per_pop_cond[i])
 
-        pt.scatter(data['tRASTER_%s' % tpop][cond][::subsampling],
-                   n+data['iRASTER_%s' % tpop][cond][::subsampling],
-                   s=ms, color=COLORS[i])
+        ax.plot(data['tRASTER_%s' % tpop][cond][::subsampling],
+                n+data['iRASTER_%s' % tpop][cond][::subsampling],
+                '.', ms=ms, color=COLORS[i])
 
-        ax.plot(tzoom[1]*np.ones(2), [n,n+Nmax_per_pop_cond[i]], 'w.', ms=0.01)
+        ax.plot(tzoom[1]*np.ones(2), [n,n+Nmax_per_pop_cond[i]],
+                'w.', ms=0.01)
         n += Nmax_per_pop_cond[i]
         
-    ax.axis('off')
+    # ax.axis('off')
     ax.set_xlim(tzoom)
+    ax.set_yticks([])
+    ax.annotate('%i '%n, (0,n), ha='right', va='center')
+    ax.annotate('0 ', (0,0), ha='right', va='center')
     ax.set_ylim([0,n])
-    ax.set_ylabel('neuron ID')
+    ax.set_ylabel('neurons')
     
     # graph_env.set_plot(ax, xlim=tzoom, ylabel='neuron ID',
                        # xticks_labels=[], yticks=[0,n], ylim=[0,n])
@@ -142,7 +147,7 @@ def membrane_potential_subplots(data, AX,
                                 clip_spikes=False,
                                 Vm_is_the_last_one=True):
     
-    for i, tpop in enumerate(POP_KEYS):
+    for i, tpop, ax in zip(range(len(POP_KEYS)), POP_KEYS, AX):
         
         if ('VMS_%s' % tpop) in data:
 
@@ -153,22 +158,25 @@ def membrane_potential_subplots(data, AX,
                 if clip_spikes:
                     tspikes, threshold = find_spikes_from_Vm(t, v, data, tpop) # getting spikes
                     tt, vv = clip_spikes_from_Vm(t[cond], v[cond], tspikes)
-                    AX[i].plot(tt[::subsampling], vv[::subsampling], '-', lw=1, c=COLORS[i])
+                    ax.plot(tt[::subsampling], vv[::subsampling], '-', lw=1, c=COLORS[i])
                 else:
-                    AX[i].plot(t[cond][::subsampling], v[cond][::subsampling], '-', lw=1, c=COLORS[i])
+                    ax.plot(t[cond][::subsampling], v[cond][::subsampling], '-', lw=1, c=COLORS[i])
                 
-            AX[i].annotate(' %s' % tpop, (1.,.5), xycoords='axes fraction',
+            ax.annotate(' %s' % tpop, (1.,.5), xycoords='axes fraction',
                            color=COLORS[i])
         else:
 
-            AX[i].annotate('$V_m$ of %s not recorded' % tpop,
+            ax.annotate('$V_m$ of %s not recorded' % tpop,
                            (.5,.5), xycoords='axes fraction',
                            color=COLORS[i], ha='center', va='center')
 
-        AX[i].set_xlim(tzoom)
-        AX[i].set_ylabel('Vm (mV)')
+        ax.set_xlim(tzoom)
+        ax.set_ylabel('$V_m$ (mV)')
         if tpop==POP_KEYS[-1] and Vm_is_the_last_one:
-            AX[i].set_xlabel('time (ms)')
+            ax.set_xlabel('time (ms)')
+        else:
+            ax.set_xticklabels([])
+
 
 def Vm_subplots_mean_with_single_trace(data, AX,
                                        POP_KEYS, COLORS, tzoom,
@@ -257,7 +265,7 @@ def input_rate_subplot(data, ax,
     
     graph_env=check_graph_environment(graph_env)
     
-    colors=['k', plt.cm.tab10(5), plt.cm.tab10(6)]
+    colors=['k', pt.cm.tab10(5), pt.cm.tab10(6)]
     
     rates, afferents, afferents_targets = {}, [], []
     for key in data:
@@ -349,11 +357,9 @@ def raster_and_Vm_plot(data,
                        POP_KEYS = None,
                        COLORS = None,
                        tzoom=[0, np.inf],
-                       figsize=(4,2),
+                       figsize=(5,3),
                        smooth_population_activity=0.,
                        Vm_subsampling=2):
-
-    fig, ax = pt.figure(figsize=figsize)
 
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
@@ -362,28 +368,31 @@ def raster_and_Vm_plot(data,
     for pop in POP_KEYS:
         if ('VMS_%s' % pop) in data:
             n+=1
-        fig2, ax2 = pt.figure(axes=(1,n),
-                              figsize=(figsize[0],figsize[1]/2*n),
-                              keep_shape=False)
 
+    if n>0:
+        fig = figure(figsize=(figsize[0],figsize[1]/2*n))
+        AX = [subplot2grid((n+2,1), (0,0), rowspan=2)]
+        for i in range(n):
+            AX.append(subplot2grid((n+2,1), (i+2,0)))
+    else:
+        fig, [AX] = pt.figure((1,1), figsize=figsize,
+                            keep_shape=True)
 
-    tzoom=[np.max([tzoom[0], 0.]), np.min([tzoom[1], data['tstop']])]
+    tzoom=[np.max([tzoom[0], 0.]),
+           np.min([tzoom[1], data['tstop']])]
 
     if COLORS is None:
         COLORS = [pt.cm.tab10(i) for i in range(10)]
 
-
-    if ('VMS_%s' % pop) in data:
-        raster_subplot(data, ax,
-                       POP_KEYS, COLORS, tzoom)
-        membrane_potential_subplots(data, ax2,
+    raster_subplot(data, AX[0],
+                   POP_KEYS, COLORS, tzoom)
+    if n>0:
+        AX[0].set_xticklabels([])
+        membrane_potential_subplots(data, AX[1:],
                                     POP_KEYS, COLORS, tzoom,
                                     subsampling=Vm_subsampling)
-    else:
-        raster_subplot(data, ax,
-                       POP_KEYS, COLORS, tzoom)
 
-    return fig, fig2
+    return fig, AX
 
 
 def twin_plot_raster_pop_act(data,
@@ -445,7 +454,7 @@ def twin_plot_raster_pop_act(data,
         graph_env.set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
                     num_yticks=4,
                     xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
-    graph_env.set_plot(ax2, ['right'], ylabel='neuron ID',
+    graph_env.set_plot(ax2, ['right'], ylabel='neurons',
                        xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
     
     return fig, ax
@@ -476,8 +485,8 @@ def raster(data,
         NMAXS = np.array([float(data['N_'+pop]) for pop in POP_KEYS])
 
     if ax is None:
-        _, ax = plt.subplots(1, figsize=(3.2,2))
-        plt.subplots_adjust(left=.05, bottom=.2)
+        _, ax = pt.subplots(1, figsize=(3.2,2))
+        pt.subplots_adjust(left=.05, bottom=.2)
         
     # raster activity
     nn = 0
@@ -583,8 +592,8 @@ def few_Vm_plot(data,
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
 
     if ax is None:
-        _, ax = plt.subplots(figsize=(5,3))
-        plt.subplots_adjust(left=.15, bottom=.1, right=.99)
+        _, ax = pt.subplots(figsize=(5,3))
+        pt.subplots_adjust(left=.15, bottom=.1, right=.99)
     
     cond = (t>tzoom[0]) & (t<tzoom[1])
 
@@ -619,8 +628,8 @@ def exc_inh_balance(data, pop_key='Exc'):
     
     NVm= len(data['VMS_'+str(pop_key)])
     
-    fig, [ax, ax2] = plt.subplots(1, 2, figsize=(3.5,2))
-    plt.subplots_adjust(left=.4, bottom=.2, hspace=1., wspace=1., right=.99)
+    fig, [ax, ax2] = pt.subplots(1, 2, figsize=(3.5,2))
+    pt.subplots_adjust(left=.4, bottom=.2, hspace=1., wspace=1., right=.99)
 
     # removings the current points where clamped at reset potential (creates artificially strong exc currents)
     CONDS =[]
@@ -664,8 +673,8 @@ def histograms(data, pop_key='Exc'):
     
     NVm= len(data['VMS_'+str(pop_key)])
     
-    fig, AX = plt.subplots(2, 2, figsize=(4,3))
-    plt.subplots_adjust(bottom=.3, top=.99, right=.99)
+    fig, AX = pt.subplots(2, 2, figsize=(4,3))
+    pt.subplots_adjust(bottom=.3, top=.99, right=.99)
 
     ######## VM ########
     # excitation
@@ -724,7 +733,7 @@ def assemble_quantities(data, filename,
     new_im = Image.new('RGBA', (830, 1140), (255,255,255,255))
 
     # title
-    fig = plt.figure(figsize=(3,.3))
+    fig = figure(figsize=(3,.3))
     fig.text(0., 0.2,
              '$\\nu_{aff}$='+str(round(data['F_AffExc'][0]))+'Hz, $\\nu_{dsnh}$='+\
              str(round(data['F_DsInh'][0]))+'Hz', fontsize=14)
@@ -741,7 +750,7 @@ def assemble_quantities(data, filename,
     try:
         fig = pop_act(data)
     except KeyError:
-        fig = plt.figure(figsize=(3,.3))
+        fig = figure(figsize=(3,.3))
     fig.text(0., .9, '(ii)', fontsize=14, weight='bold')
     fig.savefig('temp.png')
     im = Image.open('temp.png')
@@ -783,7 +792,7 @@ def assemble_quantities(data, filename,
     new_im.paste(im, (500, 1050))
     
     # closing everything
-    plt.close('all')
+    pt.close('all')
     new_im.save(filename)
 
     

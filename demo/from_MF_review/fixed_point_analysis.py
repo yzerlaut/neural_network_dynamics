@@ -6,6 +6,7 @@ module_path = str(pathlib.Path(__file__).resolve().parents[2])
 sys.path.append(module_path)
 import ntwk
 from utils import plot_tools as pt
+from utils import json
 from matplotlib.pylab import figure, subplot2grid
 
 configs = ['null-activity',
@@ -13,11 +14,14 @@ configs = ['null-activity',
            'saturated-act',
            'self-sustained']
 
-if len(sys.argv)==3:
+if len(sys.argv)>2:
 
     if sys.argv[1]=='plot':
-
-        if sys.argv[2]=='all':
+        """
+        Plot
+        """
+        if sys.argv[2] in configs:
+            configs = [sys.argv[2]]
 
             fig = figure(figsize=(8, 8))
             fig.subplots_adjust(wspace=0.7, hspace=0.5, left=0, right=0.99,
@@ -28,24 +32,118 @@ if len(sys.argv)==3:
                 AX['%s-width'%key] = width
                 AX['%s-start'%key] = start
                 start += width
-            print(AX)
+
             for i, config in enumerate(configs):
-                config_file = os.path.join(module_path,
-                                    'demo', 'from_MF_review',\
-                                    'configs', '%s.json' % config)
+
                 for key in ['config', 'TF', 'MF', 'sim-full', 'sim-zoom']:
                     AX['%s-%i'%(key,i)] = subplot2grid((4, start),
                                         (i, AX['%s-start'%key]),
                                         colspan=AX['%s-width'%key])
-                AX['config-0'].set_title('Network\nSetting')
-                AX['TF-0'].set_title('Transfer Function')
-                AX['MF-0'].set_title('Mean Field Analysis')
-                AX['sim-full-0'].set_title('Network Simulation')
-                AX['sim-zoom-0'].set_title('$V_m$ dynamics')
             
+                tf_file = os.path.join(module_path,
+                                       'demo', 'from_MF_review',\
+                                       'data', 'tf', '%s.npy' % config)
+                tf = np.load(tf_file, allow_pickle=True).item()
 
+
+                ntwk.plots.tf_2_variables(tf, ax=AX['TF-%i'%i],
+                                          xkey='F_Exc', ckey='F_Inh')
+
+            AX['config-0'].set_title('Parameters')
+            AX['TF-0'].set_title('Transfer Function')
+            AX['MF-0'].set_title('Mean Field Analysis')
+            AX['sim-full-0'].set_title('Network Simulation')
+            AX['sim-zoom-0'].set_title('$V_m$ dynamics')
             pt.show()
     
+    if sys.argv[1]=='tf':
+        """
+        Run Transfer Function characterization
+        """
+        if sys.argv[2] in configs:
+
+            config_file = os.path.join(module_path,
+                                'demo', 'from_MF_review',\
+                                'configs', '%s.json' % sys.argv[2])
+            Model = json.load(config_file)
+
+            tf_file = os.path.join(module_path,
+                                   'demo', 'from_MF_review',\
+                                   'data', 'tf', '%s.npy' % sys.argv[2])
+
+            Model['filename'] = tf_file
+
+            Model['NRN_KEY'] = 'Exc' # we scan this population
+
+            if 'quick' in sys.argv:
+                Model['N_SEED'] = 1
+                N = 4
+            else:
+                Model['N_SEED'] = 3
+                N = 10
+
+            Model['POP_STIM'] = ['Exc', 'Inh']
+
+            Model['F_Exc_array'] = np.linspace(Model['F_Exc_min'],
+                                               Model['F_Exc_max'], 4*N)
+            Model['F_Inh_array'] = np.linspace(Model['F_Inh_min'],
+                                               Model['F_Inh_max'], N)
+            
+            ntwk.transfer_functions.generate(Model)
+
+        else:
+            print(' arg must be one of:', configs)
+
+
+    if sys.argv[1]=='ntwk':
+        """
+        Run Network Simulation
+        """
+        if sys.argv[2] in configs:
+
+            config_file = os.path.join(module_path,
+                                'demo', 'from_MF_review',\
+                                'configs', '%s.json' % sys.argv[2])
+            Model = json.load(config_file)
+
+            ## we build and run the simulation
+            NTWK = ntwk.build.populations(Model, ['Exc', 'Inh'],
+                                          with_raster=True,
+                                          with_Vm=4,
+                                          verbose=True)
+
+            ntwk.build.recurrent_connections(NTWK, SEED=5,
+                                             verbose=True)
+
+            ntwk_file = os.path.join(module_path,
+                                   'demo', 'from_MF_review',\
+                                   'data', 'ntwk-%s.h5' % sys.argv[2])
+
+            Model['filename'] = tf_file
+
+            Model['NRN_KEY'] = 'Exc' # we scan this population
+
+            if 'quick' in sys.argv:
+                Model['N_SEED'] = 1
+                N = 4
+            else:
+                Model['N_SEED'] = 3
+                N = 10
+
+            Model['POP_STIM'] = ['Exc', 'Inh']
+
+            Model['F_Exc_array'] = np.linspace(Model['F_Exc_min'],
+                                               Model['F_Exc_max'], 4*N)
+            Model['F_Inh_array'] = np.linspace(Model['F_Inh_min'],
+                                               Model['F_Inh_max'], N)
+            
+            ntwk.transfer_functions.generate(Model)
+
+        else:
+            print(' arg must be one of:', configs)
+
+
+
     # ######################
     # ## ----- Plot ----- ##
     # ######################

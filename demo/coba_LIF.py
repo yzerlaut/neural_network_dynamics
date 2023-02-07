@@ -2,8 +2,9 @@
 Demo file simulating the Vogels and Abbott 2005 network 
 adapted from http://brian2.readthedocs.io/en/2.0b4/examples/COBAHH.html
 """
-import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+import os, sys, pathlib
+module_path = str(pathlib.Path(__file__).resolve().parents[1])
+sys.path.append(module_path)
 
 import numpy as np
 import matplotlib.pylab as plt
@@ -45,15 +46,19 @@ Model = {
     'Inh_a':0., 'Inh_b': 0., 'Inh_tauw':1e9,
 }
 
+filename = os.path.join(module_path, 'demo', 'data', 'coba_LIF_data.h5')
+
 if sys.argv[-1]=='plot':
     
     ## load file
-    data = ntwk.recording.load_dict_from_hdf5('coba_LIF_data.h5')
+    data = ntwk.recording.load_dict_from_hdf5(filename)
+
     print('excitatory firing activity: ', 1e3*len(data['iRASTER_Exc'])/data['tstop']/data['N_Exc'])
     print('inhibitory firing activity: ', 1e3*len(data['iRASTER_Inh'])/data['tstop']/data['N_Inh'])
     
     # ## plot
-    fig, _ = ntwk.plots.raster_and_Vm_plot(data, smooth_population_activity=10.)
+    fig, _ = ntwk.plots.raster_and_Vm_plot(data,
+                                           smooth_population_activity=10.)
     
     plt.show()
 
@@ -84,7 +89,7 @@ else:
     # ## ----- Run ----- ##
     # #####################
     network_sim = ntwk.collect_and_run(NTWK, verbose=True)
-    ntwk.recording.write_as_hdf5(NTWK, filename='coba_LIF_data.h5')
+    ntwk.recording.write_as_hdf5(NTWK, filename=filename)
 
     print('Results of the simulation are stored as:', 'coba_LIF_data.h5')
     print('--> Run \"python coba_LIF.py plot\" to plot the results')
