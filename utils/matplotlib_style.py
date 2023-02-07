@@ -1,10 +1,17 @@
 ### FIGURE
 figure.facecolor: white
 figure.dpi: 150
-figure.figsize: 1.7, 1.3
+figure.figsize: 1.6, 1.2
 figure.titlesize: 8
 # figure.titleweight: bold
 # figure.autolayout: True # When True, automatically adjust subplot
+figure.subplot.left:   0.27  # the left side of the subplots of the figure
+figure.subplot.right:  0.98    # the right side of the subplots of the figure
+figure.subplot.bottom: 0.27   # the bottom of the subplots of the figure
+figure.subplot.top:    0.83   # the top of the subplots of the figure
+figure.subplot.wspace: 0.4    # the amount of width reserved between subplots
+figure.subplot.hspace: 0.6    # the amount of height reserved for space between subplots, expressed as a fraction of the average axis height
+
 
 ### LINE
 lines.linewidth: 1

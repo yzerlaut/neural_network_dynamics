@@ -1,11 +1,10 @@
 import os, pathlib
 import numpy as np
 import matplotlib as mpl
-from matplotlib.pylab import *
-from matplotlib.pylab import Circle, setp
+from matplotlib.pylab import * 
 
 style.use(os.path.join(pathlib.Path(__file__).resolve().parents[0],
-              'matplotlib_style.py'))
+         'matplotlib_style.py'))
 
 def figure(axes=1,
            figsize=(1.5,1.3),
@@ -201,15 +200,19 @@ def get_linear_colormap(color1='blue', color2='red'):
 
 if __name__=='__main__':
 
-    fig, AX = figure((2,2))
+    fig, AX = subplots(3, 3, figsize=(3.5,2.8))
+    subplots_adjust(left=0.1, bottom=0.1)
+
     for Ax in AX:
         for ax in Ax:
             ax.plot(*np.random.randn(2, 10), 'o')
             ax.set_title('test')
+
     fig.supxlabel('x-label (unit)')
     fig.supylabel('y-label (unit)')
+    # fig.savefig(os.path.join(os.path.expanduser('~'), 'Desktop', 'fig.png'))
 
-    fig, ax = figure()
+    fig, ax = subplots(1, figsize=(1.5,1.3))
     for i in range(5):
         ax.plot(*np.random.randn(2, 20), 'o')
     ax.set_xlabel('x-label (unit)')

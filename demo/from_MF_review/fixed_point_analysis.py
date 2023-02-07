@@ -6,7 +6,7 @@ module_path = str(pathlib.Path(__file__).resolve().parents[2])
 sys.path.append(module_path)
 import ntwk
 from utils import plot_tools as pt
-from utils import json
+from utils import params
 from matplotlib.pylab import figure, subplot2grid
 
 configs = ['null-activity',
@@ -23,38 +23,44 @@ if len(sys.argv)>2:
         if sys.argv[2] in configs:
             configs = [sys.argv[2]]
 
-            fig = figure(figsize=(8, 8))
-            fig.subplots_adjust(wspace=0.7, hspace=0.5, left=0, right=0.99,
-                                top=0.95, bottom=0.05)
-            AX, start = {}, 0
-            for key, width in zip(['config', 'TF', 'MF', 'sim-full', 'sim-zoom'],
-                                  [1, 3, 2, 4, 3]):
-                AX['%s-width'%key] = width
-                AX['%s-start'%key] = start
-                start += width
+        fig = figure(figsize=(7, 5))
+        fig.subplots_adjust(wspace=1.9, hspace=0.7, left=0.03, right=0.99,
+                            top=0.95, bottom=0.05)
+        AX, start = {}, 0
+        for key, width in zip(['config', 'TF', 'MF', 'sim-full', 'sim-zoom'],
+                              [1, 2, 2, 3, 2]):
+            AX['%s-width'%key] = width
+            AX['%s-start'%key] = start
+            start += width
 
-            for i, config in enumerate(configs):
+        for i, config in enumerate(configs):
 
-                for key in ['config', 'TF', 'MF', 'sim-full', 'sim-zoom']:
-                    AX['%s-%i'%(key,i)] = subplot2grid((4, start),
-                                        (i, AX['%s-start'%key]),
-                                        colspan=AX['%s-width'%key])
+            for key in ['config', 'TF', 'MF', 'sim-full', 'sim-zoom']:
+                AX['%s-%i'%(key,i)] = subplot2grid((4, start),
+                                    (i, AX['%s-start'%key]),
+                                    colspan=AX['%s-width'%key])
+        
             
-                tf_file = os.path.join(module_path,
-                                       'demo', 'from_MF_review',\
-                                       'data', 'tf', '%s.npy' % config)
-                tf = np.load(tf_file, allow_pickle=True).item()
+            AX['config-%i'%i].axis('off')
+            AX['config-%i'%i].annotate('$\\nu_{ext}$=%.1f'%10, (0.5, 0),
+                    ha='center', xycoords='axes fraction')
+            tf_file = os.path.join(module_path,
+                                   'demo', 'from_MF_review',\
+                                   'data', 'tf', '%s.npy' % config)
+            tf = np.load(tf_file, allow_pickle=True).item()
 
 
-                ntwk.plots.tf_2_variables(tf, ax=AX['TF-%i'%i],
-                                          xkey='F_Exc', ckey='F_Inh')
+            ntwk.plots.tf_2_variables(tf, ax=AX['TF-%i'%i],
+                                      xkey='F_Exc', ckey='F_Inh')
 
-            AX['config-0'].set_title('Parameters')
-            AX['TF-0'].set_title('Transfer Function')
-            AX['MF-0'].set_title('Mean Field Analysis')
-            AX['sim-full-0'].set_title('Network Simulation')
-            AX['sim-zoom-0'].set_title('$V_m$ dynamics')
-            pt.show()
+        AX['config-0'].set_title('Parameters')
+        AX['TF-0'].set_title('Transfer Function')
+        AX['MF-0'].set_title('Mean Field Analysis')
+        AX['sim-full-0'].set_title('Network Simulation')
+        AX['sim-zoom-0'].set_title('$V_m$ dynamics')
+        fig.savefig(os.path.join(os.path.expanduser('~'),
+                    'Desktop', 'fig.png'))
+        pt.show()
     
     if sys.argv[1]=='tf':
         """
@@ -65,7 +71,7 @@ if len(sys.argv)>2:
             config_file = os.path.join(module_path,
                                 'demo', 'from_MF_review',\
                                 'configs', '%s.json' % sys.argv[2])
-            Model = json.load(config_file)
+            Model = params.load(config_file)
 
             tf_file = os.path.join(module_path,
                                    'demo', 'from_MF_review',\
@@ -104,7 +110,7 @@ if len(sys.argv)>2:
             config_file = os.path.join(module_path,
                                 'demo', 'from_MF_review',\
                                 'configs', '%s.json' % sys.argv[2])
-            Model = json.load(config_file)
+            Model = params.load(config_file)
 
             ## we build and run the simulation
             NTWK = ntwk.build.populations(Model, ['Exc', 'Inh'],
