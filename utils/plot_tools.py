@@ -4,8 +4,8 @@ import matplotlib as mpl
 import matplotlib.pylab as plt
 from matplotlib.pylab import Circle, setp
 
-plt.style.use(os.path.join(pathlib.Path(__file__).resolve().parents[1],
-                    'utils', 'matplotlib_style.py'))
+plt.style.use(os.path.join(pathlib.Path(__file__).resolve().parents[0],
+              'matplotlib_style.py'))
 
 def figure(axes=1,
            figsize=(1.4,1.1),
@@ -66,96 +66,6 @@ def inset(stuff,
         subax = fig.add_axes([x,y,width,height],facecolor=facecolor)
 
     return subax
-
-def pie(data,
-        ax=None):
-
-    if ax is None:
-        fig, ax = figure()
-    else:
-        fig = None
-
-    ax.pie(data)
-
-    return fig, ax
-
-
-def pie(data,
-        ax=None,
-        ext_labels= None,
-        pie_labels = None,
-        explodes=None,
-        COLORS=None,
-        ext_labels_distance = 1.1,
-        pie_labels_distance = 0.6,
-        pie_labels_digits = 1,
-        ext_text_settings=dict(weight='normal'),
-        pie_text_settings=dict(weight='normal', color='k'),
-        center_circle=0.3,
-        title='',
-        fig_args=dict(bottom=0.3, left=0.7, top=1.),
-        axes_args={},
-        pie_args={},
-        legend=None):
-
-    """    
-    return fig, ax
-    """
-    
-    # getting or creating the axis
-    if ax is None:
-        fig, ax = figure(**fig_args)
-    else:
-        fig = plt.gcf()
-        
-    if COLORS is None:
-        COLORS = [plt.cm.tab10(i) for i in range(10)]
-    if (explodes is None):
-        explodes = np.zeros(len(data))
-    if (ext_labels is None):
-        ext_labels = np.zeros(len(data), dtype=str)
-
-    if pie_labels is not None:
-        pie_labels_map = {}
-        for pl, val in zip(pie_labels, data):
-            pie_labels_map[str(np.round(100.*val/np.sum(data),pie_labels_digits))] = pl
-        def func(pct):
-            return pie_labels_map[str(np.round(pct,pie_labels_digits))]
-    else:
-        def func(pct):
-            return ''
-        
-    wedges, ext_texts, pie_texts = ax.pie(data,
-                                          labels=ext_labels,
-                                          autopct=func,
-                                          explode=explodes,
-                                          pctdistance=pie_labels_distance,
-                                          labeldistance=ext_labels_distance,
-                                          colors=COLORS, **pie_args)
-
-    if 'fontsize' not in pie_text_settings:
-        pie_text_settings['fontsize'] = 8
-    if 'fontsize' not in ext_text_settings:
-        ext_text_settings['fontsize'] = 8
-        
-    setp(pie_texts, **pie_text_settings)
-    setp(ext_texts, **ext_text_settings)
-    
-    Centre_Circle = Circle((0,0), center_circle, fc='white')
-    ax.add_artist(Centre_Circle)
-                                  
-    if legend is not None:
-        if 'loc' not in legend:
-            legend['loc']=(1.21,.2)
-        ax.legend(**legend)
-
-    if title!='':
-        ax.set_title(title)
-        
-    ax.axis('equal')
-    return fig, ax
-
-
 
 def plot(x, y, sy=None,
         ax=None,

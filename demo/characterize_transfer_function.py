@@ -69,10 +69,10 @@ else:
     Model['filename'] = 'tf_data.npy'
     Model['NRN_KEY'] = 'Exc' # we scan this population
     Model['tstop'] = 10000
-    Model['N_SEED'] = 3 # seed repetition
+    Model['N_SEED'] = 1 # seed repetition
     Model['POP_STIM'] = ['Exc', 'Inh']
-    Model['F_Exc_array'] = np.logspace(-1, 2, 40)
-    Model['F_Inh_array'] = np.logspace(-1, 2, 10)
+    Model['F_Exc_array'] = np.logspace(-1, 2, 10)
+    Model['F_Inh_array'] = np.logspace(-1, 2, 4)
     ntwk.transfer_functions.generate(Model)
     print('Results of the simulation are stored as:', 'tf_data.npy')
     # print('--> Run \"python 3pop_model.py plot\" to plot the results')
