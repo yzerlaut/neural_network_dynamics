@@ -1,31 +1,35 @@
 import os, pathlib
 import numpy as np
 import matplotlib as mpl
-import matplotlib.pylab as plt
+from matplotlib.pylab import *
 from matplotlib.pylab import Circle, setp
 
-plt.style.use(os.path.join(pathlib.Path(__file__).resolve().parents[0],
+style.use(os.path.join(pathlib.Path(__file__).resolve().parents[0],
               'matplotlib_style.py'))
 
 def figure(axes=1,
-           figsize=(1.4,1.1),
+           figsize=(1.5,1.3),
+           wspace=0.5, hspace=0.5,
+           left=0.3, right=0.95, bottom=0.3, top=0.85,
            keep_shape=False):
 
     if axes==1:
-
-        fig, AX = plt.subplots(axes, figsize=figsize)
+        nx, ny = 1, 1
+        fig, AX = subplots(axes, figsize=figsize)
         if keep_shape:
             AX = [[AX]]
 
     elif type(axes) in [int]:
 
-        fig, AX = plt.subplots(1, axes, figsize=figsize)
+        nx, ny = 1, axes
+        fig, AX = subplots(1, axes, figsize=figsize)
         if keep_shape:
             AX = [AX]
 
     elif type(axes) in [tuple, list]:
 
-        fig, AX = plt.subplots(axes[1], axes[0],
+        nx, ny = axes[1], axes[0]
+        fig, AX = subplots(axes[1], axes[0],
                                figsize=(figsize[0]*axes[1],
                                         figsize[1]*axes[0]))
 
@@ -37,6 +41,12 @@ def figure(axes=1,
 
     else:
         print(axes, ' --> shape not recognized ')
+
+    fig.subplots_adjust(left=left/nx,
+                        right=1-(1-right)/nx,
+                        top=1-(1-top)/ny,
+                        bottom=bottom/ny,
+                        wspace=wspace, hspace=hspace)
 
     return fig, AX
 
@@ -188,5 +198,25 @@ def draw_bar_scales(ax,
 
 def get_linear_colormap(color1='blue', color2='red'):
     return mpl.colors.LinearSegmentedColormap.from_list('mycolors',[color1, color2])
+
+if __name__=='__main__':
+
+    fig, AX = figure((2,2))
+    for Ax in AX:
+        for ax in Ax:
+            ax.plot(*np.random.randn(2, 10), 'o')
+            ax.set_title('test')
+    fig.supxlabel('x-label (unit)')
+    fig.supylabel('y-label (unit)')
+
+    fig, ax = figure()
+    for i in range(5):
+        ax.plot(*np.random.randn(2, 20), 'o')
+    ax.set_xlabel('x-label (unit)')
+    ax.set_ylabel('y-label (unit)')
+    ax.set_title('title')
+
+    show()
+
 
 

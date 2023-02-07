@@ -5,23 +5,7 @@ from PIL import Image # BITMAP (png, jpg, ...)
 import numpy as np
 import matplotlib.pylab as plt
 
-from analyz.processing.signanalysis import gaussian_smoothing
-
-def check_graph_environment(graph_env):
-    if graph_env is None:
-        try:
-            from datavyz import graph_env_manuscript as graph_env
-            return graph_env
-        except ModuleNotFoundError:
-            print('')
-            print('  /!\ Need the "datavyz" module to use the plot features /!\ ')
-            print('        get it at: https://github.com/yzerlaut/datavyz ')
-            print('')
-            print(' or simply install it with: pip install git+https://github.com/yzerlaut/datavyz')
-            print('')
-    else:
-        return graph_env
-            
+from utils.signal_processing import gaussian_smoothing
 
 def find_pop_keys(data, with_Aff_keys=False):
     ii, pops = 0, []

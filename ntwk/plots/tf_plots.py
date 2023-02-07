@@ -1,16 +1,12 @@
 import numpy as np
 
-from matplotlib.cm import copper
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-import matplotlib.pylab as plt
-
 import os, sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 
-from theory.tf import TF
+from utils import plot_tools as pt
+from ntwk.theory.tf import TF
 
 def plot_single_cell_sim(data,
-                         graph_env=None,
                          XTICKS = None,
                          fig_args={'figsize':(1.8,.6), 'hspace':.5, 'right':.5, 'left':.6},
                          COLORS = [],
@@ -19,15 +15,10 @@ def plot_single_cell_sim(data,
                          ms=1,
                          subsampling=2):
     
-    # graph settings
-    if graph_env is None:
-        from datavyz import graph_env_manuscript as graph_env
-        
     if len(COLORS)==0:
-        COLORS = [ge.green, ge.red, ge.blue, ge.orange]+ge.colors[4:]
+        COLORS = [pt.cm.tab10(i) for i in range(10)]
 
-
-    fig, [ax1, ax2, ax3] = ge.figure(axes=(3,1), **fig_args)
+    fig, [ax1, ax2, ax3] = figure(axes=(3,1), **fig_args)
         
     Model = data['Model']
     Vthre = Model[Model['NRN_KEY']+'_Vthre']
@@ -61,23 +52,23 @@ def plot_single_cell_sim(data,
     return fig, [ax1, ax2, ax3]
 
 def make_tf_plot_2_variables(data,
-                             graph_env=None,
                              xkey='F_RecExc', ckey='F_RecInh', output_key='Fout',
                              cond=None,
                              ckey_label='$\\nu_{i}$ (Hz)',
                              ylim=[1e-2, 100],
                              yticks=[0.01, 0.1, 1, 10],
                              yticks_labels=['0.01', '0.1', '1', '10'],
-                             yscale='log',
+                             yscale='linear',
                              ylabel='$\\nu_{out}$ (Hz)',
                              xlim=None,
                              xticks=None,
                              xticks_labels=None,
-                             xscale='log',
+                             xscale='linear',
                              cscale='log',
                              xlabel='$\\nu_{e}$ (Hz)',
-                             cmap=copper, ax=None, acb=None,
-                             fig_args={'with_bar_legend':True},
+                             cmap=pt.cm.copper, 
+                             ax=None, acb=None,
+                             fig_args={'figsize':(2., 1.3), 'right':0.7},
                              with_top_label=False,
                              ms=2, lw_th=2, alpha_th=0.7,
                              with_theory=False, th_discret=20):
@@ -85,12 +76,9 @@ def make_tf_plot_2_variables(data,
     # limiting the data within the range
     Fout_mean, Fout_std = data[output_key+'_mean'], data[output_key+'_std']
 
-    # graph settings
-    if graph_env is None:
-        from datavyz import graph_env_manuscript as graph_env
-        
     if ax is None:
-        fig, ax, acb = graph_env.figure(**fig_args)
+        fig, ax = pt.figure(**fig_args)
+        acb = pt.inset(ax, [1.2,0.1,0.1,0.85])
     else:
         fig = None
 
@@ -130,24 +118,31 @@ def make_tf_plot_2_variables(data,
     if with_top_label:
         ax.set_title(col_key_label+'='+str(round(f1,1))+col_key_unit)
         
-    graph_env.set_plot(ax,
-                xlim=xlim,
-                ylim=ylim,
-                xticks=xticks,
-                yticks=yticks,
-                xlabel=xlabel,
-                ylabel=ylabel,
-                xscale=xscale,
-                yscale=yscale,
-                yticks_labels=yticks_labels,
-                xticks_labels=xticks_labels)
+    for key in ['xlabel', 'ylabel', 'xlim', 'ylim', 'xscale', 'yscale']:
+        exec('ax.set_%s(%s)' % (key,key))
 
-    F1_ticks, F1_ticks_labels = [], []
+    # ax.set_xticks(xticks)
+    # ax.set_yticks(yticks)
+    # ax.set_xscale('log')
+    # ax.set_yscale('log')
+    # graph_env.set_plot(ax,
+                # xlim=xlim,
+                # ylim=ylim,
+                # xticks=xticks,
+                # yticks=yticks,
+                # xlabel=xlabel,
+                # ylabel=ylabel,
+                # xscale=xscale,
+                # yscale=yscale,
+                # yticks_labels=yticks_labels,
+                # xticks_labels=xticks_labels)
 
-    cb = graph_env.build_bar_legend_continuous(acb , cmap,
-                                               bounds = [F1.min(), F1.max()],
-                                               scale='log')
-    cb.set_label(ckey_label)#, labelpad=labelpad, fontsize=fontsize, color=color)
+    # F1_ticks, F1_ticks_labels = [], []
+
+    # cb = graph_env.build_bar_legend_continuous(acb , cmap,
+                                               # bounds = [F1.min(), F1.max()],
+                                               # scale='log')
+    # cb.set_label(ckey_label)#, labelpad=labelpad, fontsize=fontsize, color=color)
 
     return fig, ax, acb
 

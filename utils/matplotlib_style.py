@@ -4,7 +4,7 @@ figure.dpi: 150
 figure.figsize: 1.7, 1.3
 figure.titlesize: 8
 # figure.titleweight: bold
-figure.autolayout: True # When True, automatically adjust subplot
+# figure.autolayout: True # When True, automatically adjust subplot
 
 ### LINE
 lines.linewidth: 1
@@ -18,6 +18,10 @@ legend.fontsize: 8
 ### TICKS
 xtick.direction: out
 ytick.direction: out
+xtick.major.pad:     2     # distance to major tick label in points
+xtick.minor.pad:     1.9     # distance to the minor tick label in points
+ytick.major.pad:     2     # distance to major tick label in points
+ytick.minor.pad:     1.9     # distance to the minor tick label in points
 
 ### FONTS
 # font.family: sans-serif
@@ -36,6 +40,7 @@ axes.labelsize: 8
 axes.spines.top: False
 axes.spines.right: False
 axes.prop_cycle: cycler('color', ['0072B2', '009E73', 'D55E00', 'CC79A7', 'F0E442', '56B4E9'])
+axes.labelpad:      1.0     # space between label and axis
 
 ### LINES
 lines.markersize: 2.5 # marker size, in points

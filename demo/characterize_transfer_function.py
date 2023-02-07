@@ -71,8 +71,8 @@ else:
     Model['tstop'] = 10000
     Model['N_SEED'] = 1 # seed repetition
     Model['POP_STIM'] = ['Exc', 'Inh']
-    Model['F_Exc_array'] = np.logspace(-1, 2, 10)
-    Model['F_Inh_array'] = np.logspace(-1, 2, 4)
+    Model['F_Exc_array'] = np.logspace(-1, 2, 20)
+    Model['F_Inh_array'] = np.logspace(-1, 2, 10)
     ntwk.transfer_functions.generate(Model)
     print('Results of the simulation are stored as:', 'tf_data.npy')
     # print('--> Run \"python 3pop_model.py plot\" to plot the results')
