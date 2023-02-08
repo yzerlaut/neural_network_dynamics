@@ -114,7 +114,11 @@ def raster_subplot(data, ax,
     if Nmax_per_pop_cond is None:
         Nmax_per_pop_cond = []
         for pop in POP_KEYS:
-            Nmax_per_pop_cond.append(data['N_%s' % pop])
+            if 'N_%s' % pop in data:
+                Nmax_per_pop_cond.append(data['N_%s' % pop])
+            else:
+                Nmax_per_pop_cond.append(np.max(data['iRASTER_%s' % pop]))
+
     n = 0
     for i, tpop in enumerate(POP_KEYS):
         cond = (data['tRASTER_%s' % tpop]>tzoom[0]) &\
@@ -135,7 +139,8 @@ def raster_subplot(data, ax,
     ax.annotate('%i '%n, (0,n), ha='right', va='center')
     ax.annotate('0 ', (0,0), ha='right', va='center')
     ax.set_ylim([0,n])
-    ax.set_ylabel('neurons')
+    ax.annotate('neurons', (0, 0.5), ha='right', va='center',
+                rotation=90, xycoords='axes fraction')
     
     # graph_env.set_plot(ax, xlim=tzoom, ylabel='neuron ID',
                        # xticks_labels=[], yticks=[0,n], ylim=[0,n])

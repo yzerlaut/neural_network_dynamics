@@ -100,7 +100,7 @@ def getting_statistical_properties(params,
 
     Tv = Tm # initialized to Tm
     if type(Tv) not in [float, np.float, np.float64]:
-        Tv[dTv>0] = 1./2.*(nTv/dTv)**(-1) # when non-zero synaptic input
+        Tv[dTv>0] = 1./2.*(nTv[dTv>0]/dTv[dTv>0])**(-1) # when non-zero synaptic input
     elif dTv>0:
         Tv = 1./2.*(nTv/dTv)**(-1) # when non-zero synaptic input
 

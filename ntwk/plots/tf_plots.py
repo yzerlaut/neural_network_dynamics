@@ -51,27 +51,27 @@ def plot_single_cell_sim(data,
     
     return fig, [ax1, ax2, ax3]
 
-def make_tf_plot_2_variables(data,
-                             xkey='F_RecExc', ckey='F_RecInh', output_key='Fout',
-                             cond=None,
-                             ckey_label='$\\nu_{i}$ (Hz)',
-                             ylim=[1e-2, 100],
-                             yticks=[0.01, 0.1, 1, 10],
-                             yticks_labels=['0.01', '0.1', '1', '10'],
-                             yscale='linear',
-                             ylabel='$\\nu_{out}$ (Hz)',
-                             xlim=None,
-                             xticks=None,
-                             xticks_labels=None,
-                             xscale='linear',
-                             cscale='log',
-                             xlabel='$\\nu_{e}$ (Hz)',
-                             cmap=pt.cm.copper, 
-                             ax=None, acb=None,
-                             fig_args={'figsize':(2., 1.3), 'right':0.7},
-                             with_top_label=False,
-                             ms=2, lw_th=2, alpha_th=0.7,
-                             with_theory=False, th_discret=20):
+def tf_2_variables(data,
+                 xkey='F_RecExc', ckey='F_RecInh', output_key='Fout',
+                 cond=None,
+                 ckey_label='$\\nu_{i}$ (Hz)',
+                 ylim=[1e-2, 100],
+                 yticks=[0.01, 0.1, 1, 10],
+                 yticks_labels=['0.01', '0.1', '1', '10'],
+                 yscale='linear',
+                 ylabel='$\\nu_{out}$ (Hz)',
+                 xlim=None,
+                 xticks=None,
+                 xticks_labels=None,
+                 xscale='linear',
+                 cscale='log',
+                 xlabel='$\\nu_{e}$ (Hz)',
+                 cmap=pt.cm.copper, 
+                 ax=None, acb=None,
+                 fig_args={'figsize':(2., 1.3), 'right':0.7},
+                 with_top_label=False,
+                 ms=2, lw_th=2, alpha_th=0.7,
+                 with_theory=False, th_discret=20):
     
     # limiting the data within the range
     Fout_mean, Fout_std = data[output_key+'_mean'], data[output_key+'_std']
@@ -145,4 +145,75 @@ def make_tf_plot_2_variables(data,
     # cb.set_label(ckey_label)#, labelpad=labelpad, fontsize=fontsize, color=color)
 
     return fig, ax, acb
+
+
+def tf_2_variables_3d(data,
+                     Model=None,
+                     xkey='F_RecInh', ykey='F_RecExc', zkey='Fout',
+                     cond=None,
+                     zlim=[0,100],
+                     xlabel='$\\nu_{i}$ (Hz)',
+                     ylabel='$\\nu_{e}$ (Hz)',
+                     zlabel='$\\nu_{out}$ (Hz)',
+                     ax=None,
+                     lw_th=3, alpha_th=0.5):
+    
+    # limiting the data within the range
+    Fout_mean, Fout_std = data[zkey+'_mean'], data[zkey+'_std']
+
+    if ax is None:
+        fig, ax = pt.subplots()
+    else:
+        fig = None
+
+    if cond is None:
+        cond = np.ones(len(data[xkey]), dtype=bool)
+
+    # to rotate the 
+    if False:
+        tmp_planes = ax.zaxis._PLANES 
+        ax.zaxis._PLANES = ( tmp_planes[2], tmp_planes[3], 
+                             tmp_planes[0], tmp_planes[1], 
+                             tmp_planes[4], tmp_planes[5])
+        view_1 = (25, -135)
+        view_2 = (25, -45)
+        init_view = view_2
+        ax.view_init(*init_view)
+
+    ax.view_init(10, -55)
+
+    F0, F1 = data[ykey][cond], data[xkey][cond]
+
+    ax.xaxis.labelpad=-10
+    ax.yaxis.labelpad=-9
+    ax.zaxis.labelpad=-10
+    ax.tick_params(axis='x', which='major', pad=-6)
+    ax.tick_params(axis='y', which='major', pad=-5)
+    ax.tick_params(axis='z', which='major', pad=-4)
+
+    mFout, sFout = Fout_mean[cond], Fout_std[cond]
+    for i, f1 in enumerate(np.unique(F1)):
+        i1 = np.argwhere(F1==f1).flatten()
+        cond1 =  (mFout[i1]>=zlim[0]) & (mFout[i1]<zlim[1])
+        ax.plot(np.ones(len(F0[i1][cond1]))*f1,
+                F0[i1][cond1], 
+                Fout_mean[i1][cond1],# 'o',
+                color='gray', lw=2)
+        
+    # # # now analytical estimate
+    if ('COEFFS' in data['Model']):
+        x = np.linspace(0, np.max(F0), 200)
+        RATES = {}
+        RATES[xkey], RATES[ykey] = x, x
+        Fout_th = TF(RATES, data['Model'], data['Model']['NRN_KEY'])
+        th_cond = (Fout_th<=zlim[1])
+        ax.plot(RATES[xkey][th_cond],
+                RATES[xkey][th_cond],
+                Fout_th[th_cond], 'r-', lw=1)
+       
+
+    for key in ['xlabel', 'ylabel', 'zlabel']:
+        exec('ax.set_%s(%s)' % (key,key))
+
+    return fig, ax
 

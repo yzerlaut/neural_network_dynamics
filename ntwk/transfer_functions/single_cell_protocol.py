@@ -147,7 +147,7 @@ if __name__=='__main__':
         generate_transfer_function(Model)
     elif sys.argv[-1]=='plot-tf':
         data = np.load('data.npy', allow_pickle=True).item()
-        make_tf_plot_2_variables(data)
+        tf_2_variables(data)
         ntwk.show()
     else:
         Model['NRN_KEY'] = 'RecExc' # we scan this population

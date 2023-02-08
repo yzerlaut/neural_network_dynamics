@@ -3,7 +3,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from theory.Vm_statistics import getting_statistical_properties
 from theory.probability import Proba_g_P
 from theory.spiking_function import effective_Vthre, get_all_normalized_terms
-from theory.tf import  build_up_afferent_synaptic_input, built_up_neuron_params
+from theory.tf import build_up_afferent_synaptic_input, built_up_neuron_params
 from sklearn import linear_model
 import numpy as np
 

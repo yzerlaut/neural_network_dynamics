@@ -48,6 +48,7 @@ axes.spines.top: False
 axes.spines.right: False
 axes.prop_cycle: cycler('color', ['0072B2', '009E73', 'D55E00', 'CC79A7', 'F0E442', '56B4E9'])
 axes.labelpad:      1.0     # space between label and axis
+axes3d.grid:    True # display grid on 3D axes
 
 ### LINES
 lines.markersize: 2.5 # marker size, in points
