@@ -19,26 +19,26 @@ def load_config(config):
     #  the default is the "self-sustained" (Vogels & Abbot, 2005) config
     config_file = os.path.join(module_path,
                         'demo', 'from_MF_review',\
-                        'configs', 'fixed-point-basis.json' % sys.argv[2])
+                        'configs', 'fixed-point-basis.json')
     Model = params.load(config_file)
 
     # now update if need, 
     if config=='self-sustained':
         pass
     elif config=='ext-driven-AI':
-        Model['F_AffExc'] = 20.
-        Model['Q_Exc_Exc'], Model['Q_Exc_Inh'] = 2, 2
-        Model['Q_AffExc_Exc'], Model['Q_AffExc_Inh'] = 2, 2
-        Model['Q_Inh_Exc'], Model['Q_Inh_Inh'] = 10, 10
+        Model['F_AffExc'] = 25.
+        Model['Q_Exc_Exc'], Model['Q_Exc_Inh'] = 1, 1
+        Model['Q_AffExc_Exc'], Model['Q_AffExc_Inh'] = 1, 1
+        Model['Q_Inh_Exc'], Model['Q_Inh_Inh'] = 5, 5
     elif config=='saturated-act':
-        Model['F_AffExc'] = 20.
+        Model['F_AffExc'] = 25.
         Model['Q_Exc_Exc'], Model['Q_Exc_Inh'] = 4, 4
         Model['Q_AffExc_Exc'], Model['Q_AffExc_Inh'] = 4, 4
         Model['Q_Inh_Exc'], Model['Q_Inh_Inh'] = 10, 10
     elif config=='null-activity':
-        Model['F_AffExc'] = 1.
-        Model['Q_Exc_Exc'], Model['Q_Exc_Inh'] = 2, 2
-        Model['Q_AffExc_Exc'], Model['Q_AffExc_Inh'] = 2, 2
+        Model['F_AffExc'] = 3.
+        Model['Q_Exc_Exc'], Model['Q_Exc_Inh'] = 1, 1
+        Model['Q_AffExc_Exc'], Model['Q_AffExc_Inh'] = 1, 1
         Model['Q_Inh_Exc'], Model['Q_Inh_Inh'] = 10, 10
 
     return Model
@@ -79,10 +79,14 @@ if len(sys.argv)>2:
                                     colspan=AX['%s-width'%key],
                                     projection='3d' if key=='TF' else None)
         
-            
-            AX['config-%i'%i].axis('off')
-            AX['config-%i'%i].annotate('$\\nu_{ext}$=%.1f'%10, (0.5, 0),
+            ### Parameters
+
+            Model = load_config(config)
+
+            AX['config-%i'%i].annotate('$\\nu_{ext}$=%.0fHz'%Model['F_AffExc'], (0.5, 0),
                     ha='center', xycoords='axes fraction')
+
+            AX['config-%i'%i].axis('off')
 
             tf_file = os.path.join(module_path,
                                    'demo', 'from_MF_review',\
@@ -140,6 +144,7 @@ if len(sys.argv)>2:
                         Nmax_per_pop_cond=[data['N_Inh'], data['N_Exc'], 800],
                         subsampling=20, with_annot=False)
             raster.set_xlabel('time (ms)')
+            print('$\\nu_{sim}$=%.1fHz' %  calculate_mean_firing(data))
             # raster.set_title('$\\nu_{sim}$=%.1fHz' %  calculate_mean_firing(data),
                             # style='italic', fontsize=7)
 
@@ -174,11 +179,15 @@ if len(sys.argv)>2:
         """
         if sys.argv[2] in configs:
 
-            Model = load_config(sys.argv[2])
+            configs = [sys.argv[2]]
+
+        for config in configs:
+
+            Model = load_config(config)
 
             tf_file = os.path.join(module_path,
                                    'demo', 'from_MF_review',\
-                                   'data', 'tf', '%s.npy' % sys.argv[2])
+                                   'data', 'tf', '%s.npy' % config)
 
             Model['filename'] = tf_file
 
@@ -210,12 +219,13 @@ if len(sys.argv)>2:
         """
         if sys.argv[2] in configs:
 
-            config_file = os.path.join(module_path,
-                                'demo', 'from_MF_review',\
-                                'configs', '%s.json' % sys.argv[2])
-            Model = params.load(config_file)
+            configs = [sys.argv[2]]
 
-            Model['tstop'] = 2000
+        for config in configs:
+
+            Model = load_config(config)
+
+            Model['tstop'] = 1000
 
             ## we build and run the simulation
             NTWK = ntwk.build.populations(Model, ['Exc', 'Inh'],
@@ -248,53 +258,9 @@ if len(sys.argv)>2:
             # write
             ntwk_file = os.path.join(module_path,
                                    'demo', 'from_MF_review',\
-                                   'data', 'ntwk', '%s.h5' % sys.argv[2])
+                                   'data', 'ntwk', '%s.h5' % config)
             ntwk.recording.write_as_hdf5(NTWK, filename=ntwk_file)
 
 
         else:
             print(' arg must be one of:', configs)
-
-
-
-    # ######################
-    # ## ----- Plot ----- ##
-    # ######################
-    # data = np.load('tf_data.npy', allow_pickle=True).item()
-    # ntwk.plots.tf_2_variables(data,
-                              # xkey='F_Exc', ckey='F_Inh')
-    # ntwk.plots.tf_2_variables(data,
-    #                           xkey='F_Exc', ckey='F_Inh',
-    #                           ylim=[1e-1, 100],
-    #                           yticks=[0.01, 0.1, 1, 10],
-    #                           yticks_labels=['0.01', '0.1', '1', '10'],
-    #                           ylabel='$\\nu_{out}$ (Hz)',
-    #                           xticks=[0.1, 1, 10],
-    #                           xticks_labels=['0.1', '1', '10'],
-    #                           xlabel='$\\nu_{e}$ (Hz)')
-    # ntwk.show()
-    
-else:
-    print("""
-
-    run the following script with arguments to 
-
-    python fixed_point_analysis.py tf-stim null-activity
-    python fixed_point_analysis.py tf-stim null-activity
-
-    """)
-
-    Model['filename'] = 'tf_data.npy'
-    Model['NRN_KEY'] = 'Exc' # we scan this population
-    Model['tstop'] = 10000
-    Model['N_SEED'] = 1 # seed repetition
-    Model['POP_STIM'] = ['Exc', 'Inh']
-    Model['F_Exc_array'] = np.logspace(-1, 2, 20)
-    Model['F_Inh_array'] = np.logspace(-1, 2, 10)
-    ntwk.transfer_functions.generate(Model)
-    print('Results of the simulation are stored as:', 'tf_data.npy')
-    # print('--> Run \"python 3pop_model.py plot\" to plot the results')
-
-
-
-    
