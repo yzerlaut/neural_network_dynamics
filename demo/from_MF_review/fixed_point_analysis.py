@@ -23,12 +23,12 @@ if len(sys.argv)>2:
         if sys.argv[2] in configs:
             configs = [sys.argv[2]]
 
-        fig = figure(figsize=(7, 7))
-        fig.subplots_adjust(wspace=1.9, hspace=0.7, left=0.03, right=0.99,
+        fig = figure(figsize=(7, 9))
+        fig.subplots_adjust(wspace=1.2, hspace=0.7, left=0.03, right=0.99,
                             top=0.95, bottom=0.05)
         AX, start = {}, 0
         for key, width in zip(['config', 'TF', 'MF', 'raster', 'Vm'],
-                              [1, 3, 2, 3, 2]):
+                              [1, 5, 2, 3, 4]):
             AX['%s-width'%key] = width
             AX['%s-start'%key] = start
             start += width
@@ -54,7 +54,7 @@ if len(sys.argv)>2:
             ### TF plot
 
             tf['Model']['NRN_KEY'] = 'Exc'
-            tf['Model']['COEFFS'] =     ntwk.theory.fitting_tf.fit_data(tf)
+            tf['Model']['COEFFS'] = ntwk.theory.fitting_tf.fit_data(tf)
 
             ntwk.plots.tf_2_variables_3d(tf,
                                          ax=AX['TF-%i'%i],
@@ -66,9 +66,20 @@ if len(sys.argv)>2:
             RATES = {'F_Exc':x, 'F_Inh':x}
             Fout_th = ntwk.theory.tf.TF(RATES, tf['Model'],
                                         tf['Model']['NRN_KEY'])
-            inset = pt.inset(AX['MF-%i'%i], [.1,.15,.8,.7])
-            inset.plot(x, Fout_th, 'k-')
+            inset = pt.inset(AX['MF-%i'%i], [.05,.2,.8,.6])
+            inset.plot(x, Fout_th, '-', color=plt.cm.tab10(4))
             inset.plot(x, x, 'k:')
+            cond = Fout_th<x
+            if np.sum(cond)>0:
+                ipred = np.arange(len(cond))[cond][0]
+            else:
+                ipred = 0
+            inset.plot([x[ipred]], [x[ipred]], 'ko', ms=4)
+            inset.set_title('$\\nu_{MF}$=%.1fHz' %  x[10:][ipred],
+                            style='italic', fontsize=7)
+
+            inset.set_xlabel('$\\nu_{in}$=$\\nu_{e}$=$\\nu_{i}$ (Hz)')
+            inset.set_ylabel('$\\nu_{out}$ (Hz)')
             AX['MF-%i'%i].axis('off')
 
             ### raster plot
@@ -79,16 +90,33 @@ if len(sys.argv)>2:
 
             data = ntwk.recording.load_dict_from_hdf5(ntwk_file)
 
-            ntwk.plots.ntwk_plots.raster_subplot(data, AX['raster-%i'%i],
+            raster = pt.inset(AX['raster-%i'%i], [.0,.2,1.,.8])
+            AX['raster-%i'%i].axis('off')
+            ntwk.plots.ntwk_plots.raster_subplot(data, raster,
                                                  ['Inh', 'Exc', 'AffExc'],
                                                  ['r', 'g', 'b'],
                                                  [0, 1000],
-                        Nmax_per_pop_cond=[data['N_Inh'], data['N_Exc'], 800])
-            # AX['raster-%i'%i].axis('off')
+                        Nmax_per_pop_cond=[data['N_Inh'], data['N_Exc'], 800],
+                        subsampling=20, with_annot=False)
+            raster.set_xlabel('time (ms)')
 
+            ### Vms plot
+
+            tzoom1 = [500, 700]
+            ylim = raster.get_ylim()
+            raster.fill_between(tzoom1,
+                                [ylim[0], ylim[0]], [ylim[1], ylim[1]],
+                                color='grey', lw=0, alpha=.2)
+            raster.set_ylim(ylim)
+                                            
+            ntwk.plots.ntwk_plots.shifted_Vms_subplot(data, AX['Vm-%i'%i],
+                                                 ['Inh', 'Exc'],
+                                                 ['r', 'g'], tzoom1,
+                                                 spike_peak=-30, Tbar=20)
+             
         AX['config-0'].set_title('Parameters\n')
         AX['TF-0'].set_title('Transfer Function\n')
-        AX['MF-0'].set_title('Mean Field Analysis\n')
+        AX['MF-0'].set_title('Mean Field\nAnalysis')
         AX['raster-0'].set_title('Network Simulation\n')
         AX['Vm-0'].set_title('$V_m$ dynamics\n')
 

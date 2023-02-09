@@ -109,6 +109,7 @@ def raster_subplot(data, ax,
                    POP_KEYS, COLORS, tzoom,
                    Nmax_per_pop_cond=None,
                    subsampling=10,
+                   with_annot=True,
                    ms=0.5):
 
     if Nmax_per_pop_cond is None:
@@ -133,18 +134,52 @@ def raster_subplot(data, ax,
                 'w.', ms=0.01)
         n += Nmax_per_pop_cond[i]
         
-    # ax.axis('off')
     ax.set_xlim(tzoom)
-    ax.set_yticks([])
-    ax.annotate('%i '%n, (0,n), ha='right', va='center')
-    ax.annotate('0 ', (0,0), ha='right', va='center')
     ax.set_ylim([0,n])
-    ax.annotate('neurons', (0, 0.5), ha='right', va='center',
-                rotation=90, xycoords='axes fraction')
+    ax.set_yticks([])
+    if with_annot:
+        ax.annotate('%i '%n, (0,n), ha='right', va='center')
+        ax.annotate('1 ', (0,0), ha='right', va='center')
+        ax.annotate('neurons', (0, 0.5), ha='right', va='center',
+                    rotation=90, xycoords='axes fraction')
     
     # graph_env.set_plot(ax, xlim=tzoom, ylabel='neuron ID',
                        # xticks_labels=[], yticks=[0,n], ylim=[0,n])
 
+
+def shifted_Vms_subplot(data, ax,
+                        POP_KEYS, COLORS, tzoom,
+                        v_shift=10, 
+                        Tbar=50,
+                        spike_peak = None):
+
+    shift = 0
+
+    for i, tpop in zip(range(len(POP_KEYS)), POP_KEYS):
+        
+        if ('VMS_%s' % tpop) in data:
+
+            t = np.arange(len(data['VMS_%s' % tpop][0]))*data['dt']
+            cond = (t>=tzoom[0]) & (t<=tzoom[1])
+            
+            for v in data['VMS_%s' % tpop]:
+
+                ax.plot(t[cond], v[cond]+shift, '-', lw=1, c=COLORS[i])
+
+                if spike_peak is not None:
+                    tspikes, threshold = find_spikes_from_Vm(t, v, data, tpop)
+                    scond = (tspikes>=tzoom[0]) & (tspikes<=tzoom[1])
+                    for ts in tspikes[scond]:
+                        ax.plot([ts,ts],[threshold+shift,spike_peak+shift],
+                                '--', c=COLORS[i], lw=0.5)
+                shift += v_shift
+
+    pt.draw_bar_scales(ax, 
+                       Xbar=Tbar, Xbar_label='%ims'%Tbar,
+                       Ybar=v_shift, Ybar_label='%imV'%v_shift,
+                       Ybar_rotation=90)
+
+    ax.axis('off')
 
 def membrane_potential_subplots(data, AX,
                                 POP_KEYS, COLORS, tzoom,
