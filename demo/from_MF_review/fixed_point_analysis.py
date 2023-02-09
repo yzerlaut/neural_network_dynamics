@@ -37,8 +37,8 @@ def load_config(config):
         Model['Q_Inh_Exc'], Model['Q_Inh_Inh'] = 10, 10
     elif config=='null-activity':
         Model['F_AffExc'] = 3.
-        Model['Q_Exc_Exc'], Model['Q_Exc_Inh'] = 1, 1
-        Model['Q_AffExc_Exc'], Model['Q_AffExc_Inh'] = 1, 1
+        Model['Q_Exc_Exc'], Model['Q_Exc_Inh'] = 0.5, 0.5
+        Model['Q_AffExc_Exc'], Model['Q_AffExc_Inh'] = 0.5, 0.5
         Model['Q_Inh_Exc'], Model['Q_Inh_Inh'] = 10, 10
 
     return Model
@@ -109,7 +109,7 @@ if len(sys.argv)>2:
                 ### MF plot
 
                 x = np.linspace(0, tf['F_Exc'].max(), 200)
-                RATES = {'F_Exc':x, 'F_Inh':x}
+                RATES = {'F_Exc':x, 'F_Inh':x, 'F_AffExc':0*x+Model['F_AffExc']}
                 Fout_th = ntwk.theory.tf.TF(RATES, tf['Model'],
                                             tf['Model']['NRN_KEY'])
                 inset.plot(x, Fout_th, 'k--')
@@ -200,12 +200,13 @@ if len(sys.argv)>2:
                 Model['N_SEED'] = 3
                 N = 10
 
-            Model['POP_STIM'] = ['Exc', 'Inh']
+            Model['POP_STIM'] = ['Exc', 'Inh', 'AffExc']
 
             Model['F_Exc_array'] = np.linspace(Model['F_Exc_min'],
                                                Model['F_Exc_max'], 4*N)
             Model['F_Inh_array'] = np.linspace(Model['F_Inh_min'],
                                                Model['F_Inh_max'], N)
+            Model['F_AffExc_array'] = np.ones(1)*Model['F_AffExc']
             
             ntwk.transfer_functions.generate(Model)
 

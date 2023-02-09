@@ -198,10 +198,14 @@ def tf_2_variables_3d(data,
                 Fout_mean[i1][cond1],# 'o',
                 color='gray', lw=2)
         
+    print(data.keys())
     # # # now analytical estimate
     if ('COEFFS' in data['Model']):
         x = np.linspace(0, np.max(F0), 200)
         RATES = {}
+        for key in data:
+            if 'F_' in key:
+                RATES[key] = 0*x+data[key][0] # to deal with other RATES like AffExc
         RATES[xkey], RATES[ykey] = x, x
         Fout_th = TF(RATES, data['Model'], data['Model']['NRN_KEY'])
         th_cond = (Fout_th<=zlim[1])

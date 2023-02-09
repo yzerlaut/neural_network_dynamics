@@ -18,6 +18,7 @@ def fit_data(data, order=2, Fout_high=50., fit_filename=None):
     RATES={}
     for syn in SYN_POPS:
         RATES['F_'+syn['name']] = data['F_'+syn['name']]
+    print(RATES)
         
     ### OUTPUT OF ANALYTICAL CALCULUS IN SI UNITS !! -> from here SI, be careful...
     muV, sV, gV, Tv = getting_statistical_properties(neuron_params,
