@@ -1,7 +1,5 @@
 import numpy as np
 
-import os, sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 
 from utils import plot_tools as pt
 from ntwk.theory.tf import TF
@@ -209,8 +207,7 @@ def tf_2_variables_3d(data,
         th_cond = (Fout_th<=zlim[1])
         ax.plot(RATES[xkey][th_cond],
                 RATES[xkey][th_cond],
-                Fout_th[th_cond], 'r-', lw=1)
-       
+                Fout_th[th_cond], 'k--', lw=1)
 
     for key in ['xlabel', 'ylabel', 'zlabel']:
         exec('ax.set_%s(%s)' % (key,key))
