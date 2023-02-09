@@ -14,6 +14,13 @@ configs = ['null-activity',
            'saturated-act',
            'self-sustained']
 
+def calculate_mean_firing(data,
+                          window=[500,1000]):
+    # from raster activity data:
+    tcond = (data['tRASTER_Exc']>window[0]) & (data['tRASTER_Exc']<window[1])
+    return 1e3*len(data['iRASTER_Exc'][tcond])/(window[1]-window[0])/data['N_Exc']
+
+
 if len(sys.argv)>2:
 
     if sys.argv[1]=='plot':
@@ -67,16 +74,16 @@ if len(sys.argv)>2:
             Fout_th = ntwk.theory.tf.TF(RATES, tf['Model'],
                                         tf['Model']['NRN_KEY'])
             inset = pt.inset(AX['MF-%i'%i], [.05,.2,.8,.6])
-            inset.plot(x, Fout_th, '-', color=plt.cm.tab10(4))
-            inset.plot(x, x, 'k:')
+            inset.plot(x, Fout_th, 'k--')
+            inset.plot(x, x, 'k-', lw=0.5)
             cond = Fout_th<x
             if np.sum(cond)>0:
                 ipred = np.arange(len(cond))[cond][0]
             else:
                 ipred = 0
             inset.plot([x[ipred]], [x[ipred]], 'ko', ms=4)
-            inset.set_title('$\\nu_{MF}$=%.1fHz' %  x[10:][ipred],
-                            style='italic', fontsize=7)
+            # inset.set_title('$\\nu_{MF}$=%.1fHz' %  x[10:][ipred],
+                            # style='italic', fontsize=7)
 
             inset.set_xlabel('$\\nu_{in}$=$\\nu_{e}$=$\\nu_{i}$ (Hz)')
             inset.set_ylabel('$\\nu_{out}$ (Hz)')
@@ -99,6 +106,8 @@ if len(sys.argv)>2:
                         Nmax_per_pop_cond=[data['N_Inh'], data['N_Exc'], 800],
                         subsampling=20, with_annot=False)
             raster.set_xlabel('time (ms)')
+            # raster.set_title('$\\nu_{sim}$=%.1fHz' %  calculate_mean_firing(data),
+                            # style='italic', fontsize=7)
 
             ### Vms plot
 
@@ -120,10 +129,8 @@ if len(sys.argv)>2:
         AX['raster-0'].set_title('Network Simulation\n')
         AX['Vm-0'].set_title('$V_m$ dynamics\n')
 
-
         # fig.savefig(os.path.join(os.path.expanduser('~'),
                     # 'Desktop', 'fig.png'))
-
         
         pt.show()
     

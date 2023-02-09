@@ -33,16 +33,22 @@ def fit_data(data, order=2, Fout_high=50., fit_filename=None):
     # # computing effective threshold
     Vthre_eff = effective_Vthre(Fout, muV, sV, Tv)
 
-    TERMS = get_all_normalized_terms(muV, sV, gV, Tv, Proba, order=order)
+    finite_cond = ~np.isnan(Vthre_eff)
+
+    TERMS = get_all_normalized_terms(muV[finite_cond], sV[finite_cond],
+                                     gV[finite_cond], Tv[finite_cond],
+                                     Proba[finite_cond],
+                                     order=order)
 
     X = np.array(TERMS).T
 
+    # first the linear fitting
     reg = linear_model.LinearRegression(fit_intercept=False, normalize=False)
-    reg.fit(X, Vthre_eff) # FITTING
+    reg.fit(X, Vthre_eff[finite_cond]) # FITTING
     COEFFS = reg.coef_
 
     reg = linear_model.Ridge(alpha=.9, fit_intercept=False, normalize=False)
-    reg.fit(X, Vthre_eff) # FITTING
+    reg.fit(X, Vthre_eff[finite_cond]) # FITTING
     COEFFS = reg.coef_
 
     if fit_filename is not None:
@@ -58,7 +64,6 @@ def set_equally_sampled_data_on_firing_range(data,
     new_data = {'Model':data['Model']}
     keys = data.keys()
     keys.remove('Model')
-    print(keys)
     
     Nsamples = []
     for y1, y2 in zip(firing_rate_range[:-1], firing_rate_range[1:]):
