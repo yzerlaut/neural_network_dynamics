@@ -599,7 +599,7 @@ def find_spikes_from_Vm(t, Vm, data, pop_key):
     if pop_key+'_delta_v' in data:
         threshold += data[pop_key+'_delta_v']
     # adding spikes
-    tspikes = t[1:][np.argwhere((Vm[1:]-Vm[:-1])<(.9*(reset-threshold)))]
+    tspikes = t[1:][np.argwhere((Vm[1:]-Vm[:-1])<(.8*(reset-threshold)))]
     return tspikes, threshold
     
 def clip_spikes_from_Vm(t, Vm, tspikes,

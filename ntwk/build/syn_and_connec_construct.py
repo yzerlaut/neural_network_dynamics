@@ -89,8 +89,10 @@ def build_fixed_afference(NTWK,
     
     for i, afferent_pop in enumerate(AFFERENT_POPULATIONS):
         for j, target_pop in enumerate(TARGET_POPULATIONS):
-            NTWK['M_conn_%s_%s' % (afferent_pop, target_pop)] = build_fixed_aff_to_pop_matrix(afferent_pop, target_pop,
-                                                                                              NTWK['Model'], SEED=(SEED+1)*i+j+i*j)
+            NTWK['M_conn_%s_%s' % (afferent_pop, target_pop)] =\
+                    build_fixed_aff_to_pop_matrix(afferent_pop, target_pop,\
+                                                  NTWK['Model'], SEED=(SEED+1)*i+j+i*j)
+
 
 def random_connections(NTWK, store_connections=False):
     

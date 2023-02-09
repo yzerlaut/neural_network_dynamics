@@ -19,6 +19,94 @@ def translate_aff_spikes_into_syn_target_events(source_ids, source_times,
     return np.array(indices, dtype=int), np.array(times)
 
 
+def construct_fixed_afference(NTWK, afferent_pop, TARGET_POPS, t,
+                              rate_array=None,\
+                              additional_spikes={'indices':[], 'times':[]},
+                              verbose=False,
+                              SEED=1):
+    """
+    This generates an input to the network from a population external to the network
+    (whose spikes can be artifically set)
+    """
+
+    Model = NTWK['Model']
+    Nsource = NTWK['Model']['N_%s'%afferent_pop] # N source neurons
+   
+    # ------------------------------------------------- # 
+    #       build afferent spike from rate_array
+    # ------------------------------------------------- # 
+    if (rate_array is not None):
+
+        NTWK['Rate_%s' % afferent_pop] = rate_array
+        indices, times = spikes_from_time_varying_rate(t, rate_array,\
+                                                       NTWK['Model']['N_%s'%afferent_pop],
+                                                       1,
+                                                       SEED=(SEED+6)**2%100)
+
+    else:
+        indices, times = [], []
+
+    indices = np.concatenate([indices, additional_spikes['indices']])
+    times = np.concatenate([times, additional_spikes['times']])
+    # insuring no more than one prespike per bin
+    indices, times = deal_with_multiple_spikes_per_bin(indices, times, t, verbose=verbose)
+
+    # building brian2 spikes
+    spikes = brian2.SpikeGeneratorGroup(NTWK['Model']['N_%s'%afferent_pop],
+                                        indices, times*brian2.ms)
+
+    # storing quantities:
+    NTWK['PRE_SPIKES'].append(spikes)
+    NTWK['iRASTER_%s' % afferent_pop] = indices
+    NTWK['tRASTER_%s' % afferent_pop] = times
+    
+    # ------------------------------------------------- # 
+    #       set them in the target populations
+    # ------------------------------------------------- # 
+    for target_pop in TARGET_POPS:
+
+        Ntarget= NTWK['Model']['N_%s'%target_pop] # N target neurons
+        
+        # Synapses  number ?
+        Nsyn = Model['p_'+afferent_pop+'_'+target_pop]*Nsource # N synapses per post neuron
+   
+        if Nsyn>0: # if non-zero projection [...]
+            
+            # extract parameters of the afferent input
+            Qsyn = Model['Q_'+afferent_pop+'_'+target_pop]
+            
+            #finding the target pop in the brian2 objects
+            ipop = np.argwhere(NTWK['POPULATIONS']==target_pop).flatten()[0]
+        
+            if ('psyn_%s_%s' % (afferent_pop, target_pop) in Model):
+                psyn = Model['psyn_%s_%s' % (afferent_pop, target_pop)] # probability of release
+                on_pre = 'G%s%s_post+=(rand()<%.3f)*w' % (afferent_pop, target_pop, psyn)
+            else:
+                on_pre = 'G'+afferent_pop+target_pop+' += w'
+
+            synapse = brian2.Synapses(spikes, NTWK['POPS'][ipop],
+                                      model='w:siemens',
+                                      on_pre=on_pre)
+
+
+            N_per_cell = int(Model['p_'+afferent_pop+'_'+target_pop]*Nsource)
+                    
+            i_rdms = np.concatenate([\
+                            np.random.choice(np.arange(Nsource), N_per_cell)\
+                                     for jjj in range(Ntarget)])
+            j_fixed = np.concatenate([np.ones(N_per_cell, dtype=int)*jjj\
+                                      for jjj in range(Ntarget)])
+
+            synapse.connect(i=i_rdms, j=j_fixed)
+            synapse.w = Qsyn*brian2.nS
+
+            # storing quantities:
+            NTWK['PRE_SYNAPSES'].append(synapse)
+        
+        else:
+            print('Nsyn = 0 for', afferent_pop+'_'+target_pop)
+    
+
 def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
                                 t, rate_array,\
                                 additional_spikes={'indices':[], 'times':[]},

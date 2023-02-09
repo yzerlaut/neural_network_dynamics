@@ -1,2 +1,2 @@
-from .connect_afferent_input import construct_feedforward_input
+from .connect_afferent_input import construct_feedforward_input, construct_fixed_afference
 from .poisson_generator import spikes_from_time_varying_rate

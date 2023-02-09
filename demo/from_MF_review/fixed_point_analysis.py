@@ -14,6 +14,36 @@ configs = ['null-activity',
            'saturated-act',
            'self-sustained']
 
+def load_config(config):
+
+    #  the default is the "self-sustained" (Vogels & Abbot, 2005) config
+    config_file = os.path.join(module_path,
+                        'demo', 'from_MF_review',\
+                        'configs', 'fixed-point-basis.json' % sys.argv[2])
+    Model = params.load(config_file)
+
+    # now update if need, 
+    if config=='self-sustained':
+        pass
+    elif config=='ext-driven-AI':
+        Model['F_AffExc'] = 20.
+        Model['Q_Exc_Exc'], Model['Q_Exc_Inh'] = 2, 2
+        Model['Q_AffExc_Exc'], Model['Q_AffExc_Inh'] = 2, 2
+        Model['Q_Inh_Exc'], Model['Q_Inh_Inh'] = 10, 10
+    elif config=='saturated-act':
+        Model['F_AffExc'] = 20.
+        Model['Q_Exc_Exc'], Model['Q_Exc_Inh'] = 4, 4
+        Model['Q_AffExc_Exc'], Model['Q_AffExc_Inh'] = 4, 4
+        Model['Q_Inh_Exc'], Model['Q_Inh_Inh'] = 10, 10
+    elif config=='null-activity':
+        Model['F_AffExc'] = 1.
+        Model['Q_Exc_Exc'], Model['Q_Exc_Inh'] = 2, 2
+        Model['Q_AffExc_Exc'], Model['Q_AffExc_Inh'] = 2, 2
+        Model['Q_Inh_Exc'], Model['Q_Inh_Inh'] = 10, 10
+
+    return Model
+
+
 def calculate_mean_firing(data,
                           window=[500,1000]):
     # from raster activity data:
@@ -43,6 +73,7 @@ if len(sys.argv)>2:
         for i, config in enumerate(configs):
 
             for key in ['config', 'TF', 'MF', 'raster', 'Vm']:
+
                 AX['%s-%i'%(key,i)] = subplot2grid((4, start),
                                     (i, AX['%s-start'%key]),
                                     colspan=AX['%s-width'%key],
@@ -52,38 +83,41 @@ if len(sys.argv)>2:
             AX['config-%i'%i].axis('off')
             AX['config-%i'%i].annotate('$\\nu_{ext}$=%.1f'%10, (0.5, 0),
                     ha='center', xycoords='axes fraction')
+
             tf_file = os.path.join(module_path,
                                    'demo', 'from_MF_review',\
                                    'data', 'tf', '%s.npy' % config)
-
-            tf = np.load(tf_file, allow_pickle=True).item()
-
-            ### TF plot
-
-            tf['Model']['NRN_KEY'] = 'Exc'
-            tf['Model']['COEFFS'] = ntwk.theory.fitting_tf.fit_data(tf)
-
-            ntwk.plots.tf_2_variables_3d(tf,
-                                         ax=AX['TF-%i'%i],
-                                         xkey='F_Inh', ykey='F_Exc')
-
-            ### MF plot
-
-            x = np.linspace(0, tf['F_Exc'].max(), 200)
-            RATES = {'F_Exc':x, 'F_Inh':x}
-            Fout_th = ntwk.theory.tf.TF(RATES, tf['Model'],
-                                        tf['Model']['NRN_KEY'])
             inset = pt.inset(AX['MF-%i'%i], [.05,.2,.8,.6])
-            inset.plot(x, Fout_th, 'k--')
-            inset.plot(x, x, 'k-', lw=0.5)
-            cond = Fout_th<x
-            if np.sum(cond)>0:
-                ipred = np.arange(len(cond))[cond][0]
-            else:
-                ipred = 0
-            inset.plot([x[ipred]], [x[ipred]], 'ko', ms=4)
-            # inset.set_title('$\\nu_{MF}$=%.1fHz' %  x[10:][ipred],
-                            # style='italic', fontsize=7)
+
+            if os.path.isfile(tf_file):
+
+                tf = np.load(tf_file, allow_pickle=True).item()
+
+                ### TF plot
+
+                tf['Model']['NRN_KEY'] = 'Exc'
+                tf['Model']['COEFFS'] = ntwk.theory.fitting_tf.fit_data(tf)
+
+                ntwk.plots.tf_2_variables_3d(tf,
+                                             ax=AX['TF-%i'%i],
+                                             xkey='F_Inh', ykey='F_Exc')
+
+                ### MF plot
+
+                x = np.linspace(0, tf['F_Exc'].max(), 200)
+                RATES = {'F_Exc':x, 'F_Inh':x}
+                Fout_th = ntwk.theory.tf.TF(RATES, tf['Model'],
+                                            tf['Model']['NRN_KEY'])
+                inset.plot(x, Fout_th, 'k--')
+                inset.plot(x, x, 'k-', lw=0.5)
+                cond = Fout_th<x
+                if np.sum(cond)>0:
+                    ipred = np.arange(len(cond))[cond][0]
+                else:
+                    ipred = 0
+                inset.plot([x[ipred]], [x[ipred]], 'ko', ms=4)
+                # inset.set_title('$\\nu_{MF}$=%.1fHz' %  x[10:][ipred],
+                                # style='italic', fontsize=7)
 
             inset.set_xlabel('$\\nu_{in}$=$\\nu_{e}$=$\\nu_{i}$ (Hz)')
             inset.set_ylabel('$\\nu_{out}$ (Hz)')
@@ -140,10 +174,7 @@ if len(sys.argv)>2:
         """
         if sys.argv[2] in configs:
 
-            config_file = os.path.join(module_path,
-                                'demo', 'from_MF_review',\
-                                'configs', '%s.json' % sys.argv[2])
-            Model = params.load(config_file)
+            Model = load_config(sys.argv[2])
 
             tf_file = os.path.join(module_path,
                                    'demo', 'from_MF_review',\
@@ -187,8 +218,8 @@ if len(sys.argv)>2:
             Model['tstop'] = 2000
 
             ## we build and run the simulation
-            NTWK = ntwk.build.populations(Model, ['Exc', 'Inh', 'AffExc'],
-                                          AFFERENT_POPULATIONS=['BgExc'],
+            NTWK = ntwk.build.populations(Model, ['Exc', 'Inh'],
+                                          AFFERENT_POPULATIONS=['AffExc'],
                                           with_raster=True,
                                           with_Vm=4,
                                           verbose=True)
@@ -200,18 +231,16 @@ if len(sys.argv)>2:
             # afferent input
             t_array = ntwk.arange(int(Model['tstop']/Model['dt']))*Model['dt']
             # ramp function
-            Faff_array = np.array([t/200 if (t<200) else 1 for t in t_array])
+            Tramp = 200
+            Faff_array = np.array([t/Tramp if (t<Tramp) else 1 for t in t_array])
             if sys.argv[2]=='self-sustained':
-                Faff_array *= 1 
-                Faff_array[t_array>200] = 0
+                Faff_array *= 20
+                Faff_array[t_array>Tramp] = 0
             else:
-                Faff_array *= Model['F_BgExc']
+                Faff_array *= Model['F_AffExc']
+            ntwk.stim.construct_fixed_afference(NTWK, 'AffExc', ['Exc', 'Inh'],
+                                               t_array, Faff_array)
 
-            ntwk.stim.construct_feedforward_input(NTWK, 'AffExc', 'BgExc',
-                                                  t_array, Faff_array)
-            # for i, tpop in enumerate(['Exc', 'Inh']):
-                # ntwk.stim.construct_feedforward_input(NTWK, tpop, 'AffExc',
-                                                      # t_array, Faff_array)
             # init
             ntwk.build.initialize_to_rest(NTWK)
             # run
