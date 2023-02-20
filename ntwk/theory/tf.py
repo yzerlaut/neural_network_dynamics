@@ -8,7 +8,6 @@ import numpy as np
 from matplotlib import cm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import matplotlib.pylab as plt
-import datavyz
 
 
 def build_up_afferent_synaptic_input(Model, POP_STIM, NRN_KEY=None, verbose=True):

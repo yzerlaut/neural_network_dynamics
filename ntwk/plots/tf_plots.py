@@ -154,6 +154,7 @@ def tf_2_variables_3d(data,
                      ylabel='$\\nu_{e}$ (Hz)',
                      zlabel='$\\nu_{out}$ (Hz)',
                      ax=None,
+                     x=None,
                      lw_th=3, alpha_th=0.5):
     
     # limiting the data within the range
@@ -201,7 +202,8 @@ def tf_2_variables_3d(data,
     print(data.keys())
     # # # now analytical estimate
     if ('COEFFS' in data['Model']):
-        x = np.linspace(0, np.max(F0), 200)
+        if x is None:
+            x = np.linspace(np.min(F0), np.max(F0), 200)
         RATES = {}
         for key in data:
             if 'F_' in key:
