@@ -83,6 +83,10 @@ if len(sys.argv)>2:
 
             Model = load_config(config)
 
+            AX['config-%i'%i].annotate('$Q_{e}$=%.1fnS\n\n'%Model['Q_Exc_Exc'], (0.5, 0),
+                    ha='center', xycoords='axes fraction', color='tab:green')
+            AX['config-%i'%i].annotate('$Q_{i}$=%.1fnS\n'%Model['Q_Inh_Exc'], (0.5, 0),
+                    ha='center', xycoords='axes fraction', color='tab:red')
             AX['config-%i'%i].annotate('$\\nu_{ext}$=%.0fHz'%Model['F_AffExc'], (0.5, 0),
                     ha='center', xycoords='axes fraction')
 
@@ -102,13 +106,21 @@ if len(sys.argv)>2:
                 tf['Model']['NRN_KEY'] = 'Exc'
                 tf['Model']['COEFFS'] = ntwk.theory.fitting_tf.fit_data(tf)
 
+                # x = np.linspace(tf['F_Exc'].min(), tf['F_Exc'].max(), 200)
+                if config=='self-sustained':
+                    x = np.linspace(0, tf['F_Exc'].max(), 200)
+                else:
+                    x = np.linspace(1.5, tf['F_Exc'].max(), 200)
+
+
                 ntwk.plots.tf_2_variables_3d(tf,
                                              ax=AX['TF-%i'%i],
+                                             x=x,
                                              xkey='F_Inh', ykey='F_Exc')
 
                 ### MF plot
 
-                x = np.linspace(0, tf['F_Exc'].max(), 200)
+
                 RATES = {'F_Exc':x, 'F_Inh':x, 'F_AffExc':0*x+Model['F_AffExc']}
                 Fout_th = ntwk.theory.tf.TF(RATES, tf['Model'],
                                             tf['Model']['NRN_KEY'])
@@ -117,9 +129,7 @@ if len(sys.argv)>2:
                 cond = Fout_th<x
                 if np.sum(cond)>0:
                     ipred = np.arange(len(cond))[cond][0]
-                else:
-                    ipred = 0
-                inset.plot([x[ipred]], [x[ipred]], 'ko', ms=4)
+                    inset.plot([x[ipred]], [x[ipred]], 'ko', ms=4)
                 # inset.set_title('$\\nu_{MF}$=%.1fHz' %  x[10:][ipred],
                                 # style='italic', fontsize=7)
 
