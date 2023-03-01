@@ -91,13 +91,16 @@ def find_conditions(SEGMENTS,
 if __name__=='__main__':
 
     sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-    import ntwk # my custom layer on top of Brian2
+    import nrn 
 
     filename = os.path.join(str(pathlib.Path(__file__).resolve().parent),
                             'morphologies',
                             'Jiang_et_al_2015',
                             'L5pyr-j140408b.CNG.swc')
-    morpho = ntwk.Morphology.from_swc_file(filename)
+
+    filename = sys.argv[-1]
+
+    morpho = nrn.Morphology.from_swc_file(filename)
     
     SEGMENTS = compute_segments(morpho)
 
