@@ -55,6 +55,7 @@ def compute_segments(morpho,
                         [c.type for i in range(len(c.x))] for c in COMP_LIST])
     SEGMENTS['area'] = np.concatenate([c.area for c in COMP_LIST])
     SEGMENTS['index'] = np.concatenate([c.indices[:] for c in COMP_LIST])
+    SEGMENTS['distance_to_soma'] = np.concatenate([c.distance[:] for c in COMP_LIST])
     
     return SEGMENTS
 
