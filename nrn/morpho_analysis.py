@@ -37,7 +37,11 @@ def compute_segments(morpho,
     """
 
     SEGMENTS = {} # a dictionary storing segment informations
-    COMP_LIST, COMP_NAMES, SEG_INDICES = get_compartment_list(morpho)
+    if without_axon:
+        COMP_LIST, COMP_NAMES, SEG_INDICES = get_compartment_list(morpho,
+                                            inclusion_condition='comp.type!="axon"')
+    else:
+        COMP_LIST, COMP_NAMES, SEG_INDICES = get_compartment_list(morpho)
 
     SEGMENTS['name'] = np.concatenate([[n for i in range(len(c.x))] for c, n in zip(COMP_LIST, COMP_NAMES)])
     SEGMENTS['x'] = np.concatenate([c.x for c in COMP_LIST])
@@ -103,9 +107,12 @@ if __name__=='__main__':
 
     morpho = nrn.Morphology.from_swc_file(filename)
     
-    SEGMENTS = compute_segments(morpho)
+    SEGMENTS = compute_segments(morpho, without_axon=True)
 
-    print(SEGMENTS['name'])
+    for name, index, dist in zip(SEGMENTS['name'], SEGMENTS['index'],
+                    SEGMENTS['distance_to_soma']):
+        print(name, index, 1e6*dist)
+
     # print(np.unique(SEGMENTS['comp_type'][SEGMENTS['comp_type']=='dend']))
 
     # print(find_indices_with_conditions(SEGMENTS,\
