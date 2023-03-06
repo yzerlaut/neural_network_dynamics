@@ -4,8 +4,8 @@ from itertools import combinations # for cross correlations
 import sys, pathlib
 from scipy.stats import skew
 from brian2 import mV
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-from analyz.processing.signanalysis import get_acf_time
+
+from tools import get_acf_time
 
 def get_firing_rate(data, pop='Exc',
                     tdiscard=200):

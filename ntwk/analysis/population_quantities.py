@@ -7,7 +7,7 @@ import elephant, neo, quantities # eletrophysiology analysis toolkit
 # for smoothing
 from scipy.ndimage.filters import gaussian_filter1d
 
-from analyz.processing.signanalysis import get_acf_time
+from tools import get_acf_time
 
 
 def gaussian_smoothing(signal, idt_sbsmpl=10):
