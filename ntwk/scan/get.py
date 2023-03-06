@@ -37,13 +37,13 @@ def get_scan(Model,
         for k, v in dict(Model['PARAMS_SCAN'].all()).items():
             PARAMS_SCAN[k] = np.array(v)
             
-        return Model, PARAMS_SCAN, DATA, zf
+        return Model, PARAMS_SCAN, DATA
 
 if __name__=='__main__':
 
-    data_folder = os.path.join(pathlib.Path(__file__).resolve().parents[2], 'demo', 'data')
-    Model = {'data_folder': data_folder,
+    data_folder = os.path.join(pathlib.Path(__file__).resolve().parents[2], 'demo', 'data/')
+    Model = {'data_folder': './data/',
             'SEED':0, 'x':2,
-            'zip_filename':os.path.join(data_folder, 'data.zip')}
-    Model, PARAMS_SCAN, DATA, zf = get_scan(Model, verbose=True)
+            'zip_filename':'data.zip'}
+    Model, PARAMS_SCAN, DATA = get_scan(Model, verbose=True)
     print(DATA)

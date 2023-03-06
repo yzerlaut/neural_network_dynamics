@@ -80,10 +80,9 @@ def run_scan(Model, KEYS, VALUES,
     
 if __name__=='__main__':
 
-    data_folder = os.path.join(pathlib.Path(__file__).resolve().parents[2], 'demo', 'data')
-    Model = {'data_folder': data_folder,
+    Model = {'data_folder': './data/',
             'SEED':0, 'x':2,
-            'zip_filename':os.path.join(data_folder, 'data.zip')}
+            'zip_filename':'data.zip'}
 
     import sys, pathlib, time
     sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
