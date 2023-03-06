@@ -3,16 +3,11 @@ from itertools import combinations # for cross correlations
 from scipy.stats import skew
 from brian2 import ms, Hz
 import elephant, neo, quantities # eletrophysiology analysis toolkit
-
 # for smoothing
 from scipy.ndimage.filters import gaussian_filter1d
 
-from tools import get_acf_time
-
-
 def gaussian_smoothing(signal, idt_sbsmpl=10):
     return gaussian_filter1d(signal, idt_sbsmpl)
-
 
 def smooth_population_activity(rate_array, dt, Tsmoothing):
     if Tsmoothing>2*dt:

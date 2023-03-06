@@ -5,7 +5,7 @@ import sys, pathlib
 from scipy.stats import skew
 from brian2 import mV
 
-from tools import get_acf_time
+from .tools import get_acf_time
 
 def get_firing_rate(data, pop='Exc',
                     tdiscard=200):
