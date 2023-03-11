@@ -121,17 +121,7 @@ def tf_2_variables(data,
 
     # ax.set_xticks(xticks)
     # ax.set_yticks(yticks)
-    # ax.set_xscale('log')
-    # ax.set_yscale('log')
     # graph_env.set_plot(ax,
-                # xlim=xlim,
-                # ylim=ylim,
-                # xticks=xticks,
-                # yticks=yticks,
-                # xlabel=xlabel,
-                # ylabel=ylabel,
-                # xscale=xscale,
-                # yscale=yscale,
                 # yticks_labels=yticks_labels,
                 # xticks_labels=xticks_labels)
 

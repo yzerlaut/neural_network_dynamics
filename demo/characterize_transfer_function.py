@@ -1,4 +1,4 @@
-import sys, pathlib
+import sys, pathlib, os
 import numpy as np
 import matplotlib.pylab as plt
 
@@ -45,34 +45,53 @@ Model = {
 }
 
 
-if sys.argv[-1]=='plot':
-    
+if 'plot' in sys.argv:
+   
     # ######################
     # ## ----- Plot ----- ##
     # ######################
-    data = np.load('tf_data.npy', allow_pickle=True).item()
-    ntwk.plots.tf_2_variables(data,
-                              xkey='F_Exc', ckey='F_Inh')
-    # ntwk.plots.tf_2_variables(data,
-    #                           xkey='F_Exc', ckey='F_Inh',
-    #                           ylim=[1e-1, 100],
-    #                           yticks=[0.01, 0.1, 1, 10],
-    #                           yticks_labels=['0.01', '0.1', '1', '10'],
-    #                           ylabel='$\\nu_{out}$ (Hz)',
-    #                           xticks=[0.1, 1, 10],
-    #                           xticks_labels=['0.1', '1', '10'],
-    #                           xlabel='$\\nu_{e}$ (Hz)')
+    if 'log' in sys.argv:
+        data = np.load(os.path.join('demo', 'data', 'tf_data_log.npy'),
+                       allow_pickle=True).item()
+        ntwk.plots.tf_2_variables(data,
+                                  xkey='F_Exc', ckey='F_Inh',
+                                  xlim=[data['F_Exc'].min(),data['F_Exc'].max()],
+                                  # xlim=[data['F_Inh'].min(),data['F_Inh'].max()],
+                                  xscale='log', yscale='log', cscale='log')
+        # ntwk.plots.tf_2_variables(data,
+        #                           xkey='F_Exc', ckey='F_Inh',
+        #                           ylim=[1e-1, 100],
+        #                           yticks=[0.01, 0.1, 1, 10],
+        #                           yticks_labels=['0.01', '0.1', '1', '10'],
+        #                           ylabel='$\\nu_{out}$ (Hz)',
+        #                           xticks=[0.1, 1, 10],
+        #                           xticks_labels=['0.1', '1', '10'],
+        #                           xlabel='$\\nu_{e}$ (Hz)')
+    else:
+        data = np.load(os.path.join('demo', 'data', 'tf_data.npy'),
+                       allow_pickle=True).item()
+        ntwk.plots.tf_2_variables(data,
+                                  xkey='F_Exc', ckey='F_Inh')
+
     ntwk.show()
     
 else:
 
-    Model['filename'] = 'tf_data.npy'
     Model['NRN_KEY'] = 'Exc' # we scan this population
     Model['tstop'] = 10000
     Model['N_SEED'] = 1 # seed repetition
     Model['POP_STIM'] = ['Exc', 'Inh']
-    Model['F_Exc_array'] = np.logspace(-1, 2, 20)
-    Model['F_Inh_array'] = np.logspace(-1, 2, 10)
+
+    if 'log' in sys.argv:
+        Model['F_Exc_array'] = np.logspace(-1, 2, 20)
+        Model['F_Inh_array'] = np.logspace(-1, 2, 10)
+        Model['filename'] = os.path.join('demo', 'data', 'tf_data_log.npy')
+    else:
+        Model['F_Exc_array'] = np.linspace(1, 50, 20)
+        Model['F_Inh_array'] = np.linspace(1, 50, 10)
+        Model['filename'] = os.path.join('demo', 'data', 'tf_data.npy')
+
+
     ntwk.transfer_functions.generate(Model)
     print('Results of the simulation are stored as:', 'tf_data.npy')
     # print('--> Run \"python 3pop_model.py plot\" to plot the results')

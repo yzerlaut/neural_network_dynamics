@@ -85,7 +85,10 @@ def run_sim(Model,
 
 def generate_transfer_function(Model,\
                                scale='log'):
-    """ Generate the data for the transfer function  """
+    """ 
+    Generate the numerical simulation data 
+    necessary to determine the transfer function 
+    """
 
     data = {'Fout_mean':[], 'Fout_std':[], 'Model':Model}
     
