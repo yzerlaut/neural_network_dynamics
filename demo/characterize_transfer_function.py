@@ -87,7 +87,7 @@ else:
         Model['F_Inh_array'] = np.logspace(-1, 2, 10)
         Model['filename'] = os.path.join('demo', 'data', 'tf_data_log.npy')
     else:
-        Model['F_Exc_array'] = np.linspace(1, 50, 20)
+        Model['F_Exc_array'] = np.linspace(0, 50, 20)
         Model['F_Inh_array'] = np.linspace(1, 50, 10)
         Model['filename'] = os.path.join('demo', 'data', 'tf_data.npy')
 
