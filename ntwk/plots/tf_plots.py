@@ -1,3 +1,4 @@
+from matplotlib.cm import *
 import numpy as np
 
 
@@ -14,7 +15,7 @@ def plot_single_cell_sim(data,
                          subsampling=2):
     
     if len(COLORS)==0:
-        COLORS = [pt.cm.tab10(i) for i in range(10)]
+        COLORS = [pt.tab10(i) for i in range(10)]
 
     fig, [ax1, ax2, ax3] = figure(axes=(3,1), **fig_args)
         
@@ -64,7 +65,7 @@ def tf_2_variables(data,
                  xscale='linear',
                  cscale='log',
                  xlabel='$\\nu_{e}$ (Hz)',
-                 cmap=pt.cm.copper, 
+                 cmap=pt.copper, 
                  ax=None, acb=None,
                  fig_args={'figsize':(2., 1.3), 'right':0.7},
                  with_top_label=False,

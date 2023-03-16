@@ -36,7 +36,7 @@ def connectivity_matrix(Model, graph_env=None,
                         REC_POPS=None,
                         AFF_POPS=None,
                         COLORS=None,
-                        colormap=pt.cm.viridis,
+                        colormap=pt.viridis,
                         blank_zero=False,
                         nticks=4,
                         ax=None):
@@ -46,7 +46,7 @@ def connectivity_matrix(Model, graph_env=None,
     elif ('REC_POPS' in Model) and ('AFF_POPS' in Model):
         REC_POPS, AFF_POPS = list(Model['REC_POPS']), list(Model['AFF_POPS'])
     if COLORS is None:
-        COLORS = [pt.cm.tab10(i) for i in range(10)]
+        COLORS = [pt.tab10(i) for i in range(10)]
         
     pconnMatrix = np.zeros((len(REC_POPS)+len(AFF_POPS), len(REC_POPS)))
     
@@ -305,7 +305,7 @@ def input_rate_subplot(data, ax,
     
     graph_env=check_graph_environment(graph_env)
     
-    colors=['k', pt.cm.tab10(5), pt.cm.tab10(6)]
+    colors=['k', pt.tab10(5), pt.tab10(6)]
     
     rates, afferents, afferents_targets = {}, [], []
     for key in data:
@@ -366,7 +366,7 @@ def activity_plots(data,
     tzoom=[np.max([tzoom[0], 0.]), np.min([tzoom[1], data['tstop']])]
 
     if COLORS is None:
-        COLORS = [pt.cm.tab10(i) for i in range(10)]
+        COLORS = [pt.tab10(i) for i in range(10)]
 
     fig, AX = graph_env.figure(axes_extents=AE, **fig_args)
 
@@ -422,7 +422,7 @@ def raster_and_Vm_plot(data,
            np.min([tzoom[1], data['tstop']])]
 
     if COLORS is None:
-        COLORS = [pt.cm.tab10(i) for i in range(10)]
+        COLORS = [pt.tab10(i) for i in range(10)]
 
     raster_subplot(data, AX[0],
                    POP_KEYS, COLORS, tzoom)
@@ -450,7 +450,7 @@ def twin_plot_raster_pop_act(data,
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
     if COLORS is None:
-        COLORS = [pt.cm.tab10(i) for i in range(10)]
+        COLORS = [pt.tab10(i) for i in range(10)]
         
     tzoom=[np.max([tzoom[0], 0.]), np.min([tzoom[1], data['tstop']])]
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
@@ -562,7 +562,7 @@ def pop_act(data,
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
     if COLORS is None:
-        COLORS = [pt.cm.tab10(i) for i in range(10)]
+        COLORS = [pt.tab10(i) for i in range(10)]
         
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
     cond = (t>tzoom[0]) & (t<tzoom[1])

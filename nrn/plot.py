@@ -1,11 +1,9 @@
 import sys, pathlib, os, json
 import numpy as np
 
-
 import matplotlib.animation as animation
 from matplotlib.collections import LineCollection, PatchCollection
 import matplotlib.patches as mpatches
-from matplotlib.cm import viridis_r
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 import nrn 
@@ -152,7 +150,7 @@ def show_animated_time_varying_trace(t, Quant0, SEGMENT_LIST,
                                      quant_label='$V_m$ (mV)',
                                      time_label='time (ms)',
                                      segment_condition=None,
-                                     colormap=viridis_r,
+                                     colormap=pt.viridis_r,
                                      ms=0.5):
     """
 
