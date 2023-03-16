@@ -1,34 +1,31 @@
 import os, pathlib
 import numpy as np
 import matplotlib as mpl
-from matplotlib.pylab import * 
+import matplotlib.pylab as plt
+from matplotlib.pylab import Circle, setp
 
-style.use(os.path.join(pathlib.Path(__file__).resolve().parents[0],
-         'matplotlib_style.py'))
+plt.style.use(os.path.join(pathlib.Path(__file__).resolve().parents[1],
+                    'utils', 'matplotlib_style.py'))
 
 def figure(axes=1,
-           figsize=(1.5,1.3),
-           wspace=0.5, hspace=0.5,
-           left=0.3, right=0.95, bottom=0.3, top=0.85,
+           figsize=(1.4,1.1),
            keep_shape=False):
 
     if axes==1:
-        nx, ny = 1, 1
-        fig, AX = subplots(axes, figsize=figsize)
+
+        fig, AX = plt.subplots(axes, figsize=figsize)
         if keep_shape:
             AX = [[AX]]
 
     elif type(axes) in [int]:
 
-        nx, ny = 1, axes
-        fig, AX = subplots(1, axes, figsize=figsize)
+        fig, AX = plt.subplots(1, axes, figsize=figsize)
         if keep_shape:
             AX = [AX]
 
     elif type(axes) in [tuple, list]:
 
-        nx, ny = axes[1], axes[0]
-        fig, AX = subplots(axes[1], axes[0],
+        fig, AX = plt.subplots(axes[1], axes[0],
                                figsize=(figsize[0]*axes[1],
                                         figsize[1]*axes[0]))
 
@@ -40,12 +37,6 @@ def figure(axes=1,
 
     else:
         print(axes, ' --> shape not recognized ')
-
-    fig.subplots_adjust(left=left/nx,
-                        right=1-(1-right)/nx,
-                        top=1-(1-top)/ny,
-                        bottom=bottom/ny,
-                        wspace=wspace, hspace=hspace)
 
     return fig, AX
 
@@ -76,6 +67,84 @@ def inset(stuff,
 
     return subax
 
+
+def pie(data,
+        ax=None,
+        ext_labels= None,
+        pie_labels = None,
+        explodes=None,
+        COLORS=None,
+        ext_labels_distance = 1.1,
+        pie_labels_distance = 0.6,
+        pie_labels_digits = 1,
+        ext_text_settings=dict(weight='normal'),
+        pie_text_settings=dict(weight='normal', color='k'),
+        center_circle=0.3,
+        title='',
+        fig_args=dict(bottom=0.3, left=0.7, top=1.),
+        axes_args={},
+        pie_args={},
+        legend=None):
+
+    """    
+    return fig, ax
+    """
+    
+    # getting or creating the axis
+    if ax is None:
+        fig, ax = figure(**fig_args)
+    else:
+        fig = plt.gcf()
+        
+    if COLORS is None:
+        COLORS = [plt.cm.tab10(i) for i in range(10)]
+    if (explodes is None):
+        explodes = np.zeros(len(data))
+    if (ext_labels is None):
+        ext_labels = np.zeros(len(data), dtype=str)
+
+    if pie_labels is not None:
+        pie_labels_map = {}
+        for pl, val in zip(pie_labels, data):
+            pie_labels_map[str(np.round(100.*val/np.sum(data),pie_labels_digits))] = pl
+        def func(pct):
+            return pie_labels_map[str(np.round(pct,pie_labels_digits))]
+    else:
+        def func(pct):
+            return ''
+        
+    wedges, ext_texts, pie_texts = ax.pie(data,
+                                          labels=ext_labels,
+                                          autopct=func,
+                                          explode=explodes,
+                                          pctdistance=pie_labels_distance,
+                                          labeldistance=ext_labels_distance,
+                                          colors=COLORS, **pie_args)
+
+    if 'fontsize' not in pie_text_settings:
+        pie_text_settings['fontsize'] = 8
+    if 'fontsize' not in ext_text_settings:
+        ext_text_settings['fontsize'] = 8
+        
+    setp(pie_texts, **pie_text_settings)
+    setp(ext_texts, **ext_text_settings)
+    
+    Centre_Circle = Circle((0,0), center_circle, fc='white')
+    ax.add_artist(Centre_Circle)
+                                  
+    if legend is not None:
+        if 'loc' not in legend:
+            legend['loc']=(1.21,.2)
+        ax.legend(**legend)
+
+    if title!='':
+        ax.set_title(title)
+        
+    ax.axis('equal')
+    return fig, ax
+
+
+
 def plot(x, y, sy=None,
         ax=None,
         color='k',
@@ -98,7 +167,7 @@ def plot(x, y, sy=None,
 
 def draw_bar_scales(ax,
                     Xbar=0., Xbar_label='', Xbar_fraction=0.1, Xbar_label_format='%.1f',
-                    Ybar=0., Ybar_label='', Ybar_fraction=0.1, Ybar_label_format='%.1f', Ybar_rotation=0,
+                    Ybar=0., Ybar_label='', Ybar_fraction=0.1, Ybar_label_format='%.1f',
                     loc='top-left',
                     orientation=None,
                     xyLoc=None, 
@@ -106,7 +175,7 @@ def draw_bar_scales(ax,
                     color='k', xcolor='k', ycolor='k', ycolor2='grey',
                     fontsize=8, size='normal',
                     shift_factor=20., lw=1,
-                    remove_axis=False):
+                    remove_axis=''):
     """
     USE:
 
@@ -138,7 +207,7 @@ def draw_bar_scales(ax,
         ax.plot(xyLoc[0]-np.arange(2)*Xbar,xyLoc[1]+np.zeros(2), lw=lw, color=color)
         ax.plot(xyLoc[0]+np.zeros(2),xyLoc[1]-np.arange(2)*Ybar, lw=lw, color=color)
         ax.annotate(Xbar_label, (xyLoc[0]-Xbar/shift_factor,xyLoc[1]+Ybar/shift_factor), color=xcolor, va='bottom', ha='right',fontsize=fontsize, annotation_clip=False)
-        ax.annotate(Ybar_label, (xyLoc[0]+Xbar/shift_factor,xyLoc[1]-Ybar/shift_factor), color=ycolor, va='top', ha='left',fontsize=fontsize, annotation_clip=False, rotation=Ybar_rotation)
+        ax.annotate(Ybar_label, (xyLoc[0]+Xbar/shift_factor,xyLoc[1]-Ybar/shift_factor), color=ycolor, va='top', ha='left',fontsize=fontsize, annotation_clip=False)
         if Ybar_label2!='':
             ax.annotate('\n'+Ybar_label2, (xyLoc[0]+Xbar/shift_factor,xyLoc[1]-Ybar/shift_factor),
                         color=ycolor2, va='top', ha='left',fontsize=fontsize, annotation_clip=False)
@@ -151,7 +220,7 @@ def draw_bar_scales(ax,
         ax.plot(xyLoc[0]+np.arange(2)*Xbar,xyLoc[1]+np.zeros(2), lw=lw, color=color)
         ax.plot(xyLoc[0]+np.zeros(2),xyLoc[1]-np.arange(2)*Ybar, lw=lw, color=color)
         ax.annotate(Xbar_label, (xyLoc[0]+Xbar/shift_factor,xyLoc[1]+Ybar/shift_factor), color=xcolor, va='bottom', ha='left',fontsize=fontsize, annotation_clip=False)
-        ax.annotate(Ybar_label, (xyLoc[0]-Xbar/shift_factor,xyLoc[1]-Ybar/shift_factor), color=ycolor, va='top', ha='right',fontsize=fontsize, annotation_clip=False, rotation=Ybar_rotation)
+        ax.annotate(Ybar_label, (xyLoc[0]-Xbar/shift_factor,xyLoc[1]-Ybar/shift_factor), color=ycolor, va='top', ha='right',fontsize=fontsize, annotation_clip=False)
         if Ybar_label2!='':
             ax.annotate('\n'+Ybar_label2, (xyLoc[0]-Xbar/shift_factor,xyLoc[1]-Ybar/shift_factor),
                         color=ycolor2, va='top', ha='right',fontsize=fontsize, annotation_clip=False)
@@ -164,7 +233,7 @@ def draw_bar_scales(ax,
         ax.plot(xyLoc[0]-np.arange(2)*Xbar,xyLoc[1]+np.zeros(2), lw=lw, color=color)
         ax.plot(xyLoc[0]+np.zeros(2),xyLoc[1]+np.arange(2)*Ybar, lw=lw, color=color)
         ax.annotate(Xbar_label, (xyLoc[0]-Xbar/shift_factor,xyLoc[1]-Ybar/shift_factor), color=xcolor, va='top', ha='right',fontsize=fontsize, annotation_clip=False)
-        ax.annotate(Ybar_label, (xyLoc[0]+Xbar/shift_factor,xyLoc[1]+Ybar/shift_factor), color=ycolor, va='bottom', ha='left',fontsize=fontsize, annotation_clip=False, rotation=Ybar_rotation)
+        ax.annotate(Ybar_label, (xyLoc[0]+Xbar/shift_factor,xyLoc[1]+Ybar/shift_factor), color=ycolor, va='bottom', ha='left',fontsize=fontsize, annotation_clip=False)
         if Ybar_label2!='':
             ax.annotate(Ybar_label2+'\n',
                         (xyLoc[0]+Xbar/shift_factor,xyLoc[1]+Ybar/shift_factor),
@@ -178,7 +247,7 @@ def draw_bar_scales(ax,
         ax.plot(xyLoc[0]+np.arange(2)*Xbar,xyLoc[1]+np.zeros(2), lw=lw, color=color)
         ax.plot(xyLoc[0]+np.zeros(2),xyLoc[1]+np.arange(2)*Ybar, lw=lw, color=color)
         ax.annotate(Xbar_label, (xyLoc[0]+Xbar/shift_factor,xyLoc[1]-Ybar/shift_factor), color=xcolor, va='top', ha='left',fontsize=fontsize, annotation_clip=False)
-        ax.annotate(Ybar_label, (xyLoc[0]-Xbar/shift_factor,xyLoc[1]+Ybar/shift_factor), color=ycolor, va='bottom', ha='right',fontsize=fontsize, annotation_clip=False, rotation=Ybar_rotation)
+        ax.annotate(Ybar_label, (xyLoc[0]-Xbar/shift_factor,xyLoc[1]+Ybar/shift_factor), color=ycolor, va='bottom', ha='right',fontsize=fontsize, annotation_clip=False)
         if Ybar_label2!='':
             ax.annotate(Ybar_label2+'\n', (xyLoc[0]-Xbar/shift_factor,xyLoc[1]+Ybar/shift_factor),
                         color=ycolor2, va='bottom', ha='right',fontsize=fontsize, annotation_clip=False)
@@ -191,35 +260,105 @@ def draw_bar_scales(ax,
         - left-bottom, bottom-left
         """)
         
-    if remove_axis:
+    if remove_axis=='both':
         ax.axis('off')
+    elif remove_axis=='x':
+        ax.axes.get_xaxis().set_visible(False)
+        ax.spines[['bottom']].set_visible(False)
+    elif remove_axis=='y':
+        ax.axes.get_yaxis().set_visible(False)
+        ax.spines[['left']].set_visible(False)
 
 
+def adjacent_values(vals, q1, q3):
+    upper_adjacent_value = q3 + (q3 - q1) * 1.5
+    upper_adjacent_value = np.clip(upper_adjacent_value, q3, vals[-1])
+
+    lower_adjacent_value = q1 - (q3 - q1) * 1.5
+    lower_adjacent_value = np.clip(lower_adjacent_value, vals[0], q1)
+    return lower_adjacent_value, upper_adjacent_value
+
+def violin(data,
+           ax=None,
+           labels=None,
+           color='tab:red'):
+
+    if ax is None:
+        fig, ax = figure()
+    else:
+        fig = None
+
+    if labels is None:
+        labels = ['%i'%i for i in range(len(data))]
+
+    parts = ax.violinplot(data,
+            showmeans=False, showmedians=False,
+            showextrema=False)
+
+    for pc in parts['bodies']:
+        pc.set_facecolor(color)
+        pc.set_edgecolor('black')
+        pc.set_alpha(1)
+
+    quartile1, medians, quartile3 = np.percentile(data, [25, 50, 75], axis=1)
+    whiskers = np.array([
+        adjacent_values(sorted_array, q1, q3)
+        for sorted_array, q1, q3 in zip(data, quartile1, quartile3)])
+    whiskers_min, whiskers_max = whiskers[:, 0], whiskers[:, 1]
+
+    inds = np.arange(1, len(medians) + 1)
+    ax.scatter(inds, medians, marker='o', color='w', s=10, zorder=3)
+    ax.vlines(inds, quartile1, quartile3, color='k', linestyle='-', lw=3)
+    ax.vlines(inds, whiskers_min, whiskers_max, color='k', linestyle='-', lw=1)
+
+    ax.set_xticks(range(1, 1+len(data)))
+    ax.set_xticklabels(labels, rotation=70)
+
+    return fig, ax
+
+    
 def get_linear_colormap(color1='blue', color2='red'):
     return mpl.colors.LinearSegmentedColormap.from_list('mycolors',[color1, color2])
 
+
+# ##################################################
+# ######  FIG TOOLS   ##############################
+# ##################################################
+
+def flatten(AX):
+    """
+    to be used in 
+    "for ax in flatten(AX)"
+    """
+    List = []
+    for ax in AX:
+        if type(ax) is list:
+            List = List+ax
+        else:
+            List.append(ax)        
+    return np.array(List).flatten()
+
+def set_common_xlims(AX, lims=None):
+    if lims is None:
+        lims = [np.inf, -np.inf]
+        for ax in flatten(AX):
+            lims = [np.min([ax.get_xlim()[0], lims[0]]), np.max([ax.get_xlim()[1], lims[1]])]
+    for ax in flatten(AX):
+        ax.set_xlim(lims)
+        
+def set_common_ylims(AX, lims=None):
+    if lims is None:
+        lims = [np.inf, -np.inf]
+        for ax in flatten(AX):
+            lims = [np.min([ax.get_ylim()[0], lims[0]]), np.max([ax.get_ylim()[1], lims[1]])]
+    for ax in flatten(AX):
+        ax.set_ylim(lims)
+
+
 if __name__=='__main__':
+    
+    data = [sorted(np.random.normal(0, std, 100)) for std in range(1, 5)]
 
-    fig, AX = subplots(3, 3, figsize=(3.5,2.8))
-    subplots_adjust(left=0.1, bottom=0.1)
+    violin(data)
 
-    for Ax in AX:
-        for ax in Ax:
-            ax.plot(*np.random.randn(2, 10), 'o')
-            ax.set_title('test')
-
-    fig.supxlabel('x-label (unit)')
-    fig.supylabel('y-label (unit)')
-    # fig.savefig(os.path.join(os.path.expanduser('~'), 'Desktop', 'fig.png'))
-
-    fig, ax = subplots(1, figsize=(1.5,1.3))
-    for i in range(5):
-        ax.plot(*np.random.randn(2, 20), 'o')
-    ax.set_xlabel('x-label (unit)')
-    ax.set_ylabel('y-label (unit)')
-    ax.set_title('title')
-
-    show()
-
-
-
+    plt.show()
