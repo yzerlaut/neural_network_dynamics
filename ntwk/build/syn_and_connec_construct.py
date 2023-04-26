@@ -208,14 +208,28 @@ def get_syn_and_conn_matrix(Model, POPULATIONS,
     # default initialisation
     for i, j in itertools.product(range(len(SOURCE_POPULATIONS)), range(len(POPULATIONS))):
         source_pop, target_pop = SOURCE_POPULATIONS[i], POPULATIONS[j]
-        if len(source_pop.split('Exc'))>1:
-            Erev, Ts = Model['Ee'], Model['Tse']
+        # reveral potential first
+        if ('Erev_%s' % source_pop) in Model:
+            Erev = Model['Erev_%s' % source_pop]
+        elif len(source_pop.split('Exc'))>1:
+            Erev = Model['Erev_Exc']
         elif len(source_pop.split('Inh'))>1:
-            Erev, Ts = Model['Ei'], Model['Tsi']
+            Erev = Model['Erev_Inh']
         else:
             print(' /!\ AFFERENT POP COULD NOT BE CLASSIFIED AS Exc or Inh /!\ ')
             print('-----> set to Exc by default')
-            Erev, Ts = Model['Ee'], Model['Tse']
+            Erev= Model['Erev_Exc']
+        # synaptic time course
+        if ('Tsyn_%s' % source_pop) in Model:
+            Tsyn = Model['Tsyn_%s' % source_pop]
+        elif len(source_pop.split('Exc'))>1:
+            Ts = Model['Tsyn_Exc']
+        elif len(source_pop.split('Inh'))>1:
+            Ts = Model['Tsyn_Inh']
+        else:
+            print(' /!\ AFFERENT POP COULD NOT BE CLASSIFIED AS Exc or Inh /!\ ')
+            print('-----> set to Exc by default')
+            Ts = Model['Tsyn_Exc']
 
         pconn, Qsyn, psyn = 0., 0., 1. # by default
         if ('p_'+source_pop+'_'+target_pop in Model) and ('Q_'+source_pop+'_'+target_pop in Model):

@@ -14,12 +14,12 @@ def built_up_neuron_params(Model, NRN_KEY, N=1):
 def change_units_to_SI(params):
     print('/!\ PASSING cell parameters in SI units /!\ ')
     # mV to V, ms to s
-    for key in ['El', 'Vthre', 'Vreset', 'deltaV', 'Ei', 'Ee',
+    for key in ['El', 'Vthre', 'Vreset', 'deltaV', 'Ei', 'Ee', 
                 'Te', 'Ti', 'Trefrac', 'tauw', 'Ts', 'Tsyn', 'Erev']:
         if key in params:
             params[key] *= 1e-3
     # nS to S
-    for key in ['a', 'Gl', 'Qe', 'Qi', 'Q', 'Qs']:
+    for key in ['a', 'Gl', 'Qe', 'Qi', 'Q_', 'Qs']:
         if key in params:
             params[key] *= 1e-9
     # pF to F and pA to A

@@ -1,17 +1,14 @@
-import sys, pathlib, os
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-
 import numpy as np
 
-from neural_network_dynamics.ntwk_build.syn_and_connec_construct import *
-from neural_network_dynamics.ntwk_stim.connect_afferent_input import *
-from neural_network_dynamics.ntwk_stim import waveform_library as stim_waveforms
-from neural_network_dynamics.recording.load_and_save import write_as_hdf5
-from neural_network_dynamics.theory import mean_field
+from .syn_and_connec_construct import *
+from ..stim.connect_afferent_input import *
+from ..stim import waveform_library as stim_waveforms
+from ..recording.load_and_save import write_as_hdf5
+from ..theory import mean_field
 
 
-def quick_ntwk_sim(Model,
-                   filename='data.ntwk.h5', verbose=True, SEED=1):
+def simulation(Model,
+               filename='data.ntwk.h5', verbose=True, SEED=1):
 
     np.random.seed(SEED)
     ######################
@@ -84,7 +81,7 @@ def quick_ntwk_sim(Model,
 
 
         
-def quick_MF_sim(Model, filename='data.mf.npz', verbose=True, dt=1e-2):
+def mean_field(Model, filename='data.mf.npz', verbose=True, dt=1e-2):
     """
     
     """
@@ -135,3 +132,4 @@ if __name__=='__main__':
         Model['COEFFS_%s' % rec] = np.load('configs/Network_Modulation_2020/COEFFS_pyrExc.npy')
     # quick_ntwk_sim(Model)
     quick_MF_sim(Model)
+
