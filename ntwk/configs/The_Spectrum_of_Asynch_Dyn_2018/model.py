@@ -11,13 +11,14 @@ Model = params.load(paramsFile)
 
 if sys.argv[-1]=='plot':
     ## load file
-    data = ntwk.load_dict_from_hdf5('CellRep2019_data.h5')
+    data = ntwk.recording.load_dict_from_hdf5('data/CellRep2019_data.h5')
     print(data)
     # ## plot
-    fig, _ = ntwk.raster_and_Vm_plot(data, smooth_population_activity=10.)
+    fig, _ = ntwk.plots.raster_and_Vm(data, smooth_population_activity=10.)
     ntwk.show()
 
 else:
 
     # ntwk.quick_ntwk_sim(Model)
-    ntwk.quick_run.simulation(Model)
+    ntwk.quick_run.simulation(Model,
+                              filename='data/CellRep2019_data.h5')

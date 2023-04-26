@@ -380,13 +380,13 @@ def activity_plots(data,
 
     return fig, AX
 
-def raster_and_Vm_plot(data,
-                       POP_KEYS = None,
-                       COLORS = None,
-                       tzoom=[0, np.inf],
-                       figsize=(5,3),
-                       smooth_population_activity=0.,
-                       Vm_subsampling=2):
+def raster_and_Vm(data,
+                  POP_KEYS = None,
+                  COLORS = None,
+                  tzoom=[0, np.inf],
+                  figsize=(5,3),
+                  smooth_population_activity=0.,
+                  Vm_subsampling=2):
 
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
