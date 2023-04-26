@@ -2,10 +2,10 @@ import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 import numpy as np
 
-import main as ntwk
+import ntwk
 
 from analyz.processing.signanalysis import gaussian_smoothing as smooth
-from datavyz.main import graph_env
+from utils import plot_tools as pt
 
 
 
@@ -152,14 +152,14 @@ else:
     ########### BUILD POPS ################
     #######################################
     
-    NTWK = ntwk.build_populations(Model, REC_POPS,
+    NTWK = ntwk.build.populations(Model, REC_POPS,
                                   AFFERENT_POPULATIONS=AFF_POPS,
                                   with_pop_act=True,
                                   with_raster=True,
                                   with_Vm=4,
                                   verbose=True)
 
-    ntwk.build_up_recurrent_connections(NTWK, SEED=5, verbose=True)
+    ntwk.build.recurrent_connections(NTWK, SEED=5, verbose=True)
 
     #######################################
     ########### AFFERENT INPUTS ###########
@@ -167,17 +167,17 @@ else:
 
     #  time-dep afferent excitation
     for i, tpop in enumerate(REC_POPS): # both on excitation and inhibition
-        ntwk.construct_feedforward_input(NTWK, tpop, 'AffExc',
-                                         t_array, faff,
-                                         verbose=True,
-                                         SEED=4)
+        ntwk.stim.construct_feedforward_input(NTWK, tpop, 'AffExc',
+                                              t_array, faff,
+                                              verbose=True,
+                                              SEED=4)
 
     # # noise excitation
     for i, tpop in enumerate(REC_POPS): # both on excitation and inhibition
-        ntwk.construct_feedforward_input(NTWK, tpop, 'NoiseExc',
-                                         t_array, fnoise+0.*t_array,
-                                         verbose=True,
-                                         SEED=5)
+        ntwk.stim.construct_feedforward_input(NTWK, tpop, 'NoiseExc',
+                                              t_array, fnoise+0.*t_array,
+                                              verbose=True,
+                                              SEED=5)
 
     ################################################################
     ## --------------- Initial Condition ------------------------ ##
@@ -192,7 +192,7 @@ else:
     #####################
     ## ----- Save ----- ##
     #####################
-    ntwk.write_as_hdf5(NTWK, filename='mean_field_data.h5')
+    ntwk.recording.write_as_hdf5(NTWK, filename='mean_field_data.h5')
     print('Results of the simulation are stored as:', 'mean_field_data.h5')
     print('--> Run \"python mean_field.py plot\" to plot the results')
     print('--> Run \"python mean_field.py mf\" to run the associated MF and plot the results')

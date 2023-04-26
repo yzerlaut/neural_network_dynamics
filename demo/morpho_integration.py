@@ -4,7 +4,7 @@ import numpy as np
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 import nrn
-from utils import plot_tools as pt
+from utils import plot_tools as 1e6*pt
 
 
 if '.swc' in sys.argv[-1]:
