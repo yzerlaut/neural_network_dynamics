@@ -97,10 +97,10 @@ if sys.argv[-1]=='plot':
     ######################
 
     ## load file
-    data = ntwk.load_dict_from_hdf5('mean_field_data.h5')
+    data = ntwk.recording.load_dict_from_hdf5('mean_field_data.h5')
     
     # ## plot
-    fig, _ = ntwk.activity_plots(data,
+    fig, _ = ntwk.plots.activity_plots(data,
                                  smooth_population_activity=10)
     
     ntwk.show()

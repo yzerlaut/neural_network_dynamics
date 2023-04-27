@@ -40,17 +40,22 @@ def simulation(Model,
     for a, aff_pop in enumerate(AFF_POPS):
 
         t_array = np.arange(int(Model['tstop']/Model['dt']))*Model['dt']
+
         if '%s_IncreasingStep_size' % aff_pop in Model:
             if verbose:
                 print('Adding Increasing Step Waveform to:', aff_pop)
             faff =  stim_waveforms.IncreasingSteps(t_array, aff_pop, Model, translate_to_SI=False)
+        elif 'Farray_%s' % aff_pop in Model:
+            if verbose:
+                print('Using the provided array for:', aff_pop)
+            faff = Model['Farray_%s' % aff_pop]
         elif 'F_%s' % aff_pop in Model:
             if verbose:
                 print('Setting Constant Level to:', aff_pop)
             faff = Model['F_%s' % aff_pop]+0.*t_array
         else:
             print('/!\ no F_%s value set in Model ---> set to 0 ! /!\ ' % aff_pop)
-            faff = Model['F_%s' % aff_pop]+0*t_array
+            faff = 0*t_array
 
         
         #  time-dep afferent excitation

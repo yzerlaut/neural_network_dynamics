@@ -18,7 +18,5 @@ if sys.argv[-1]=='plot':
     ntwk.show()
 
 else:
-
-    # ntwk.quick_ntwk_sim(Model)
     ntwk.quick_run.simulation(Model,
                               filename='data/CellRep2019_data.h5')
