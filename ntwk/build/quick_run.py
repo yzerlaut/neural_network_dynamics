@@ -8,7 +8,10 @@ from ..theory import mean_field
 
 
 def simulation(Model,
-               filename='data.ntwk.h5', verbose=True, SEED=1):
+               filename='data.ntwk.h5',
+               with_Vm=0,
+               verbose=True,
+               SEED=1):
 
     np.random.seed(SEED)
     ######################
@@ -28,7 +31,7 @@ def simulation(Model,
                                   AFFERENT_POPULATIONS=AFF_POPS,
                                   with_pop_act=True,
                                   with_raster=True,
-                                  with_Vm=4)
+                                  with_Vm=with_Vm)
 
     build_up_recurrent_connections(NTWK, SEED=5, verbose=verbose)
 

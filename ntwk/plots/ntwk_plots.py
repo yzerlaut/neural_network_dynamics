@@ -22,7 +22,7 @@ def find_pop_keys(data, with_Aff_keys=False):
         return pops, aff_pops
     else:
         return pops
-    
+
 def find_num_of_key(data,pop_key):
     ii, pops = 0, []
     while str(ii) in data.keys():
@@ -47,9 +47,9 @@ def connectivity_matrix(Model,
         REC_POPS, AFF_POPS = list(Model['REC_POPS']), list(Model['AFF_POPS'])
     if COLORS is None:
         COLORS = [pt.tab10(i) for i in range(10)]
-        
+
     pconnMatrix = np.zeros((len(REC_POPS)+len(AFF_POPS), len(REC_POPS)))
-    
+
     for i, source_pop in enumerate(REC_POPS+AFF_POPS):
         for j, target_pop in enumerate(REC_POPS):
             if ('p_%s_%s' % (source_pop, target_pop) in Model) and (Model['p_%s_%s' % (source_pop, target_pop)]>0):
@@ -65,7 +65,7 @@ def connectivity_matrix(Model,
 
     cond = np.isfinite(pconnMatrix)
     Lims = [np.round(100*pconnMatrix[cond].min(),1),np.round(100*pconnMatrix[cond].max(),1)]
-    
+
     pt.matrix(100*pconnMatrix.T, origin='upper',
                      colormap=colormap,
                      ax=ax, vmin=Lims[0], vmax=Lims[1])
@@ -81,7 +81,7 @@ def connectivity_matrix(Model,
 
     pt.annotate(ax, 'pre', (1., .5), rotation=90, va='center', size='xx-small')
     pt.annotate(ax, 'post', (0.5, 1.), ha='center', size='xx-small')
-        
+
     ticks = np.linspace(Lims[0], Lims[1], nticks)
     acb = pt.bar_legend(fig,
                                colorbar_inset=dict(rect=[.72,.3,.03,.5], facecolor=None),
@@ -90,7 +90,6 @@ def connectivity_matrix(Model,
                                ticks=ticks,
                                ticks_labels=['%.1f'%t for t in ticks],
                                label='$p_{conn}$ (%)', size='small')
-   
 
     pt.set_plot(ax,
                 ['left', 'bottom'],
@@ -101,7 +100,6 @@ def connectivity_matrix(Model,
                 yticks=.83*np.arange(0,6)+.85/2.,
                 yticks_labels=[])
 
-    
     return fig, ax, acb
 
 
@@ -133,7 +131,7 @@ def raster_subplot(data, ax,
         ax.plot(tzoom[1]*np.ones(2), [n,n+Nmax_per_pop_cond[i]],
                 'w.', ms=0.01)
         n += Nmax_per_pop_cond[i]
-        
+
     ax.set_xlim(tzoom)
     ax.set_ylim([0,n])
     ax.set_yticks([])
@@ -142,26 +140,26 @@ def raster_subplot(data, ax,
         ax.annotate('1 ', (0,0), ha='right', va='center')
         ax.annotate('neurons', (0, 0.5), ha='right', va='center',
                     rotation=90, xycoords='axes fraction')
-    
+
     # pt.set_plot(ax, xlim=tzoom, ylabel='neuron ID',
                        # xticks_labels=[], yticks=[0,n], ylim=[0,n])
 
 
 def shifted_Vms_subplot(data, ax,
                         POP_KEYS, COLORS, tzoom,
-                        v_shift=10, 
+                        v_shift=10,
                         Tbar=50,
                         spike_peak = None):
 
     shift = 0
 
     for i, tpop in zip(range(len(POP_KEYS)), POP_KEYS):
-        
+
         if ('VMS_%s' % tpop) in data:
 
             t = np.arange(len(data['VMS_%s' % tpop][0]))*data['dt']
             cond = (t>=tzoom[0]) & (t<=tzoom[1])
-            
+
             for v in data['VMS_%s' % tpop]:
 
                 ax.plot(t[cond], v[cond]+shift, '-', lw=1, c=COLORS[i])
@@ -174,7 +172,7 @@ def shifted_Vms_subplot(data, ax,
                                 '--', c=COLORS[i], lw=0.5)
                 shift += v_shift
 
-    pt.draw_bar_scales(ax, 
+    pt.draw_bar_scales(ax,
                        Xbar=Tbar, Xbar_label='%ims'%Tbar,
                        Ybar=v_shift, Ybar_label='%imV'%v_shift,
                        Ybar_rotation=90)
@@ -186,14 +184,14 @@ def membrane_potential_subplots(data, AX,
                                 subsampling=1,
                                 clip_spikes=False,
                                 Vm_is_the_last_one=True):
-    
+
     for i, tpop, ax in zip(range(len(POP_KEYS)), POP_KEYS, AX):
-        
+
         if ('VMS_%s' % tpop) in data:
 
             t = np.arange(len(data['VMS_%s' % tpop][0]))*data['dt']
             cond = (t>=tzoom[0]) & (t<=tzoom[1])
-            
+
             for v in data['VMS_%s' % tpop]:
                 if clip_spikes:
                     tspikes, threshold = find_spikes_from_Vm(t, v, data, tpop) # getting spikes
@@ -201,7 +199,7 @@ def membrane_potential_subplots(data, AX,
                     ax.plot(tt[::subsampling], vv[::subsampling], '-', lw=1, c=COLORS[i])
                 else:
                     ax.plot(t[cond][::subsampling], v[cond][::subsampling], '-', lw=1, c=COLORS[i])
-                
+
             ax.annotate(' %s' % tpop, (1.,.5), xycoords='axes fraction',
                            color=COLORS[i])
         else:
@@ -226,12 +224,12 @@ def Vm_subplots_mean_with_single_trace(data, AX,
 
     if traces_ID is None:
         traces_ID = np.zeros(len(POP_KEYS), dtype=int)
-        
+
     for i, tpop in enumerate(POP_KEYS):
-        
+
         t = np.arange(len(data['VMS_%s' % tpop][0]))*data['dt']
         cond = (t>=tzoom[0]) & (t<=tzoom[1])
-        
+
         if ('VMS_%s' % tpop) in data:
 
             # mean
@@ -239,7 +237,7 @@ def Vm_subplots_mean_with_single_trace(data, AX,
             pt.plot(t[cond][::subsampling], V.mean(axis=0)[cond][::subsampling],
                            sy=V.std(axis=0)[cond][::subsampling],
                            lw=0.5, color=COLORS[i], ax=AX[i], no_set=True)
-            
+
             # single trace
             v = data['VMS_%s' % tpop][traces_ID[i]]
 
@@ -251,13 +249,14 @@ def Vm_subplots_mean_with_single_trace(data, AX,
                 AX[i].plot(t[cond][::subsampling], v[cond][::subsampling], '-', lw=1, c=COLORS[i])
 
         pt.set_plot(AX[i], ylabel='mV', xlim=tzoom)
-        
-            
+
+
 def population_activity_subplot(data, ax,
                                 POP_KEYS, COLORS, tzoom,
                                 subsampling=1,
-                                with_smoothing=0, lw=2,
-                                fout_min=0.01, with_log_scale=False):
+                                with_smoothing=0, lw=0.5,
+                                fout_min=0.01,
+                                with_log_scale=False):
 
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
     cond = (t>tzoom[0]) & (t<tzoom[1])
@@ -283,7 +282,7 @@ def population_activity_subplot(data, ax,
     else:
         pt.set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
                            num_yticks=4, xlim=tzoom)
-    
+
     return ax
 
 def input_rate_subplot(data, ax,
@@ -295,9 +294,9 @@ def input_rate_subplot(data, ax,
     """
     ned to be improved to cover different afferent->target sets of waveforms
     """
-    
+
     colors=['k', pt.tab10(5), pt.tab10(6)]
-    
+
     rates, afferents, afferents_targets = {}, [], []
     for key in data:
         if len(key.split('Rate_'))>1:
@@ -316,14 +315,14 @@ def input_rate_subplot(data, ax,
 
         if with_label:
             ax.legend(frameon=False)
-        
+
         pt.set_plot(ax, ['left'],
                            ylabel='input (Hz)',
                            num_yticks=3, xlim=tzoom)
     else:
         pt.annotate(ax, 'no time varying input', (.5, .5), ha='center', va='center')
         ax.axis('off')
-        
+
 
 def activity_plots(data,
                    POP_KEYS = None,
@@ -339,7 +338,7 @@ def activity_plots(data,
 
     AE = [[[4,1]],
           [[4,2]]] # axes extent
-    
+
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
 
@@ -347,11 +346,11 @@ def activity_plots(data,
         if ('VMS_%s' % pop) in data:
             AE.append([[4,1]])
         Vm_plot_args['Vm_is_the_last_one'] = True
-            
+
     if ('POP_ACT_%s' % pop) in data: # just checking on the last one
         AE.append([[4,2]])
         Vm_plot_args['Vm_is_the_last_one'] = False
-        
+
     tzoom=[np.max([tzoom[0], 0.]), np.min([tzoom[1], data['tstop']])]
 
     if COLORS is None:
@@ -376,9 +375,9 @@ def activity_plots(data,
                                     with_smoothing=smooth_population_activity,
                                     subsampling=subsampling,
                                     with_log_scale=pop_act_log_scale)
-        
 
     return fig, AX
+
 
 def raster_and_Vm(data,
                   POP_KEYS = None,
@@ -390,7 +389,7 @@ def raster_and_Vm(data,
 
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
-        
+
     n, fig2 = 0, None
     for pop in POP_KEYS:
         if ('VMS_%s' % pop) in data:
@@ -436,7 +435,7 @@ def twin_plot_raster_pop_act(data,
         POP_KEYS = find_pop_keys(data)
     if COLORS is None:
         COLORS = [pt.tab10(i) for i in range(10)]
-        
+
     tzoom=[np.max([tzoom[0], 0.]), np.min([tzoom[1], data['tstop']])]
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
     cond = (t>tzoom[0]) & (t<tzoom[1])
@@ -454,7 +453,7 @@ def twin_plot_raster_pop_act(data,
                     color=color, lw=lw)
         else:
             ax.plot(t[cond], data['POP_ACT_'+pop_key][cond], color=color, lw=lw)
-            
+
     # now spikes
     ax2 = ax.twinx()
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
@@ -481,10 +480,10 @@ def twin_plot_raster_pop_act(data,
                     xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
     pt.set_plot(ax2, ['right'], ylabel='neurons',
                        xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
-    
+
     return fig, ax
 
-    
+
 ######################################
 #### RASTER PLOT
 ######################################
@@ -509,7 +508,7 @@ def raster(data,
     if ax is None:
         _, ax = pt.subplots(1, figsize=(3.2,2))
         pt.subplots_adjust(left=.05, bottom=.2)
-        
+
     # raster activity
     nn = 0
     for n, pop_key, color, nmax in zip(range(len(NMAXS)), POP_KEYS, COLORS, NMAXS):
@@ -525,7 +524,7 @@ def raster(data,
                        ylim=[0, np.sum(NMAXS)])
     if bar_scales_args is not None:
         pt.draw_bar_scales(ax, **bar_scales_args)
-    
+
     return ax
 
 ######################################
@@ -545,7 +544,7 @@ def pop_act(data,
         POP_KEYS = find_pop_keys(data)
     if COLORS is None:
         COLORS = [pt.tab10(i) for i in range(10)]
-        
+
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
     cond = (t>tzoom[0]) & (t<tzoom[1])
 
@@ -572,7 +571,7 @@ def pop_act(data,
         pt.set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
                     num_yticks=4,
                     xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
-    
+
     return ax
 
 
@@ -583,7 +582,7 @@ def find_spikes_from_Vm(t, Vm, data, pop_key):
     # adding spikes
     tspikes = t[1:][np.argwhere((Vm[1:]-Vm[:-1])<(.8*(reset-threshold)))]
     return tspikes, threshold
-    
+
 def clip_spikes_from_Vm(t, Vm, tspikes,
                         clip_window=10):
 
@@ -592,7 +591,7 @@ def clip_spikes_from_Vm(t, Vm, tspikes,
         clipped[(t>=ts) & (t<ts+clip_window)] = True
     return t[~clipped], Vm[~clipped]
 
-    
+
 def few_Vm_plot(data,
                 POP_KEYS = None, COLORS=None, NVMS=None,
                 tzoom=[0, np.inf],
@@ -608,13 +607,13 @@ def few_Vm_plot(data,
         COLORS = ['C'+str(i) for i in range(len(POP_KEYS))]
     if NVMS is None:
         NVMS = np.array([range(len(data['VMS_'+pop_key])) for pop_key in POP_KEYS], dtype=object)
-        
+
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
 
     if ax is None:
         _, ax = pt.subplots(figsize=(5,3))
         pt.subplots_adjust(left=.15, bottom=.1, right=.99)
-    
+
     cond = (t>tzoom[0]) & (t<tzoom[1])
 
     nn = 0
@@ -640,13 +639,13 @@ def few_Vm_plot(data,
                 xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
     if bar_scales_args is not None:
         pt.draw_bar_scales(ax, **bar_scales_args)
-    
+
     return ax
 
 def exc_inh_balance(data, pop_key='Exc'):
-    
+
     NVm= len(data['VMS_'+str(pop_key)])
-    
+
     fig, [ax, ax2] = pt.subplots(1, 2, figsize=(3.5,2))
     pt.subplots_adjust(left=.4, bottom=.2, hspace=1., wspace=1., right=.99)
 
@@ -654,7 +653,7 @@ def exc_inh_balance(data, pop_key='Exc'):
     CONDS =[]
     for i in range(NVm):
         CONDS.append(data['VMS_'+str(pop_key)][i]!=data[str(find_num_of_key(data,pop_key))+'_params']['Vreset'])
-        
+
     # excitation
     mean = np.mean([data['ISYNe_'+str(pop_key)][i][CONDS[i]].mean() for i in range(NVm)])
     std = np.std([data['ISYNe_'+str(pop_key)][i][CONDS[i]].mean() for i in range(NVm)])
@@ -666,7 +665,7 @@ def exc_inh_balance(data, pop_key='Exc'):
     std = np.std([data['ISYNi_'+str(pop_key)][i][CONDS[i]].mean() for i in range(NVm)])
     ax.bar([1], mean, yerr=std, edgecolor='r', facecolor='w', lw=3,
            error_kw={'ecolor':'r','linewidth':3}, capsize=3)
-    
+
     set_plot(ax, ylabel='currents \n (abs. value, pA)',
              xticks=[0,1], xticks_labels=['exc.', 'inh.'])
 
@@ -682,16 +681,16 @@ def exc_inh_balance(data, pop_key='Exc'):
     std = np.std([data['GSYNi_'+str(pop_key)][i].mean() for i in range(NVm)])/Gl
     ax2.bar([1], mean, yerr=std, edgecolor='r', facecolor='w', lw=3,
            error_kw={'ecolor':'r','linewidth':3}, capsize=3)
-    
+
     set_plot(ax2, ylabel='$G_{syn}$/$g_L$',
              xticks=[0,1], xticks_labels=['exc.', 'inh.'])
-    
+
     return fig
 
 def histograms(data, pop_key='Exc'):
-    
+
     NVm= len(data['VMS_'+str(pop_key)])
-    
+
     fig, AX = pt.subplots(2, 2, figsize=(4,3))
     pt.subplots_adjust(bottom=.3, top=.99, right=.99)
 
@@ -705,7 +704,7 @@ def histograms(data, pop_key='Exc'):
                  width=be[1]-be[0], facecolor=G, alpha=.3)
     set_plot(AX[0, 0], ['bottom'], yticks=[],
              xticks=[-70, -60, -50], xticks_labels=[], xlim=[-75,-45])
-    
+
     # inhibition
     for i in range(NVm):
         hist, be = np.histogram(data['VMS_'+inh_pop_key][i], bins=20, normed=True)
@@ -725,7 +724,7 @@ def histograms(data, pop_key='Exc'):
     hist, be = np.histogram(np.concatenate(data['ISYNi_'+exc_pop_key])[cond], bins=20, normed=True)
     AX[0, 1].bar(.5*(be[1:]+be[:-1]), hist, edgecolor=R, lw=0,
                  width=be[1]-be[0], facecolor=R, alpha=.3)
-        
+
     # on inhibitory population
     cond = np.concatenate(data['VMS_'+inh_pop_key])!=data[str(find_num_of_key(data,'Inh'))+'_params']['Vreset'] # removing clamping at reset
     hist, be = np.histogram(np.concatenate(data['ISYNe_'+inh_pop_key])[cond], bins=20, normed=True)
@@ -809,16 +808,16 @@ def assemble_quantities(data, filename,
     fig.savefig('temp.png')
     im = Image.open('temp.png')
     new_im.paste(im, (500, 1050))
-    
+
     # closing everything
     pt.close('all')
     new_im.save(filename)
 
-    
+
 if __name__=='__main__':
     import sys
     sys.path.append('../../')
-    
+
     from params_scan.aff_exc_aff_dsnh_params_space import get_scan
     args, F_aff, F_dsnh, DATA = get_scan(\
                     '../../params_scan/data/scan.zip')
@@ -827,4 +826,4 @@ if __name__=='__main__':
                         exc_pop_key='RecExc',
                         inh_pop_key='RecInh')
 
-    
+
