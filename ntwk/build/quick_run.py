@@ -57,7 +57,7 @@ def simulation(Model,
             print('/!\ no F_%s value set in Model ---> set to 0 ! /!\ ' % aff_pop)
             faff = 0*t_array
 
-        
+
         #  time-dep afferent excitation
         for i, tpop in enumerate(REC_POPS): # both on excitation and inhibition
             construct_feedforward_input(NTWK, tpop, aff_pop,
@@ -85,14 +85,14 @@ def simulation(Model,
         print('[ok] Results of the simulation are stored as:', filename)
 
 
-        
+
 def mean_field(Model, filename='data.mf.npz', verbose=True, dt=1e-2):
     """
-    
+
     """
     if verbose:
         print('--   running (slow) mean-field for %s [...]' % filename)
-        
+
     tstop = 1e-3*Model['tstop'] # from ms to seconds
     t = np.arange(int(tstop/dt))*dt
 
@@ -105,10 +105,10 @@ def mean_field(Model, filename='data.mf.npz', verbose=True, dt=1e-2):
         ### Intrinsic props
         if '%s_Ioscill_amp' % rec in Model:
             CURRENT_INPUTS[rec] = Model['%s_Ioscill_amp' % rec]*(1-np.cos(Model['%s_Ioscill_freq' % rec]*2*np.pi*t))/2.
-        
+
         ### afferent input
         for aff in list(Model['AFF_POPS']):
-            
+
             if '%s_IncreasingStep_size' % aff in Model:
                 faff =  stim_waveforms.IncreasingSteps(t, aff, Model,
                                                        translate_to_SI=True)
@@ -118,7 +118,7 @@ def mean_field(Model, filename='data.mf.npz', verbose=True, dt=1e-2):
                 faff = Model['F_%s' % aff]+0*t
 
             INPUTS['%s_%s' % (aff,rec)] = faff
-    
+
     X = mean_field.solve_mean_field_first_order(Model,
                                                 DYN_SYSTEM,
                                                 INPUTS=INPUTS,
@@ -127,7 +127,7 @@ def mean_field(Model, filename='data.mf.npz', verbose=True, dt=1e-2):
 
     np.savez(filename, **X)
 
-    
+
 if __name__=='__main__':
 
     import sys

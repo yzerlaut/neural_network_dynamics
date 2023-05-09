@@ -1,5 +1,6 @@
 import numpy as np
-from analyz.processing.signanalysis import gaussian_smoothing
+from scipy.ndimage.filters import gaussian_filter1d
+from scipy.special import erf
 
 def heaviside(x):
     return 0.5*(1+np.sign(x))
@@ -7,8 +8,11 @@ def heaviside(x):
 def smooth_heaviside(x):
     return 0.5*(1+erf(x))
 
+def gaussian_smoothing(Signal, idt_sbsmpl=10):
+    """Gaussian smoothing of the data"""
+    return gaussian_filter1d(Signal, idt_sbsmpl)
+
 def smooth_double_gaussian(t, t0, T1, T2, amplitude, smoothing=1e-2):
-        
     return amplitude*(\
                       np.exp(-(t-t0)**2/2./T1**2)*smooth_heaviside(-(t-t0)/smoothing)+\
                       np.exp(-(t-t0)**2/2./T2**2)*smooth_heaviside((t-t0)/smoothing))
@@ -81,12 +85,12 @@ def IncreasingSteps(t, pop, Model, translate_to_SI=False):
 
 
 
-    
+
 if __name__=='__main__':
     import matplotlib.pylab as plt
     t = np.linspace(0, 200, 1e3)
     x = ramp_rise_then_constant(t, 50, 100, 50, 200)
-    x = double_gaussian(t_array, 60., 30., 20., 10.)
+    x = double_gaussian(t, 60., 30., 20., 10.)
     plt.plot(t, x)
     plt.show()
-    
+
