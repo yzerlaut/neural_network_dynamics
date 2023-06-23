@@ -1,4 +1,4 @@
-import json
+import json, sys
 
 def load(filename):
     with open(filename) as f:
@@ -11,7 +11,11 @@ def load(filename):
 
 if __name__=='__main__':
    
-    paramsFile = 'ntwk/configs/The_Spectrum_of_Asynch_Dyn_2018/params.json'
+    if len(sys.argv)>1:
+        paramsFile = sys.argv[-1]
+    else:
+        paramsFile = 'ntwk/configs/The_Spectrum_of_Asynch_Dyn_2018/params.json'
+
     params = load(paramsFile)
 
     import pprint
