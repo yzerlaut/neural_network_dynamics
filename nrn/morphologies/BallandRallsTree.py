@@ -7,7 +7,7 @@ def build_morpho(branch_length=100,
                  soma_radius=5,
                  root_diameter=2,
                  Nbranch = 10,
-                 diameter_exponent=2./3., # Rall's branching rule by default
+                 diameter_reduction_factor=0.5**(2/3), # Rall's branching rule by default
                  Nperbranch=10,
                  angle=np.pi/8.,
                  random_angle=np.pi/15.,
@@ -38,14 +38,14 @@ def build_morpho(branch_length=100,
 
             # left angle
             new_Angles.append(Angles[i]+angle+np.random.randn()*random_angle)
-            setattr(c, 'L', Cylinder(diameter=root_diameter*(diameter_exponent)**(b-1)*um,
+            setattr(c, 'L', Cylinder(diameter=root_diameter*(diameter_reduction_factor)**(b-1)*um,
                                      n=Nperbranch,
                                      x=np.cos(new_Angles[-1])*branch_length*np.arange(2)*um,
                                      y=np.sin(new_Angles[-1])*branch_length*np.arange(2)*um))
 
             # right angle
             new_Angles.append(Angles[i]-angle+np.random.randn()*random_angle)
-            setattr(c, 'R', Cylinder(diameter=root_diameter*(diameter_exponent)**(b-1)*um,
+            setattr(c, 'R', Cylinder(diameter=root_diameter*(diameter_reduction_factor)**(b-1)*um,
                                      n=Nperbranch,
                                      x=np.cos(new_Angles[-1])*branch_length*np.arange(2)*um,
                                      y=np.sin(new_Angles[-1])*branch_length*np.arange(2)*um))
