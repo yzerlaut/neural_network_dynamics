@@ -178,8 +178,8 @@ if len(sys.argv)>2:
         AX['raster-0'].set_title('Network Simulation\n')
         AX['Vm-0'].set_title('$V_m$ dynamics\n')
 
-        # fig.savefig(os.path.join(os.path.expanduser('~'),
-                    # 'Desktop', 'fig.png'))
+        fig.savefig(os.path.join(os.path.expanduser('~'),
+                    'Desktop', 'fig.png'))
         
         pt.show()
     
