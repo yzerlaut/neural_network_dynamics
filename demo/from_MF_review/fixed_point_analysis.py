@@ -26,20 +26,31 @@ def load_config(config):
     if config=='self-sustained':
         pass
     elif config=='ext-driven-AI':
+        # ntwk params
         Model['F_AffExc'] = 25.
         Model['Q_Exc_Exc'], Model['Q_Exc_Inh'] = 1, 1
         Model['Q_AffExc_Exc'], Model['Q_AffExc_Inh'] = 1, 1
         Model['Q_Inh_Exc'], Model['Q_Inh_Inh'] = 5, 5
+        # for TF scan
+        Model['F_Exc_max'], Model['F_Inh_max'] = 60, 60
+        Model['Fout_max'] = 80.
     elif config=='saturated-act':
+        # ntwk params
         Model['F_AffExc'] = 25.
         Model['Q_Exc_Exc'], Model['Q_Exc_Inh'] = 4, 4
         Model['Q_AffExc_Exc'], Model['Q_AffExc_Inh'] = 4, 4
         Model['Q_Inh_Exc'], Model['Q_Inh_Inh'] = 10, 10
+        # no for TF scan
+        Model['F_Exc_max'], Model['F_Inh_max'] = 200, 200
+        Model['Fout_max'] = 300.
     elif config=='null-activity':
         Model['F_AffExc'] = 3.
         Model['Q_Exc_Exc'], Model['Q_Exc_Inh'] = 0.5, 0.5
         Model['Q_AffExc_Exc'], Model['Q_AffExc_Inh'] = 0.5, 0.5
         Model['Q_Inh_Exc'], Model['Q_Inh_Inh'] = 10, 10
+        # for TF scan
+        Model['F_Exc_max'], Model['F_Inh_max'] = 60, 60
+        Model['Fout_max'] = 80.
 
     return Model
 
@@ -212,6 +223,7 @@ if len(sys.argv)>1:
 
             Model['POP_STIM'] = ['Exc', 'Inh', 'AffExc']
 
+            print(config, Model['F_Exc_max'])
             Model['F_Exc_array'] = np.linspace(Model['F_Exc_min'],
                                                Model['F_Exc_max'], 4*N)
             Model['F_Inh_array'] = np.linspace(Model['F_Inh_min'],

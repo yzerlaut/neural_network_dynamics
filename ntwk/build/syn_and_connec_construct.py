@@ -223,13 +223,13 @@ def get_syn_and_conn_matrix(Model, POPULATIONS,
         if ('Tsyn_%s' % source_pop) in Model:
             Tsyn = Model['Tsyn_%s' % source_pop]
         elif len(source_pop.split('Exc'))>1:
-            Ts = Model['Tsyn_Exc']
+            Tsyn = Model['Tsyn_Exc']
         elif len(source_pop.split('Inh'))>1:
-            Ts = Model['Tsyn_Inh']
+            Tsyn = Model['Tsyn_Inh']
         else:
             print(' /!\ AFFERENT POP COULD NOT BE CLASSIFIED AS Exc or Inh /!\ ')
             print('-----> set to Exc by default')
-            Ts = Model['Tsyn_Exc']
+            Tsyn = Model['Tsyn_Exc']
 
         pconn, Qsyn, psyn = 0., 0., 1. # by default
         if ('p_'+source_pop+'_'+target_pop in Model) and ('Q_'+source_pop+'_'+target_pop in Model):
@@ -241,7 +241,7 @@ def get_syn_and_conn_matrix(Model, POPULATIONS,
             print('No connection for:', source_pop,'->', target_pop)
                 
         M[i, j] = {'pconn': pconn, 'Q': Qsyn,
-                   'Erev': Erev, 'Tsyn': Ts, 'psyn':psyn,
+                   'Erev': Erev, 'Tsyn': Tsyn, 'psyn':psyn,
                    'name':source_pop+target_pop}
 
         # in case conductance-current mixture

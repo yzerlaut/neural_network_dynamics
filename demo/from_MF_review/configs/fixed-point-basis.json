@@ -16,10 +16,10 @@
     "Q_AffExc_Exc":6.0, "Q_AffExc_Inh":6.0, 
     "                                                 ":0,
     " # -- synaptic time constants                    ":0,
-    "Tse":5.0, "Tsi":10.0,
+    "Tsyn_Exc":5.0, "Tsyn_Inh":10.0,
     "                                                 ":0,
     " # -- synaptic reversal potentials               ":0,
-    "Ee":0.0, "Ei": -80.0,
+    "Erev_Exc":0.0, "Erev_Inh": -80.0,
     "                                                 ":0,
     " # -- connectivity parameters                    ":0,
     "p_Exc_Exc":0.02, "p_Exc_Inh":0.02, 
@@ -57,5 +57,6 @@
     "F_Exc_max":35.0,
     "F_Inh_min":0.1,
     "F_Inh_max":35.0,
+    "Fout_max":70.0,
     "                                                 ":0
 }
