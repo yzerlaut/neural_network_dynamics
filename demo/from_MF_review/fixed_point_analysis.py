@@ -51,7 +51,7 @@ def calculate_mean_firing(data,
     return 1e3*len(data['iRASTER_Exc'][tcond])/(window[1]-window[0])/data['N_Exc']
 
 
-if len(sys.argv)>2:
+if len(sys.argv)>1:
 
     if sys.argv[1]=='plot':
         """
@@ -181,7 +181,7 @@ if len(sys.argv)>2:
         fig.savefig(os.path.join(os.path.expanduser('~'),
                     'Desktop', 'fig.png'))
         
-        pt.show()
+        plt.show()
     
     if sys.argv[1]=='tf':
         """

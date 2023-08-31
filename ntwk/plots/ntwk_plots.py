@@ -174,8 +174,9 @@ def shifted_Vms_subplot(data, ax,
 
     pt.draw_bar_scales(ax,
                        Xbar=Tbar, Xbar_label='%ims'%Tbar,
-                       Ybar=v_shift, Ybar_label='%imV'%v_shift,
-                       Ybar_rotation=90)
+                       # Ybar_rotation=90,
+                       Ybar=v_shift,
+                       Ybar_label='%imV'%v_shift)
 
     ax.axis('off')
 
