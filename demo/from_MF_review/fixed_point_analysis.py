@@ -22,10 +22,9 @@ def load_config(config):
                         'configs', 'fixed-point-basis.json')
     Model = params.load(config_file)
 
-    Model['Vm_tzoom'] = [400,600]
     # now update if need, 
     if config=='self-sustained':
-        pass
+        Model['Vm_tzoom'] = [500,700]
     elif config=='ext-driven-AI':
         # ntwk params
         Model['F_AffExc'] = 25.
@@ -35,6 +34,7 @@ def load_config(config):
         # for TF scan
         Model['F_Exc_max'], Model['F_Inh_max'] = 60, 60
         Model['Fout_max'] = 80.
+        Model['Vm_tzoom'] = [400,800]
     elif config=='saturated-act':
         # ntwk params
         Model['F_AffExc'] = 25.
@@ -45,7 +45,7 @@ def load_config(config):
         Model['F_Exc_max'], Model['F_Inh_max'] = 200, 200
         Model['Fout_max'] = 300.
         # zoom to see staurating dynamics 
-        Model['Vm_tzoom'] = [400,500]
+        Model['Vm_tzoom'] = [400,450]
     elif config=='null-activity':
         Model['F_AffExc'] = 3.
         Model['Q_Exc_Exc'], Model['Q_Exc_Inh'] = 0.5, 0.5
@@ -55,7 +55,7 @@ def load_config(config):
         Model['F_Exc_max'], Model['F_Inh_max'] = 60, 60
         Model['Fout_max'] = 80.
         # unzoom to see events
-        Model['Vm_tzoom'] = [400,700]
+        Model['Vm_tzoom'] = [300,800]
 
     return Model
 
@@ -104,7 +104,7 @@ if len(sys.argv)>1:
             AX['config-%i'%i].annotate('$Q_{i}$=%.1fnS\n'%Model['Q_Inh_Exc'], (0.5, 0),
                     ha='center', xycoords='axes fraction', color='tab:red')
             AX['config-%i'%i].annotate('$\\nu_{ext}$=%.0fHz'%Model['F_AffExc'], (0.5, 0),
-                    ha='center', xycoords='axes fraction')
+                    ha='center', xycoords='axes fraction', color='tab:blue')
 
             AX['config-%i'%i].axis('off')
 
@@ -166,7 +166,7 @@ if len(sys.argv)>1:
             AX['raster-%i'%i].axis('off')
             ntwk.plots.ntwk_plots.raster_subplot(data, raster,
                                                  ['Inh', 'Exc', 'AffExc'],
-                                                 ['tab:red', 'tab:green', 'tab:grey'],
+                                                 ['tab:red', 'tab:green', 'tab:blue'],
                                                  [0, 800],
                         Nmax_per_pop_cond=[data['N_Inh'], data['N_Exc'], 800],
                         subsampling=20, with_annot=False)
