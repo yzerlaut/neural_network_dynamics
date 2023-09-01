@@ -17,14 +17,16 @@ def build_up_afferent_synaptic_input(Model, POP_STIM, NRN_KEY=None, verbose=True
 
     SYN_POPS = []
     for source_pop in POP_STIM:
-        if len(source_pop.split('Exc'))>1:
-            Erev, Ts = Model['Ee'], Model['Tse']
+        if 'Erev_%s'%source_pop in Model:
+            Erev, Ts = Model['Erev_%s'%source_pop], Model['Tsyn_%s'%source_pop]
+        elif len(source_pop.split('Exc'))>1:
+            Erev, Ts = Model['Erev_Exc'], Model['Tsyn_Exc']
         elif len(source_pop.split('Inh'))>1:
-            Erev, Ts = Model['Ei'], Model['Tsi']
+            Erev, Ts = Model['Erev_Inh'], Model['Tsyn_Inh']
         else:
             print(' /!\ AFFERENT POP COULD NOT BE CLASSIFIED AS Exc or Inh /!\ ')
             print('-----> set to Exc by default')
-            Erev, Ts = Model['Ee'], Model['Tse']
+            Erev, Ts = Model['Erev_Exc'], Model['Tsyn_Exc']
 
         # here we set 0 connectivity for those not explicitely defined
         try:

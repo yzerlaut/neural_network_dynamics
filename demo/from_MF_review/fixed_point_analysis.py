@@ -22,6 +22,7 @@ def load_config(config):
                         'configs', 'fixed-point-basis.json')
     Model = params.load(config_file)
 
+    Model['Vm_tzoom'] = [400,600]
     # now update if need, 
     if config=='self-sustained':
         pass
@@ -37,12 +38,14 @@ def load_config(config):
     elif config=='saturated-act':
         # ntwk params
         Model['F_AffExc'] = 25.
-        Model['Q_Exc_Exc'], Model['Q_Exc_Inh'] = 4, 4
-        Model['Q_AffExc_Exc'], Model['Q_AffExc_Inh'] = 4, 4
+        Model['Q_Exc_Exc'], Model['Q_Exc_Inh'] = 6, 6
+        Model['Q_AffExc_Exc'], Model['Q_AffExc_Inh'] = 6, 6
         Model['Q_Inh_Exc'], Model['Q_Inh_Inh'] = 10, 10
         # no for TF scan
         Model['F_Exc_max'], Model['F_Inh_max'] = 200, 200
         Model['Fout_max'] = 300.
+        # zoom to see staurating dynamics 
+        Model['Vm_tzoom'] = [400,500]
     elif config=='null-activity':
         Model['F_AffExc'] = 3.
         Model['Q_Exc_Exc'], Model['Q_Exc_Inh'] = 0.5, 0.5
@@ -51,6 +54,8 @@ def load_config(config):
         # for TF scan
         Model['F_Exc_max'], Model['F_Inh_max'] = 60, 60
         Model['Fout_max'] = 80.
+        # unzoom to see events
+        Model['Vm_tzoom'] = [400,700]
 
     return Model
 
@@ -127,6 +132,7 @@ if len(sys.argv)>1:
                 ntwk.plots.tf_2_variables_3d(tf,
                                              ax=AX['TF-%i'%i],
                                              x=x,
+                                             zlim=[0,200] if (config=='saturated-act') else [0,80],
                                              xkey='F_Inh', ykey='F_Exc')
 
                 ### MF plot
@@ -160,19 +166,21 @@ if len(sys.argv)>1:
             AX['raster-%i'%i].axis('off')
             ntwk.plots.ntwk_plots.raster_subplot(data, raster,
                                                  ['Inh', 'Exc', 'AffExc'],
-                                                 ['r', 'g', 'b'],
-                                                 [0, 1000],
+                                                 ['tab:red', 'tab:green', 'tab:grey'],
+                                                 [0, 800],
                         Nmax_per_pop_cond=[data['N_Inh'], data['N_Exc'], 800],
                         subsampling=20, with_annot=False)
             raster.set_xlabel('time (ms)')
+            raster.set_xticks([0,400,800])
             print('$\\nu_{sim}$=%.1fHz' %  calculate_mean_firing(data))
             # raster.set_title('$\\nu_{sim}$=%.1fHz' %  calculate_mean_firing(data),
                             # style='italic', fontsize=7)
 
             ### Vms plot
 
-            tzoom1 = [500, 700]
+            tzoom1 = Model['Vm_tzoom']
             ylim = raster.get_ylim()
+            raster.plot(tzoom1, [ylim[1], ylim[1]], color='k', lw=2)
             raster.fill_between(tzoom1,
                                 [ylim[0], ylim[0]], [ylim[1], ylim[1]],
                                 color='grey', lw=0, alpha=.2)
@@ -183,7 +191,7 @@ if len(sys.argv)>1:
                                                  ['r', 'g'], tzoom1,
                                                  spike_peak=-30, Tbar=20)
              
-        AX['config-0'].set_title('Parameters\n')
+        AX['config-0'].set_title('Network\nParameters')
         AX['TF-0'].set_title('Transfer Function\n')
         AX['MF-0'].set_title('Mean Field\nAnalysis')
         AX['raster-0'].set_title('Network Simulation\n')
