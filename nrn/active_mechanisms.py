@@ -10,7 +10,8 @@ gamma = F/(R*T)  # R=gas constant, F=Faraday constant
 
 Equation_String= '''
 Im = + 0*amp/meter**2 : amp/meter**2
-I_inj : amp (point current)'''
+I_inj : amp (point current)
+'''
 
 #########################################
 ########### Membrane currents ###########
@@ -66,9 +67,9 @@ class PassiveCurrent(MembraneCurrent):
     def __init__(self, name='Pas', params=None):
         
         self.equations = """
-        I{name} = gbar_{name}*(v-{El}*mV): amp/meter**2
-        gbar_{name} : siemens/meter**2
-        """
+I{name} = gbar_{name}*(v-{El}*mV): amp/meter**2
+gbar_{name} : siemens/meter**2
+"""
         
         super().__init__(name, params)
     
@@ -92,18 +93,19 @@ class HodgkinHuxleyCurrent(MembraneCurrent):
                  params=None):
 
         self.equations = """
-        I{name} = I{name}_Na + I{name}_K : amp/meter**2
-        I{name}_Na = gbarNa_{name} * m{name}**3 * h{name} * (v-{E_Na}*mV) : amp/meter**2
-        I{name}_K = gbarK_{name} * n{name}**4 * (v-{E_K}*mV) : amp/meter**2
-        gbarNa_{name} : siemens/meter**2
-        gbarK_{name} : siemens/meter**2
-        v2 = v - {VT}*mV : volt  # shifted membrane potential (Traub convention)
-        dm{name}/dt = (0.32*(mV**-1)*(13.*mV-v2)/
-          (exp((13.*mV-v2)/(4.*mV))-1.)*(1-m{name})-0.28*(mV**-1)*(v2-40.*mV)/
-          (exp((v2-40.*mV)/(5.*mV))-1.)*m{name}) / ms * {tadj}: 1
-        dn{name}/dt = (0.032*(mV**-1)*(15.*mV-v2)/
-          (exp((15.*mV-v2)/(5.*mV))-1.)*(1.-n{name})-.5*exp((10.*mV-v2)/(40.*mV))*n{name}) / ms * {tadj}: 1
-        dh{name}/dt = (0.128*exp((17.*mV-v2)/(18.*mV))*(1.-h{name})-4./(1+exp((40.*mV-v2)/(5.*mV)))*h{name}) / ms * {tadj}: 1"""
+I{name} = I{name}_Na + I{name}_K : amp/meter**2
+I{name}_Na = gbarNa_{name} * m{name}**3 * h{name} * (v-{E_Na}*mV) : amp/meter**2
+I{name}_K = gbarK_{name} * n{name}**4 * (v-{E_K}*mV) : amp/meter**2
+gbarNa_{name} : siemens/meter**2
+gbarK_{name} : siemens/meter**2
+v2 = v - {VT}*mV : volt  # shifted membrane potential (Traub convention)
+dm{name}/dt = (0.32*(mV**-1)*(13.*mV-v2)/
+(exp((13.*mV-v2)/(4.*mV))-1.)*(1-m{name})-0.28*(mV**-1)*(v2-40.*mV)/
+(exp((v2-40.*mV)/(5.*mV))-1.)*m{name}) / ms * {tadj}: 1
+dn{name}/dt = (0.032*(mV**-1)*(15.*mV-v2)/
+(exp((15.*mV-v2)/(5.*mV))-1.)*(1.-n{name})-.5*exp((10.*mV-v2)/(40.*mV))*n{name}) / ms * {tadj}: 1
+dh{name}/dt = (0.128*exp((17.*mV-v2)/(18.*mV))*(1.-h{name})-4./(1+exp((40.*mV-v2)/(5.*mV)))*h{name}) / ms * {tadj}: 1
+"""
         
         super().__init__(name, params)
         
@@ -122,7 +124,7 @@ class LowThresholdCalciumCurrent(MembraneCurrent):
     Genealogy (NEURON comment):
 
     T-type Ca channel 
-    ca.mod to lead to thalamic ca current inspired by destexhe and huguenrd
+    ca.mod to lead to thalamic ca current inspired by Destexhe and Huguenard
     Uses fixed eca instead of GHK eqn
     changed from (AS Oct0899)
     changed for use with Ri18  (B.Kampa 2005)
@@ -131,16 +133,16 @@ class LowThresholdCalciumCurrent(MembraneCurrent):
                  params=None):
         
         self.equations = """
-        I{name} = g{name} * (v - {E_Ca}*mV): amp/meter**2
-        g{name} = gbar_{name} * m{name}**2 * h{name} : siemens/meter**2
-        gbar_{name} : siemens/meter**2
-        m{name}_inf = 1.0 / ( 1 + exp(-(v/mV+{v12m})/{vwm}) ) : 1 
-	h{name}_inf = 1.0 / ( 1 + exp((v/mV+{v12h})/{vwh}) ) : 1 
-	tau_m{name} = ( {am} + 1.0 / ( exp((v/mV+{vm1})/{wm1}) + exp(-(v/mV+{vm2})/{wm2}) ) ) * ms : second
-	tau_h{name} = ( {ah} + 1.0 / ( exp((v/mV+{vh1})/{wh1}) + exp(-(v/mV+{vh2})/{wh2}) ) ) * ms : second
-        dm{name}/dt = -(m{name} - m{name}_inf)/tau_m{name} : 1
-        dh{name}/dt = -(h{name} - h{name}_inf)/tau_h{name} : 1
-        """
+I{name} = g{name} * (v - {E_Ca}*mV): amp/meter**2
+g{name} = gbar_{name} * m{name}**2 * h{name} : siemens/meter**2
+gbar_{name} : siemens/meter**2
+m{name}_inf = 1.0 / ( 1 + exp(-(v/mV+{v12m})/{vwm}) ) : 1 
+h{name}_inf = 1.0 / ( 1 + exp((v/mV+{v12h})/{vwh}) ) : 1 
+tau_m{name} = ( {am} + 1.0 / ( exp((v/mV+{vm1})/{wm1}) + exp(-(v/mV+{vm2})/{wm2}) ) ) * ms : second
+tau_h{name} = ( {ah} + 1.0 / ( exp((v/mV+{vh1})/{wh1}) + exp(-(v/mV+{vh2})/{wh2}) ) ) * ms : second
+dm{name}/dt = -(m{name} - m{name}_inf)/tau_m{name} : 1
+dh{name}/dt = -(h{name} - h{name}_inf)/tau_h{name} : 1
+"""
 
         super().__init__(name, params)
         
@@ -185,22 +187,22 @@ class HighVoltageActivationCalciumCurrent(MembraneCurrent):
     def __init__(self, name='HVACa', params=None):
 
         self.equations = """
-        I{name} = g{name} * (v - {E_Ca}*mV) : amp/meter**2
-	g{name} = gbar_{name} * {tadj} * m{name}*m{name}*h{name} : siemens/meter**2
-	gbar_{name} : siemens/meter**2
-        # --> activation: m
-	a_m{name} = 0.055*(-27 - v/mV)/expm1((-27-v/mV)/3.8) : 1
-	b_m{name} = 0.94*exp((-75. - v/mV)/17.) : 1
-	h{name}_inf = a_h{name}/(a_h{name}+b_h{name}) : 1
-        tau_m{name} = 1/{tadj}/(a_m{name}+b_m{name})*second : second
-        dm{name}/dt = -(m{name} - m{name}_inf)/tau_m{name} : 1
-        # --> inactivation: h
-	a_h{name} = 0.000457*exp((-13-v/mV)/50.) : 1
-	b_h{name} = 0.0065/(exp((-v/mV-15)/28.) + 1) : 1
-	m{name}_inf = a_m{name}/(a_m{name}+b_m{name}) : 1
-	tau_h{name} = 1/{tadj}/(a_h{name}+b_h{name})*second : second
-        dh{name}/dt = -(h{name} - h{name}_inf)/tau_h{name} : 1
-        """
+I{name} = g{name} * (v - {E_Ca}*mV) : amp/meter**2
+g{name} = gbar_{name} * {tadj} * m{name}*m{name}*h{name} : siemens/meter**2
+gbar_{name} : siemens/meter**2
+# --> activation: m
+a_m{name} = 0.055*(-27 - v/mV)/expm1((-27-v/mV)/3.8) : 1
+b_m{name} = 0.94*exp((-75. - v/mV)/17.) : 1
+h{name}_inf = a_h{name}/(a_h{name}+b_h{name}) : 1
+tau_m{name} = 1/{tadj}/(a_m{name}+b_m{name})*second : second
+dm{name}/dt = -(m{name} - m{name}_inf)/tau_m{name} : 1
+# --> inactivation: h
+a_h{name} = 0.000457*exp((-13-v/mV)/50.) : 1
+b_h{name} = 0.0065/(exp((-v/mV-15)/28.) + 1) : 1
+m{name}_inf = a_m{name}/(a_m{name}+b_m{name}) : 1
+tau_h{name} = 1/{tadj}/(a_h{name}+b_h{name})*second : second
+dh{name}/dt = -(h{name} - h{name}_inf)/tau_h{name} : 1
+"""
         
         super().__init__(name, params)
 
@@ -232,15 +234,15 @@ class PotassiumChannelCurrent(MembraneCurrent):
     def __init__(self, name='K', params=None):
 
         self.equations = """
-        I{name} = g{name} * (v - {E_K}*mV) : amp/meter**2
-        g{name} = gbar_{name} * {tadj} * n{name} : siemens/meter**2
-        gbar_{name} : siemens/meter**2
-        a{name} = {Ra} * (v/mV - {tha}) / (1 - exp(-(v/mV - {tha})/{qa})) : 1
-        b{name} = -{Rb} * (v/mV - {tha}) / (1 - exp((v/mV - {tha})/{qa})) : 1
-	tau_n{name} = 1/{tadj}/(a{name}+b{name})*ms : second 
-	n{name}_inf = a{name}/(a{name}+b{name}) : 1
-        dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name} : 1
-        """
+I{name} = g{name} * (v - {E_K}*mV) : amp/meter**2
+g{name} = gbar_{name} * {tadj} * n{name} : siemens/meter**2
+gbar_{name} : siemens/meter**2
+a{name} = {Ra} * (v/mV - {tha}) / (1 - exp(-(v/mV - {tha})/{qa})) : 1
+b{name} = -{Rb} * (v/mV - {tha}) / (1 - exp((v/mV - {tha})/{qa})) : 1
+tau_n{name} = 1/{tadj}/(a{name}+b{name})*ms : second 
+n{name}_inf = a{name}/(a{name}+b{name}) : 1
+dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name} : 1
+"""
         
         super().__init__(name, params)
 
@@ -288,20 +290,20 @@ class SodiumChannelCurrent(MembraneCurrent):
     def __init__(self, name='Na', params=None):
 
         self.equations = """
-        I{name} = g{name} * (v - {E_Na}*mV) : amp/meter**2
-        gbar_{name} : siemens/meter**2
-        g{name} = gbar_{name} * {tadj} * m{name}**3 *h{name} : siemens/meter**2
-	a_m{name} = {Ra}/ms*{qa}/exprel(-(clip(v/mV+{vshift},-120,100)-{tha})/{qa}): 1/second
-	b_m{name} = {Rb}/ms*{qa}/exprel(-(-clip(v/mV+{vshift},-120,100)+{tha})/{qa}): 1/second
-	tau_m{name} = 1/{tadj}/(a_m{name}+b_m{name}) : second
-	m{name}_inf = a_m{name}/(a_m{name}+b_m{name}) : 1
-	a_h{name} = {Rd}/ms*{qi}/exprel(-(clip(v/mV+{vshift},-120,100)-{thi1})/{qi}): 1/second
-	b_h{name} = {Rg}/ms*{qi}/exprel(-(-clip(v/mV+{vshift},-120,100)+{thi2})/{qi}): 1/second
-	tau_h{name} = 1/{tadj}/(a_h{name}+b_h{name}) : second
-	h{name}_inf = 1/(1+exp((clip(v/mV+{vshift}, -120, 100)-{thinf})/{qinf})) : 1
-        dm{name}/dt = -(m{name} - m{name}_inf)/tau_m{name} : 1
-        dh{name}/dt = -(h{name} - h{name}_inf)/tau_h{name} : 1
-        """
+I{name} = g{name} * (v - {E_Na}*mV) : amp/meter**2
+gbar_{name} : siemens/meter**2
+g{name} = gbar_{name} * {tadj} * m{name}**3 *h{name} : siemens/meter**2
+a_m{name} = {Ra}/ms*{qa}/exprel(-(clip(v/mV+{vshift},-120,100)-{tha})/{qa}): 1/second
+b_m{name} = {Rb}/ms*{qa}/exprel(-(-clip(v/mV+{vshift},-120,100)+{tha})/{qa}): 1/second
+tau_m{name} = 1/{tadj}/(a_m{name}+b_m{name}) : second
+m{name}_inf = a_m{name}/(a_m{name}+b_m{name}) : 1
+a_h{name} = {Rd}/ms*{qi}/exprel(-(clip(v/mV+{vshift},-120,100)-{thi1})/{qi}): 1/second
+b_h{name} = {Rg}/ms*{qi}/exprel(-(-clip(v/mV+{vshift},-120,100)+{thi2})/{qi}): 1/second
+tau_h{name} = 1/{tadj}/(a_h{name}+b_h{name}) : second
+h{name}_inf = 1/(1+exp((clip(v/mV+{vshift}, -120, 100)-{thinf})/{qinf})) : 1
+dm{name}/dt = -(m{name} - m{name}_inf)/tau_m{name} : 1
+dh{name}/dt = -(h{name} - h{name}_inf)/tau_h{name} : 1
+"""
 	# h{name}_inf = a_h{name}/(a_h{name}+b_h{name}) : 1
         super().__init__(name, params)
 
@@ -346,15 +348,16 @@ class CalciumDependentPotassiumCurrent(MembraneCurrent):
     def __init__(self, name='KCa', params=None):
 
         self.equations = """
-        I{name} = g{name} * (v - {E_K}*mV) : amp/meter**2
-        g{name} = gbar_{name} * {tadj}* n{name} : siemens/meter**2
-        gbar_{name} : siemens/meter**2
-        a{name} = {Ra} * (InternalCalcium/({InternalCalcium0}*uM))**{ExpCai} : 1
-        b{name} = {Rb} : 1
-	tau_n{name} = 1/{tadj}/(a{name}+b{name})*ms : second 
-	n{name}_inf = a{name}/(a{name}+b{name}) : 1
-        dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name} : 1"""
-        
+I{name} = g{name} * (v - {E_K}*mV) : amp/meter**2
+g{name} = gbar_{name} * {tadj}* n{name} : siemens/meter**2
+gbar_{name} : siemens/meter**2
+a{name} = {Ra} * (InternalCalcium/({InternalCalcium0}*uM))**{ExpCai} : 1
+b{name} = {Rb} : 1
+tau_n{name} = 1/{tadj}/(a{name}+b{name})*ms : second 
+n{name}_inf = a{name}/(a{name}+b{name}) : 1
+dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name} : 1
+"""
+
         super().__init__(name, params)
 
     def insert(self, eqs):
@@ -392,14 +395,14 @@ class HyperpolarizationActivatedCationCurrent(MembraneCurrent):
     def __init__(self, name='H', params=None):
 
         self.equations = """
-        I{name} = g{name} * (v - {E_hdb}*mV) : amp/meter**2
-        g{name} = gbar_{name} * l{name} : siemens/meter**2
-        gbar_{name} : : siemens/meter**2
-        a{name} = 1/(1+ exp(0.0378*{zetat}*(v/mV-{vhalft}))) : 1
-	tau_l{name} = exp(0.0378*{zetat}*{gmt}*(v/mV-{vhalft})) / ({qtl}*{qt}*{a0t}*(1+a{name})) *ms : second 
-	l{name}_inf = 1/(1+a{name}) : 1
-        dl{name}/dt = -(l{name} - l{name}_inf)/tau_l{name} : 1
-        """
+I{name} = g{name} * (v - {E_hdb}*mV) : amp/meter**2
+g{name} = gbar_{name} * l{name} : siemens/meter**2
+gbar_{name} : : siemens/meter**2
+a{name} = 1/(1+ exp(0.0378*{zetat}*(v/mV-{vhalft}))) : 1
+tau_l{name} = exp(0.0378*{zetat}*{gmt}*(v/mV-{vhalft})) / ({qtl}*{qt}*{a0t}*(1+a{name})) *ms : second 
+l{name}_inf = 1/(1+a{name}) : 1
+dl{name}/dt = -(l{name} - l{name}_inf)/tau_l{name} : 1
+"""
         
         super().__init__(name, params)
 
@@ -434,14 +437,15 @@ class MuscarinicPotassiumCurrent(MembraneCurrent):
     def __init__(self, name='Musc', params=None):
 
         self.equations = """
-        I{name} = g{name} * (v - {E_K}*mV) : amp/meter**2
-        g{name} = gbar_{name} * n{name} : siemens/meter**2
-        gbar_{name} : siemens/meter**2
-        a{name} = {Ra} * (v/mV - {tha}) / (1 - exp(-(v/mV - {tha})/{qa})) : 1
-        b{name} = {Rb} : 1
-	tau_n{name} = 1/{tadj}/(a{name}+b{name})*ms : second 
-	n{name}_inf = a{name}/(a{name}+b{name}) : 1
-        dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name} : 1"""
+I{name} = g{name} * (v - {E_K}*mV) : amp/meter**2
+g{name} = gbar_{name} * n{name} : siemens/meter**2
+gbar_{name} : siemens/meter**2
+a{name} = {Ra} * (v/mV - {tha}) / (1 - exp(-(v/mV - {tha})/{qa})) : 1
+b{name} = {Rb} : 1
+tau_n{name} = 1/{tadj}/(a{name}+b{name})*ms : second 
+n{name}_inf = a{name}/(a{name}+b{name}) : 1
+dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name} : 1
+"""
         
         super().__init__(name, params)
 
@@ -517,8 +521,9 @@ class CalciumConcentrationDynamics:
 
         # drive_channel = -0.05182136/{depth}*({contributing_currents})/mA*cm**2*nmolar/ms : mmolar/second
         self.equations ="""
-        drive_channel = -0.5182*({contributing_currents})/mA*cm**2*mmolar/ms : mmolar/second
-	dInternalCalcium/dt = drive_channel+({cainf}*mmolar-InternalCalcium)/{taur}/ms : mmolar"""
+drive_channel = -0.5182*({contributing_currents})/mA*cm**2*mmolar/ms : mmolar/second
+dInternalCalcium/dt = drive_channel+({cainf}*mmolar-InternalCalcium)/{taur}/ms : mmolar
+"""
         self.code = self.equations.format(**self.params)
         
     def insert(self, eqs):
@@ -541,8 +546,9 @@ if __name__=='__main__':
 
     # Starting from an empty equation string:
     Equation_String= '''
-    Im = + 0*amp/meter**2 : amp/meter**2
-    I_inj : amp (point current)'''
+Im = + 0*amp/meter**2 : amp/meter**2
+I_inj : amp (point current)
+'''
 
     # calcium dynamics following: HighVoltageActivationCalciumCurrent + LowThresholdCalciumCurrent
     Equation_String = CalciumConcentrationDynamics(contributing_currents='IT+IHVACa',
@@ -559,7 +565,8 @@ if __name__=='__main__':
     
     for current in CURRENTS:
         Equation_String = current.insert(Equation_String)
-    
+
+    print(Equation_String)
     eqs = Equations(Equation_String)
     
     # Simplified three-compartment morphology
