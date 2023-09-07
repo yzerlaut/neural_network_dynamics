@@ -10,8 +10,12 @@ gamma = F/(R*T)  # R=gas constant, F=Faraday constant
 
 Equation_String= '''
 Im = + 0*amp/meter**2 : amp/meter**2
+vc = clip( v/mV , -90, 50) : 1
 I_inj : amp (point current)
 '''
+# with UNITLESS CLIPPED VOLTAGE, useful for mechanisms
+
+
 
 #########################################
 ########### Membrane currents ###########
@@ -243,7 +247,6 @@ tau_n{name} = 1/{tadj}/(a{name}+b{name})*ms : second
 n{name}_inf = a{name}/(a{name}+b{name}) : 1
 dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name} : 1
 """
-        
         super().__init__(name, params)
 
         
@@ -256,7 +259,61 @@ dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name} : 1
             Ra = 0.02, # kHz=1/ms
             Rb = 0.002) # kHz
 
-    
+class DelayedRectifierPotassiumChannelCurrent(MembraneCurrent):
+    """
+    Delayed Rectifier Potassium channel
+    Genealogy: 
+    from Tzivilaki et al. (2019) / Poirazi lab 
+    """
+    def __init__(self, name='Na', params=None):
+
+        self.equations = """
+I{name} = g{name} * (v - {E_K}*mV)                                            : amp/meter**2
+gbar_{name}                                                                   : siemens/meter**2
+g{name} = gbar_{name} * n{name}**4                                            : siemens/meter**2
+a_n{name} = -0.018 * (vc-13) / ( exp( - clip((vc-13)/25, -inf, -1e-4) ) - 1 ) : 1
+b_n{name} = 0.054 * (vc-23) / exp( (vc-23)/12 )                               : 1
+tau_n{name} =  1/{tadj}/(abs(a_n{name}+b_n{name})+1e-4)*second                : second
+n{name}_inf = a_n{name}/(abs(a_n{name}+b_n{name})+1e-4)                       : 1 
+dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name}                            : 1
+"""
+        super().__init__(name, params)
+
+    def default_params(self):
+        return dict(
+            E_K = -90.0,# mV
+            tadj = 1 )
+
+
+class SlowlyInactivatingPotassiumCurrent(MembraneCurrent):
+    """
+    Slowly Inactivating K+ Channel
+    Genealogy: 
+    iksin.mod, from Tzivilaki et al. (2019) / Poirazi lab 
+    """
+    def __init__(self, name='Kslowin', params=None):
+
+        self.equations = """
+I{name} = g{name} * (v - {E_K}*mV)                                            : amp/meter**2
+gbar_{name}                                                                   : siemens/meter**2
+g{name} = gbar_{name} * a{name} * b{name}                                     : siemens/meter**2
+a{name}_inf = 1/( 1 + exp(-(vc+34)/6.5) )                                     : 1 
+tau_a{name} =  10*second                                                      : second
+da{name}/dt = -(a{name} - a{name}_inf)/tau_a{name}                            : 1
+b{name}_inf = 1/( 1 + exp((vc+65)/6.6) )                                      : 1 
+tau_b{name} =  ( 200+3200/( 1 + exp( -(vc+63.6)/4 ) ) ) * second              : second
+db{name}/dt = -(b{name} - b{name}_inf)/tau_b{name}                            : 1
+"""
+        super().__init__(name, params)
+
+    def default_params(self):
+        return dict(
+            E_K = -90.0,# mV
+            tadj = 1 )
+  
+
+
+  
 class SodiumChannelCurrent(MembraneCurrent):
     """
     Sodium channel, Hodgkin-Huxley style kinetics.  
@@ -292,7 +349,7 @@ class SodiumChannelCurrent(MembraneCurrent):
         self.equations = """
 I{name} = g{name} * (v - {E_Na}*mV) : amp/meter**2
 gbar_{name} : siemens/meter**2
-g{name} = gbar_{name} * {tadj} * m{name}**3 *h{name} : siemens/meter**2
+g{name} = gbar_{name} * {tadj} * m{name}**3 * h{name} : siemens/meter**2
 a_m{name} = {Ra}/ms*{qa}/exprel(-(clip(v/mV+{vshift},-120,100)-{tha})/{qa}): 1/second
 b_m{name} = {Rb}/ms*{qa}/exprel(-(-clip(v/mV+{vshift},-120,100)+{tha})/{qa}): 1/second
 tau_m{name} = 1/{tadj}/(a_m{name}+b_m{name}) : second
@@ -311,19 +368,66 @@ dh{name}/dt = -(h{name} - h{name}_inf)/tau_h{name} : 1
     def default_params(self):
         return dict(
             E_Na=60., # mV
-	    vshift = -10,#	(mV)		: voltage shift (affects all)
-	    tha  = -35,#	(mV)		: v 1/2 for act		(-42)
-	    qa   = 9., #	(mV)		: act slope		
-	    Ra   = 0.182, #	(/ms)		: open (v)		
-	    Rb   = 0.124, #	(/ms)		: close (v)		
-	    thi1  = -50., #	(mV)		: v 1/2 for inact 	
-	    thi2  = -75., #	(mV)		: v 1/2 for inact 	
-	    qi   = 5., #	(mV)	        : inact tau slope
-	    thinf  = -65., #	(mV)		: inact inf slope	
-	    qinf  = 6.2, #	(mV)		: inact inf slope
-	    Rg   = 0.0091, #	(/ms)		: inact (v)	
-	    Rd   = 0.024, #	(/ms)		: inact recov (v) 
+            vshift = -10,#	(mV)		: voltage shift (affects all)
+            tha  = -35,#	(mV)		: v 1/2 for act		(-42)
+            qa   = 9., #	(mV)		: act slope		
+            Ra   = 0.182, #	(/ms)		: open (v)		
+            Rb   = 0.124, #	(/ms)		: close (v)		
+            thi1  = -50., #	(mV)		: v 1/2 for inact 	
+            thi2  = -75., #	(mV)		: v 1/2 for inact 	
+            qi   = 5., #	(mV)	        : inact tau slope
+            thinf  = -65., #	(mV)		: inact inf slope	
+            qinf  = 6.2, #	(mV)		: inact inf slope
+            Rg   = 0.0091, #	(/ms)		: inact (v)	
+            Rd   = 0.024, #	(/ms)		: inact recov (v) 
             tadj = 2.3**((34-23)/10))
+
+class FastSodiumChannelCurrent(MembraneCurrent):
+    """
+    Sodium channel, with a fast inactivation `s`
+    Genealogy: 
+    from Tzivilaki et al. (2019) / Poirazi lab / Kiki Sidiropoulou,  September 27, 2007 
+    --> IMPLEMENTATION NOT WORKING
+    """
+    def __init__(self, name='Na', params=None):
+
+        self.equations = """
+I{name} = g{name} * (v - {E_Na}*mV) : amp/meter**2
+gbar_{name} : siemens/meter**2
+g{name} = gbar_{name} * {tadj} * m{name}**3 * h{name}                          : siemens/meter**2
+# --- m
+a_m{name} = -0.2816 * ( 0.5*(1-sign(abs(vc+28)-1e-4)) * (-9.3+(vc+28)/2.) +\
+       0.5*(1+sign(abs(vc+28)-1e-4)) * ((vc+28)/(exp(-(vc+28)/9.3)-1) ) )               : 1
+b_m{name} =  0.2464 * ( 0.5*(1-sign(abs(vc+1)-1e-4))*(6.0 + (v/mV+1)/2.) +\
+       0.5*(1+sign(abs(vc+1)-1e-4)) * ((vc+1)/(exp((vc+1)/6.0)-1)) )                    : 1
+tau_m{name} =  1/{tadj}/(abs(a_m{name}+b_m{name})+1e-5)*second                          : second
+m{name}_inf = a_m{name}/( abs(a_m{name}+b_m{name}) + 1e-5 )                             : 1 
+# --- h 
+a_h{name} = 0.098 * ( 0.5*(1-sign(abs(vc+40.1)-1e-4))*(20.0 + (vc+40.1)/2.) +\
+        0.5*(1+sign(abs(vc+40.1)-1e-4)) / exp(vc+40.1+43.1/20.) )                       : 1
+b_h{name} = 1.4 * ( 0.5*(1-sign(abs(vc+13.1)-1e-4))*(10.0 + (vc+13.1)/2.) +\
+        0.5*(1+sign(abs(vc+13.1)-1e-4)) * 1 / (1 + exp(-vc/10.0) ) )                    : 1
+tau_h{name} = 1/{tadj}/(abs(a_h{name}+b_h{name})+1e-8)*second                           : second
+h{name}_inf = 0*a_h{name}/( abs(a_h{name}+b_h{name}) + 1e-8 )                              : 1
+# --- s 
+# alphav{name} = 1/(1+exp((vc+58.)/2.))                                                 : 1
+# alphar{name} = exp(1e-3*12.*(vc+60.0)*9.648e4/(8.315*(273.16+{celsius})))             : 1
+# betar{name} =  exp(1e-3*12.*0.2*(vc+60.0)*9.648e4/(8.315*(273.16+{celsius})))         : 1
+# tau_s{name} = clip( betar{name}/(3e-4/ms)/(1+alphar{name}) , {taumin}*ms, 1e5*ms )    : second
+# s{name}_inf = clip( alphav{name} + {ar2} * (1-alphav{name}), 1e-8, 1-1e-8)            : 1
+dm{name}/dt = -(m{name} - m{name}_inf)/tau_m{name}                                      : 1
+dh{name}/dt = -(h{name} - h{name}_inf)/tau_h{name}                                      : 1
+# ds{name}/dt = -(s{name} - s{name}_inf)/tau_s{name}                                    : 1
+"""
+        super().__init__(name, params)
+
+    def default_params(self):
+        return dict(
+            E_Na = 55.0,# mV
+            taumin = 30.0,# ms
+            celsius= 34., # deg celsius
+            ar2 = 1.0, # sinf=1 constant when ar2=1.0
+            tadj = 1 )
 
     
 class CalciumDependentPotassiumCurrent(MembraneCurrent):
@@ -380,10 +484,10 @@ dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name} : 1
         return dict(
             E_K=-90., # mV
             InternalCalcium0 = 1., # uM
-	    ExpCai = 1., # exponent for InternalCalcium term
-	    Ra   = 0.01, #	(/ms)		: max act rate  
-	    Rb   = 0.02, #	(/ms)		: max deact rate 
-	    tadj = 2.3**((34-23)/10))
+            ExpCai = 1., # exponent for InternalCalcium term
+            Ra   = 0.01, #	(/ms)		: max act rate  
+            Rb   = 0.02, #	(/ms)		: max deact rate 
+            tadj = 2.3**((34-23)/10))
 
     
 class HyperpolarizationActivatedCationCurrent(MembraneCurrent):
@@ -567,6 +671,7 @@ I_inj : amp (point current)
         Equation_String = current.insert(Equation_String)
 
     print(Equation_String)
+
     eqs = Equations(Equation_String)
     
     # Simplified three-compartment morphology
@@ -649,3 +754,4 @@ I_inj : amp (point current)
     AX[2].set_xlabel('time (ms)')
 
     plt.show()
+
