@@ -271,12 +271,19 @@ class DelayedRectifierPotassiumChannelCurrent(MembraneCurrent):
 I{name} = g{name} * (v - {E_K}*mV)                                            : amp/meter**2
 gbar_{name}                                                                   : siemens/meter**2
 g{name} = gbar_{name} * n{name}**4                                            : siemens/meter**2
-a_n{name} = -0.018 * (vc-13) / ( exp( - clip((vc-13)/25, -inf, -1e-4) ) - 1 ) : 1
-b_n{name} = 0.054 * (vc-23) / exp( (vc-23)/12 )                               : 1
+vanDRPCC = clip(vc-13, -inf, 0) + clip(vc-13, 1e-4, inf)                  : 1
+a_n{name} = -0.018 * vanDRPCC / ( exp( - vanDRPCC / 25.0 ) - 1 )              : 1
+vbnDRPCC = clip(vc-23, -inf, 0) + clip(vc-23, 1e-4, inf)                  : 1
+b_n{name} = 0.0054 * vbnDRPCC / ( exp( + vbnDRPCC / 12.0 ) - 1 )              : 1
 tau_n{name} =  1/{tadj}/(abs(a_n{name}+b_n{name})+1e-4)*second                : second
 n{name}_inf = a_n{name}/(abs(a_n{name}+b_n{name})+1e-4)                       : 1 
 dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name}                            : 1
 """
+# a_n{name} = -0.018 * (vc-13) / ( exp( - clip((vc-13)/25, -inf, -1e-4) ) - 1 ) : 1
+# b_n{name} = 0.054 * (vc-23) / exp( (vc-23)/12 )                               : 1
+# tau_n{name} =  1/{tadj}/(abs(a_n{name}+b_n{name})+1e-4)*second                : second
+# n{name}_inf = a_n{name}/(abs(a_n{name}+b_n{name})+1e-4)                       : 1 
+# dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name}                            : 1
         super().__init__(name, params)
 
     def default_params(self):
@@ -669,8 +676,6 @@ I_inj : amp (point current)
     
     for current in CURRENTS:
         Equation_String = current.insert(Equation_String)
-
-    print(Equation_String)
 
     eqs = Equations(Equation_String)
     
