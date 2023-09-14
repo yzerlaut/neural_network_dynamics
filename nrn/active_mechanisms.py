@@ -271,12 +271,19 @@ class DelayedRectifierPotassiumChannelCurrent(MembraneCurrent):
 I{name} = g{name} * (v - {E_K}*mV)                                            : amp/meter**2
 gbar_{name}                                                                   : siemens/meter**2
 g{name} = gbar_{name} * n{name}**4                                            : siemens/meter**2
-a_n{name} = -0.018 * (vc-13) / ( exp( - clip((vc-13)/25, -inf, -1e-4) ) - 1 ) : 1
-b_n{name} = 0.054 * (vc-23) / exp( (vc-23)/12 )                               : 1
-tau_n{name} =  1/{tadj}/(abs(a_n{name}+b_n{name})+1e-4)*second                : second
-n{name}_inf = a_n{name}/(abs(a_n{name}+b_n{name})+1e-4)                       : 1 
+vanDRPCC = clip(vc-13, -inf, 0) + clip(vc-13, 1e-4, inf)                      : 1
+a_n{name} = -0.018 * vanDRPCC / ( exp( - vanDRPCC / 25.0 ) - 1 )              : 1
+vbnDRPCC = clip(vc-23, -inf, 0) + clip(vc-23, 1e-4, inf)                      : 1
+b_n{name} = 0.0054 * vbnDRPCC / ( exp( + vbnDRPCC / 12.0 ) - 1 )              : 1
+tau_n{name} =  1/{tadj}/(a_n{name}+b_n{name})*ms                              : second
+n{name}_inf = a_n{name}/(a_n{name}+b_n{name})                                 : 1 
 dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name}                            : 1
 """
+# a_n{name} = -0.018 * (vc-13) / ( exp( - clip((vc-13)/25, -inf, -1e-4) ) - 1 ) : 1
+# b_n{name} = 0.054 * (vc-23) / exp( (vc-23)/12 )                               : 1
+# tau_n{name} =  1/{tadj}/(abs(a_n{name}+b_n{name})+1e-4)*second                : second
+# n{name}_inf = a_n{name}/(abs(a_n{name}+b_n{name})+1e-4)                       : 1 
+# dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name}                            : 1
         super().__init__(name, params)
 
     def default_params(self):
@@ -298,10 +305,10 @@ I{name} = g{name} * (v - {E_K}*mV)                                            : 
 gbar_{name}                                                                   : siemens/meter**2
 g{name} = gbar_{name} * a{name} * b{name}                                     : siemens/meter**2
 a{name}_inf = 1/( 1 + exp(-(vc+34)/6.5) )                                     : 1 
-tau_a{name} =  10*second                                                      : second
+tau_a{name} =  10*ms                                                          : second
 da{name}/dt = -(a{name} - a{name}_inf)/tau_a{name}                            : 1
 b{name}_inf = 1/( 1 + exp((vc+65)/6.6) )                                      : 1 
-tau_b{name} =  ( 200+3200/( 1 + exp( -(vc+63.6)/4 ) ) ) * second              : second
+tau_b{name} =  ( 200+3200/( 1 + exp( -(vc+63.6)/4 ) ) ) * ms                  : second
 db{name}/dt = -(b{name} - b{name}_inf)/tau_b{name}                            : 1
 """
         super().__init__(name, params)
@@ -312,8 +319,6 @@ db{name}/dt = -(b{name} - b{name}_inf)/tau_b{name}                            : 
             tadj = 1 )
   
 
-
-  
 class SodiumChannelCurrent(MembraneCurrent):
     """
     Sodium channel, Hodgkin-Huxley style kinetics.  
@@ -394,21 +399,21 @@ class FastSodiumChannelCurrent(MembraneCurrent):
         self.equations = """
 I{name} = g{name} * (v - {E_Na}*mV) : amp/meter**2
 gbar_{name} : siemens/meter**2
-g{name} = gbar_{name} * {tadj} * m{name}**3 * h{name}                          : siemens/meter**2
+g{name} = gbar_{name} * {tadj} * m{name}**3 * h{name}                                 : siemens/meter**2
 # --- m
 a_m{name} = -0.2816 * ( 0.5*(1-sign(abs(vc+28)-1e-4)) * (-9.3+(vc+28)/2.) +\
        0.5*(1+sign(abs(vc+28)-1e-4)) * ((vc+28)/(exp(-(vc+28)/9.3)-1) ) )               : 1
 b_m{name} =  0.2464 * ( 0.5*(1-sign(abs(vc+1)-1e-4))*(6.0 + (v/mV+1)/2.) +\
        0.5*(1+sign(abs(vc+1)-1e-4)) * ((vc+1)/(exp((vc+1)/6.0)-1)) )                    : 1
-tau_m{name} =  1/{tadj}/(abs(a_m{name}+b_m{name})+1e-5)*second                          : second
-m{name}_inf = a_m{name}/( abs(a_m{name}+b_m{name}) + 1e-5 )                             : 1 
+tau_m{name} =  1/{tadj}/( a_m{name}+b_m{name} )*ms                                      : second
+m{name}_inf = a_m{name}/( a_m{name}+b_m{name} )                                         : 1 
 # --- h 
 a_h{name} = 0.098 * ( 0.5*(1-sign(abs(vc+40.1)-1e-4))*(20.0 + (vc+40.1)/2.) +\
         0.5*(1+sign(abs(vc+40.1)-1e-4)) / exp(vc+40.1+43.1/20.) )                       : 1
 b_h{name} = 1.4 * ( 0.5*(1-sign(abs(vc+13.1)-1e-4))*(10.0 + (vc+13.1)/2.) +\
         0.5*(1+sign(abs(vc+13.1)-1e-4)) * 1 / (1 + exp(-vc/10.0) ) )                    : 1
-tau_h{name} = 1/{tadj}/(abs(a_h{name}+b_h{name})+1e-8)*second                           : second
-h{name}_inf = 0*a_h{name}/( abs(a_h{name}+b_h{name}) + 1e-8 )                              : 1
+tau_h{name} = 1/{tadj}/( a_h{name}+b_h{name} )*ms                                       : second
+h{name}_inf = 0*a_h{name}/( a_h{name}+b_h{name}  )                                      : 1
 # --- s 
 # alphav{name} = 1/(1+exp((vc+58.)/2.))                                                 : 1
 # alphar{name} = exp(1e-3*12.*(vc+60.0)*9.648e4/(8.315*(273.16+{celsius})))             : 1
@@ -669,8 +674,6 @@ I_inj : amp (point current)
     
     for current in CURRENTS:
         Equation_String = current.insert(Equation_String)
-
-    print(Equation_String)
 
     eqs = Equations(Equation_String)
     
