@@ -15,8 +15,6 @@ I_inj : amp (point current)
 '''
 # with UNITLESS CLIPPED VOLTAGE, useful for mechanisms
 
-
-
 #########################################
 ########### Membrane currents ###########
 #########################################
@@ -515,7 +513,6 @@ dl{name}/dt = -(l{name} - l{name}_inf)/tau_l{name} : 1
         
         super().__init__(name, params)
 
-        
     def default_params(self):
         return dict(
             E_hdb=0,#  (mV)        
@@ -527,6 +524,133 @@ dl{name}/dt = -(l{name} - l{name}_inf)/tau_l{name} : 1
             gmt=.4, #   (1)
             qtl=1., #
             qt=4.5**((34-33)/10))
+
+
+class HyperpolarizationActivatedCationCurrent2(MembraneCurrent):
+    """
+    hyperpolarization-activated cation current (Ih)
+
+    Genealogy: 
+    from Tzivilaki et al. (2019) / Poirazi lab 
+    """
+    def __init__(self, name='H', params=None):
+
+        self.equations = """
+I{name} = g{name} * (v - {E_H}*mV)                                                  : amp/meter**2
+g{name} = gbar_{name} * n{name}                                                     : siemens/meter**2
+gbar_{name}                                                                         : siemens/meter**2
+tau_n{name} = 0.5*(1+sign(vc-{E_H})) * 1 * ms +\
+  0.5*(1-sign(vc-{E_H})) * 2*(1/(exp((vc+145)/(-17.5))+exp((vc+16.8)/16.5))+10)*ms  : second
+n{name}_inf = 1 - (1 / (1 + exp(({vhalf} - vc)/{K})))                               : 1
+dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name}                                  : 1
+"""
+        
+        super().__init__(name, params)
+
+    def default_params(self):
+        return dict(
+            E_H=-10,#  (mV)        
+            vhalf=-90, #   (mV)
+            K=10)
+
+
+class ATypePotassiumCurrentProximal(MembraneCurrent):
+    """
+    IKa current
+
+    TITLE K-A channel from Klee Ficker and Heinemann
+    : modified by Brannon and Yiota Poirazi (poirazi@LNC.usc.edu)
+    : to account for Hoffman et al 1997 proximal region kinetics
+    : used only in soma and sections located < 100 microns from the soma
+    """
+    def __init__(self, name='KAprox', params=None):
+
+        self.equations = """
+I{name} = g{name} * (v - {E_K}*mV)                                                    : amp/meter**2
+g{name} = gbar_{name} * n{name} * l{name}                                             : siemens/meter**2
+gbar_{name}                                                                           : siemens/meter**2
+# --- "n" variable
+alphan{name} = exp(1e-3*({zetan}+{pw}/(1+exp((vc-{tq})/{qq})))*(vc-{vhalfn})*{CT})    : 1
+betan{name} = exp(1e-3*{gmn}*({zetan}+{pw}/(1+exp((vc-{tq})/{qq})))*(vc-{vhalfn})*{CT})    : 1
+n{name}_inf = 1/( 1 + alphan{name} )                                                  : 1
+tau_n{name} = clip(betan{name} /{tadj} /{a0n} / ( 1 + alphan{name} ), 0.1, inf) *ms   : second 
+dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name}                                    : 1
+# --- "l" variable
+alphal{name} = exp(1e-3*{zetal}*(vc-{vhalfl})*{CT})                                   : 1
+l{name}_inf = 1/( 1 + alphal{name} )                                                  : 1
+tau_l{name} = 12*ms                                                                   : second 
+dl{name}/dt = -(l{name} - l{name}_inf)/tau_l{name}                                    : 1
+"""
+        
+        super().__init__(name, params)
+        
+    def default_params(self):
+        return dict(
+            E_K = -90.,                         #    (mV)
+            CT = 9.648e4/(8.315*(273.16+34)),   #    constant, for T=34 deg. Celsius
+            vhalfn = 11,                        #    (mV)      :activation half-potential
+            vhalfl = -56,                       #    (mV)      :inactivation half-potential
+            a0n = 0.05,                         #    (/ms)     :parameters used
+            zetan = -1.5,                       #    (1)       :in calculation of (-1.5)
+            zetal = 3,                          #    (1)       :steady state values(3)
+            gmn = 0.55, #    (1)  and time constants(0.55) change to get an effect on spike repol
+            gml = 1,                            #    (1)
+            lmin = 2,                           #    (ms)
+            nmin = 0.1,                         #    (ms)
+            pw = -1,                            #    (1)
+            tq = -40,                           #    (mV)
+            qq = 5,                             #    (mV)
+	    tadj = 5**((34-24)/10))             # temperature sensitivity factor
+
+
+class ATypePotassiumCurrentDistal(MembraneCurrent):
+    """
+    IKa current - distal version
+
+    TITLE K-A channel from Klee Ficker and Heinemann
+    : modified by Brannon and Yiota Poirazi (poirazi@LNC.usc.edu)
+    : to account for Hoffman et al 1997 proximal region kinetics
+    : used only in soma and sections located < 100 microns from the soma
+    """
+    def __init__(self, name='KAdist', params=None):
+
+        self.equations = """
+I{name} = g{name} * (v - {E_K}*mV)                                                    : amp/meter**2
+g{name} = gbar_{name} * n{name} * l{name}                                             : siemens/meter**2
+gbar_{name}                                                                           : siemens/meter**2
+# --- "n" variable
+alphan{name} = exp(1e-3*({zetan}+{pw}/(1+exp((vc-{tq})/{qq})))*(vc-{vhalfn})*{CT})    : 1
+betan{name} = exp(1e-3*{gmn}*({zetan}+{pw}/(1+exp((vc-{tq})/{qq})))*(vc-{vhalfn})*{CT})    : 1
+n{name}_inf = 1/( 1 + alphan{name} )                                                  : 1
+tau_n{name} = clip(betan{name} /{tadj} /{a0n} / ( 1 + alphan{name} ), 0.1, inf) *ms   : second 
+dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name}                                    : 1
+# --- "l" variable
+alphal{name} = exp(1e-3*{zetal}*(vc-{vhalfl})*{CT})                                   : 1
+l{name}_inf = 1/( 1 + alphal{name} )                                                  : 1
+tau_l{name} = clip( (vc+50)*0.26, {lmin}, inf) * ms                                   : second 
+dl{name}/dt = -(l{name} - l{name}_inf)/tau_l{name}                                    : 1
+"""
+        
+        super().__init__(name, params)
+        
+    def default_params(self):
+        return dict(
+            E_K = -90.,                         #    (mV)
+            CT = 9.648e4/(8.315*(273.16+34)),   #    constant, for T=34 deg. Celsius
+            vhalfn = -1,                        #    (mV)      :activation half-potential
+            vhalfl = -56,                       #    (mV)      :inactivation half-potential
+            a0n = 0.1,                          #    (/ms)     :parameters used
+            zetan = -1.8,                       #    (1)       :in calculation of (-1.5)
+            zetal = 3,                          #    (1)       :steady state values(3)
+            gmn = 0.39, #    (1)  and time constants(0.55) change to get an effect on spike repol
+            gml = 1,                            #    (1)
+            lmin = 2,                           #    (ms)
+            nmin = 0.1,                         #    (ms)
+            pw = -1,                            #    (1)
+            tq = -40,                           #    (mV)
+            qq = 5,                             #    (mV)
+	    tadj = 5**((34-24)/10))             # temperature sensitivity factor
+
 
 
 class MuscarinicPotassiumCurrent(MembraneCurrent):
