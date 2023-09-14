@@ -293,8 +293,10 @@ dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name}                            : 
 class SlowlyInactivatingPotassiumCurrent(MembraneCurrent):
     """
     Slowly Inactivating K+ Channel
+
     Genealogy: 
-    iksin.mod, from Tzivilaki et al. (2019) / Poirazi lab 
+    iksin.mod, 
+    from Tzivilaki et al. (2019) / Poirazi lab 
     """
     def __init__(self, name='Kslowin', params=None):
 
@@ -556,12 +558,13 @@ dn{name}/dt = -(n{name} - n{name}_inf)/tau_n{name}                              
 
 class ATypePotassiumCurrentProximal(MembraneCurrent):
     """
-    IKa current
+    IKa current -- proximal version
 
     TITLE K-A channel from Klee Ficker and Heinemann
     : modified by Brannon and Yiota Poirazi (poirazi@LNC.usc.edu)
     : to account for Hoffman et al 1997 proximal region kinetics
     : used only in soma and sections located < 100 microns from the soma
+    from Tzivilaki et al. (2019) / Poirazi lab 
     """
     def __init__(self, name='KAprox', params=None):
 
@@ -605,12 +608,13 @@ dl{name}/dt = -(l{name} - l{name}_inf)/tau_l{name}                              
 
 class ATypePotassiumCurrentDistal(MembraneCurrent):
     """
-    IKa current - distal version
+    IKa current -- distal version
 
     TITLE K-A channel from Klee Ficker and Heinemann
     : modified by Brannon and Yiota Poirazi (poirazi@LNC.usc.edu)
     : to account for Hoffman et al 1997 proximal region kinetics
     : used only in soma and sections located < 100 microns from the soma
+    from Tzivilaki et al. (2019) / Poirazi lab 
     """
     def __init__(self, name='KAdist', params=None):
 
