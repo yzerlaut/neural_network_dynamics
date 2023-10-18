@@ -1,23 +1,44 @@
-import sys, pathlib, os
+import sys, pathlib, os, tempfile
 import numpy as np
 
 def make_new_swc(filename):
 
-   # we cut the file  
+   # we cut the file by preserving the parent mapping 
     new_swc = ''       
-    with open(filename, 'r') as f:
-        for line in f.readlines():
-            if line.split(' ')[1]!='3':
-                new_swc += line
-    with open("morphologies/%s/%s_no_axon.swc" % (ID,ID), 'w') as f:                                
-        f.write(new_swc)
-    
+    mapping = {'old':[], 'new':[]}
 
+    with open(filename, 'r') as f:
+
+        for line in f.readlines():
+            index, comp, x, y, z, diam, parent = line.split(' ')
+            parent = parent.replace('\n', '')
+
+            if comp!='2':
+                mapping['new'].append(len(mapping['new']))
+                mapping['old'].append(int(index))
+
+                if parent=='-1':
+                    new_parent = '-1'
+                else:
+                    # print(mapping['old'], parent)
+                    try:
+                        new_parent = mapping['new'][np.flatnonzero(np.array(mapping['old'])==int(parent))[0]]
+                    except BaseException:
+                        print('\nPb with line:') 
+                        print(line)
+                        new_parent = mapping['new'][-2]
+                        print('  -->  no dendritic parent found, putting it on parent:', new_parent)
+
+                new_swc += '%s %s %s %s %s %s %s\n' % (mapping['new'][-1], comp, x, y, z, diam, new_parent)
+
+    print('\n --> [ok] new swc file without axon succesfully written as:\n',
+         filename.replace('.swc', '_no_axon.swc'))
+
+    with open(filename.replace('.swc', '_no_axon.swc'), 'w') as f:                                
+        f.write(new_swc)
 
 if __name__=='__main__':
 
-    sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
-    import nrn 
 
     if '.swc' in sys.argv[-1]:
         filename = sys.argv[-1]
@@ -26,30 +47,37 @@ if __name__=='__main__':
                               'Jiang_et_al_2015',
                               'L5pyr-j140408b.CNG.swc')
 
-    # full morphology
-    morpho = nrn.Morphology.from_swc_file(filename)
-    SEGMENTS = nrn.morpho_analysis.compute_segments(morpho)
+    # now without the axon
+    make_new_swc(filename)
 
-    for name, index, dist in zip(SEGMENTS['name'], SEGMENTS['index'],
-                    SEGMENTS['distance_to_soma']):
-        print(name, index, 1e6*dist)
+    try:
+        sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
+        import nrn 
+        import utils.plot_tools as pt
+        import matplotlib.pylab as plt
 
-    # print(np.unique(SEGMENTS['comp_type'][SEGMENTS['comp_type']=='dend']))
+        # full morphology
+        morpho = nrn.Morphology.from_swc_file(filename.replace('.swc', '_no_axon.swc'))
+        SEGMENTS = nrn.morpho_analysis.compute_segments(morpho)
 
-    # print(find_indices_with_conditions(SEGMENTS,\
-    #                                    min_distance_to_soma=230e-6,
-    #                                    comp_type='apic'))
-    # print(SEGMENTS['start_x'][:3], SEGMENTS['end_x'][:3], SEGMENTS['y'][:3], SEGMENTS['z'][:3])
-    # # print(SEGMENTS['x'][-3:], SEGMENTS['y'][-3:], SEGMENTS['z'][-3:])
-    # # print(len(SEGMENTS['index']), len(np.unique(SEGMENTS['index'])))
-    
-    # COMP_LIST, INDICES = ntwk.morpho_analysis.get_compartment_list(morpho,
-    #                             inclusion_condition='comp.type!="axon"')
-    # print(dir(COMP_LIST[0]))
-    # print(ntwk.morpho_analysis.list_compartment_types(COMP_LIST))
-    # find_conditions(SEGMENTS,
-    #                 comp_type = ['soma', 'dend'],
-    #                 isoma = 0,
-    #                 min_distance_to_soma=0.,
-    #                 max_distance_to_soma=1e9)
+        vis = pt.nrnvyz(SEGMENTS)
+
+        fig, AX = plt.subplots(1, 3, figsize=(7,2))
+        # dendrites and soma
+        vis.plot_segments(cond=(SEGMENTS['comp_type']!='axon'), ax=AX[0], color='tab:red')
+        AX[0].annotate('soma+dendrites', (0,0), xycoords='axes fraction', color='tab:red')
+        # axon only
+        vis.plot_segments(cond=(SEGMENTS['comp_type']=='axon'), ax=AX[1], color='tab:blue')
+        AX[1].annotate('axon only', (0,0), xycoords='axes fraction', color='tab:blue')
+        # both dendrites and axon
+        vis.plot_segments(cond=(SEGMENTS['comp_type']=='axon'), ax=AX[2], color='tab:blue')
+        AX[2].annotate('axon', (0,0), xycoords='axes fraction', color='tab:blue')
+        vis.plot_segments(cond=(SEGMENTS['comp_type']!='axon'), ax=AX[2], color='tab:red')
+        AX[2].annotate('soma+dendrites', (0,0), xycoords='axes fraction', color='tab:red')
+        plt.show()
+
+    except BaseException as be:
+        print('plotting tools not found')
+
+
 
