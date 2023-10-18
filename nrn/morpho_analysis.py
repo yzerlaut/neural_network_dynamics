@@ -97,17 +97,39 @@ if __name__=='__main__':
 
     sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
     import nrn 
+    import utils.plot_tools as pt
+    import matplotlib.pylab as plt
 
-    filename = os.path.join(str(pathlib.Path(__file__).resolve().parent),
-                            'morphologies',
-                            'Jiang_et_al_2015',
-                            'L5pyr-j140408b.CNG.swc')
-
-    filename = sys.argv[-1]
+    if '.swc' in sys.argv[-1]:
+        filename = sys.argv[-1]
+    else:
+        filename = os.path.join(\
+                str(pathlib.Path(__file__).resolve().parent),
+                                'morphologies',
+                                'Jiang_et_al_2015',
+                                'L5pyr-j140408b.CNG.swc')
 
     morpho = nrn.Morphology.from_swc_file(filename)
     
-    SEGMENTS = compute_segments(morpho, without_axon=True)
+    SEGMENTS = compute_segments(morpho)
+
+    vis = pt.nrnvyz(SEGMENTS)
+
+    fig, AX = plt.subplots(1, 3, figsize=(7,2))
+
+    # dendrites and soma
+    vis.plot_segments(cond=(SEGMENTS['comp_type']!='axon'), ax=AX[0], color='tab:red')
+    AX[0].annotate('dendrites', (0,0), xycoords='axes fraction', color='tab:red')
+    # axon only
+    vis.plot_segments(cond=(SEGMENTS['comp_type']=='axon'), ax=AX[1], color='tab:blue')
+    AX[1].annotate('axon', (0,0), xycoords='axes fraction', color='tab:blue')
+    # both dendrites and axon
+    vis.plot_segments(cond=(SEGMENTS['comp_type']=='axon'), ax=AX[2], color='tab:blue')
+    AX[2].annotate('axon', (0,0), xycoords='axes fraction', color='tab:blue')
+    vis.plot_segments(cond=(SEGMENTS['comp_type']!='axon'), ax=AX[2], color='tab:red')
+    AX[2].annotate('dendrites\n', (0,0), xycoords='axes fraction', color='tab:red')
+
+    plt.show()
 
     for name, index, dist in zip(SEGMENTS['name'], SEGMENTS['index'],
                     SEGMENTS['distance_to_soma']):
