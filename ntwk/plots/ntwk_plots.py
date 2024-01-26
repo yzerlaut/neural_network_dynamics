@@ -259,8 +259,8 @@ def population_activity_subplot(data, ax,
                                 fout_min=0.01,
                                 with_log_scale=False):
 
-    t = np.arange(int(data['tstop']/data['dt']))*data['dt']
-    cond = (t>tzoom[0]) & (t<tzoom[1])
+    t = np.arange(int(data['tstop']/data['dt'])+1)*data['dt']
+    cond = (t>=tzoom[0]) & (t<tzoom[1])
 
     for pop_key, color in zip(POP_KEYS, COLORS):
         if with_smoothing>0:
