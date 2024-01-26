@@ -22,9 +22,9 @@ Model = {
     'Q_Inh_Exc':10., 'Q_Inh_Inh':10.,
     'Q_DsInh_Inh':10., 
     # synaptic time constants
-    'Tse':5., 'Tsi':5.,
+    'Tsyn_Exc':5., 'Tsyn_Inh':5.,
     # synaptic reversal potentials
-    'Ee':0., 'Ei': -80.,
+    'Erev_Exc':0., 'Erev_Inh': -80.,
     # connectivity parameters
     'p_AffExc_Thal':0.1,
     'p_Exc_Exc':0.02, 'p_Exc_Inh':0.02, 

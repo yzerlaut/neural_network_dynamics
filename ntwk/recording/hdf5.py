@@ -19,9 +19,9 @@ def make_writable_elements(value):
     if isinstance(value, (np.int64, np.float64)):
         return value
     elif isinstance(value, float):
-        return np.float(value)
+        return np.float32(value)
     elif isinstance(value, (int, np.int32)):
-        return np.int(value)
+        return np.int16(value)
     elif isinstance(value, str):
         return np.string_(value)
     elif isinstance(value, tuple):
