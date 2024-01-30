@@ -182,7 +182,8 @@ def shifted_Vms_subplot(data, ax,
 
 def membrane_potential_subplots(data, AX,
                                 POP_KEYS, COLORS, tzoom,
-                                subsampling=1, lw=1,
+                                subsampling=1, 
+                                lw=1,
                                 clip_spikes=False,
                                 Vm_is_the_last_one=True):
 
@@ -194,12 +195,17 @@ def membrane_potential_subplots(data, AX,
             cond = (t>=tzoom[0]) & (t<=tzoom[1])
 
             for v in data['VMS_%s' % tpop]:
+
                 if clip_spikes:
-                    tspikes, threshold = find_spikes_from_Vm(t, v, data, tpop) # getting spikes
+                    # getting spikes
+                    tspikes, threshold = \
+                            find_spikes_from_Vm(t, v, data, tpop)
                     tt, vv = clip_spikes_from_Vm(t[cond], v[cond], tspikes)
-                    ax.plot(tt[::subsampling], vv[::subsampling], '-', lw=lw, c=COLORS[i])
+                    ax.plot(tt[::subsampling], vv[::subsampling], 
+                            '-', lw=lw, c=COLORS[i])
                 else:
-                    ax.plot(t[cond][::subsampling], v[cond][::subsampling], '-', lw=lw, c=COLORS[i])
+                    ax.plot(t[cond][::subsampling], v[cond][::subsampling],
+                            '-', lw=lw, c=COLORS[i])
 
             ax.annotate(' %s' % tpop, (1.,.5), xycoords='axes fraction',
                            color=COLORS[i])
@@ -255,24 +261,24 @@ def Vm_subplots_mean_with_single_trace(data, AX,
 def population_activity_subplot(data, ax,
                                 POP_KEYS, COLORS, tzoom,
                                 subsampling=1,
-                                with_smoothing=0, lw=0.5,
+                                smoothing=0, lw=0.5,
                                 fout_min=0.01,
-                                with_log_scale=False):
+                                log_scale=False):
 
     t = np.arange(int(data['tstop']/data['dt'])+1)*data['dt']
     cond = (t>=tzoom[0]) & (t<tzoom[1])
 
     for pop_key, color in zip(POP_KEYS, COLORS):
-        if with_smoothing>0:
+        if smoothing>0:
             ax.plot(t[cond][::subsampling],
-                    gaussian_smoothing(data['POP_ACT_'+pop_key][cond], int(with_smoothing/data['dt']))[::subsampling]+fout_min,
+                    gaussian_smoothing(data['POP_ACT_'+pop_key][cond], int(smoothing/data['dt']))[::subsampling]+fout_min,
                     color=color, lw=lw)
         else:
             ax.plot(t[cond][::subsampling],
                     data['POP_ACT_'+pop_key][cond][::subsampling]+fout_min,
                     color=color, lw=lw)
 
-    if with_log_scale:
+    if log_scale:
         # ax.set_yscale("log", nonposy='clip')
         pt.set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
                            xlim=tzoom,
@@ -293,7 +299,7 @@ def input_rate_subplot(data, ax,
                        subsampling=2):
 
     """
-    ned to be improved to cover different afferent->target sets of waveforms
+    need to be improved to cover different afferent->target sets of waveforms
     """
 
     colors=['k', pt.tab10(5), pt.tab10(6)]
@@ -330,12 +336,13 @@ def activity_plots(data,
                    COLORS = None,
                    tzoom=[0, np.inf],
                    ax=None,
-                   smooth_population_activity=0.,
-                   pop_act_log_scale=False,
-                   subsampling=2,
-                   Vm_plot_args=dict(subsampling=2),
-                   raster_plot_args=dict(subsampling=10),
-                   fig_args=dict(hspace=0.5, right = 5.)):
+                   pop_act_args=dict(smoothing=0,
+                                     subsampling=2,
+                                     log_scale=False),
+                   Vm_args=dict(subsampling=2),
+                   raster_args=dict(subsampling=10),
+                   fig_args=dict(hspace=0.5,
+                                 right = 5.)):
 
     AE = [[[4,1]],
           [[4,2]]] # axes extent
@@ -346,11 +353,11 @@ def activity_plots(data,
     for pop in POP_KEYS:
         if ('VMS_%s' % pop) in data:
             AE.append([[4,1]])
-        Vm_plot_args['Vm_is_the_last_one'] = True
+        Vm_args['Vm_is_the_last_one'] = True
 
     if ('POP_ACT_%s' % pop) in data: # just checking on the last one
         AE.append([[4,2]])
-        Vm_plot_args['Vm_is_the_last_one'] = False
+        Vm_args['Vm_is_the_last_one'] = False
 
     tzoom=[np.max([tzoom[0], 0.]), np.min([tzoom[1], data['tstop']])]
 
@@ -363,19 +370,17 @@ def activity_plots(data,
                        POP_KEYS, COLORS, tzoom)
     raster_subplot(data, AX[1],
                    POP_KEYS, COLORS, tzoom,
-                   **raster_plot_args)
+                   **raster_args)
 
     if ('VMS_%s' % pop) in data:
         membrane_potential_subplots(data, AX[2:],
                                     POP_KEYS, COLORS, tzoom,
-                                    **Vm_plot_args)
+                                    **Vm_args)
     if ('POP_ACT_%s' % pop) in data:
         population_activity_subplot(data, AX[-1],
                                     POP_KEYS, COLORS,
                                     tzoom,
-                                    with_smoothing=smooth_population_activity,
-                                    subsampling=subsampling,
-                                    with_log_scale=pop_act_log_scale)
+                                    **pop_act_args)
 
     return fig, AX
 
@@ -385,8 +390,9 @@ def raster_and_Vm(data,
                   COLORS = None,
                   tzoom=[0, np.inf],
                   figsize=(5,3),
-                  smooth_population_activity=0.,
-                  Vm_subsampling=2):
+                  Vm_args=dict(subsampling=1,
+                               lw=1,
+                               clip_spikes=False)):
 
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
@@ -403,7 +409,7 @@ def raster_and_Vm(data,
             AX.append(subplot2grid((n+2,1), (i+2,0)))
     else:
         fig, [AX] = pt.figure((1,1), figsize=figsize,
-                            keep_shape=True)
+                              reshape_axes=False)
 
     tzoom=[np.max([tzoom[0], 0.]),
            np.min([tzoom[1], data['tstop']])]
@@ -417,8 +423,7 @@ def raster_and_Vm(data,
         AX[0].set_xticklabels([])
         membrane_potential_subplots(data, AX[1:],
                                     POP_KEYS, COLORS, tzoom,
-                                    clip_spikes=True, lw=0.5,
-                                    subsampling=Vm_subsampling)
+                                    **Vm_args)
 
     return fig, AX
 
@@ -428,8 +433,8 @@ def twin_plot_raster_pop_act(data,
                              COLORS = None,
                              tzoom=[0, np.inf],
                              ax=None,
-                             with_smoothing=10.,
-                             with_log_scale=False, fout_min=1e-2,
+                             smoothing=10.,
+                             log_scale=False, fout_min=1e-2,
                              lw=2,
                              raster_ms=2, raster_alpha=0.5):
 
@@ -449,9 +454,9 @@ def twin_plot_raster_pop_act(data,
 
     t = np.arange(len(data['POP_ACT_'+POP_KEYS[0]]))*data['dt']
     for pop_key, color in zip(POP_KEYS, COLORS):
-        if with_smoothing>0:
+        if smoothing>0:
             ax.plot(t[cond],
-                    gaussian_smoothing(data['POP_ACT_'+pop_key][cond], int(with_smoothing/data['dt'])),
+                    gaussian_smoothing(data['POP_ACT_'+pop_key][cond], int(smoothing/data['dt'])),
                     color=color, lw=lw)
         else:
             ax.plot(t[cond], data['POP_ACT_'+pop_key][cond], color=color, lw=lw)
@@ -468,7 +473,7 @@ def twin_plot_raster_pop_act(data,
         ax2.plot(tzoom[1]*np.ones(2), [n,n+data['N_%s' % tpop]], 'w.', ms=0.01)
         n += data['N_%s' % tpop]
 
-    if with_log_scale:
+    if log_scale:
         # ax.set_yscale("log", nonposy='clip')
         pt.set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
                     xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])],
@@ -534,9 +539,10 @@ def raster(data,
 ######################################
 
 def pop_act(data,
-            POP_KEYS = None, COLORS=None,
-            with_smoothing=0,
-            with_log_scale=False,
+            POP_KEYS = None, 
+            COLORS=None,
+            smoothing=0,
+            log_scale=False,
             fout_min=0.01,
             tzoom=[0, np.inf],
             lw=2,
@@ -554,14 +560,14 @@ def pop_act(data,
         fig, ax = pt.figure(axes_extents=[[[4,1]]], hspace=0.5, right = 5.)
 
     for pop_key, color in zip(POP_KEYS, COLORS):
-        if with_smoothing>0:
+        if smoothing>0:
             ax.plot(t[cond],
-                    gaussian_smoothing(data['POP_ACT_'+pop_key][cond], int(with_smoothing/data['dt'])),
+                    gaussian_smoothing(data['POP_ACT_'+pop_key][cond], int(smoothing/data['dt'])),
                     color=color, lw=lw)
         else:
             ax.plot(t[cond], data['POP_ACT_'+pop_key][cond], color=color, lw=lw)
 
-    if with_log_scale:
+    if log_scale:
         # ax.set_yscale("log", nonposy='clip')
         pt.set_plot(ax, ylabel='pop. act. (Hz)', xlabel='time (ms)',
                     xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])],
