@@ -182,7 +182,7 @@ def shifted_Vms_subplot(data, ax,
 
 def membrane_potential_subplots(data, AX,
                                 POP_KEYS, COLORS, tzoom,
-                                subsampling=1,
+                                subsampling=1, lw=1,
                                 clip_spikes=False,
                                 Vm_is_the_last_one=True):
 
@@ -197,9 +197,9 @@ def membrane_potential_subplots(data, AX,
                 if clip_spikes:
                     tspikes, threshold = find_spikes_from_Vm(t, v, data, tpop) # getting spikes
                     tt, vv = clip_spikes_from_Vm(t[cond], v[cond], tspikes)
-                    ax.plot(tt[::subsampling], vv[::subsampling], '-', lw=1, c=COLORS[i])
+                    ax.plot(tt[::subsampling], vv[::subsampling], '-', lw=lw, c=COLORS[i])
                 else:
-                    ax.plot(t[cond][::subsampling], v[cond][::subsampling], '-', lw=1, c=COLORS[i])
+                    ax.plot(t[cond][::subsampling], v[cond][::subsampling], '-', lw=lw, c=COLORS[i])
 
             ax.annotate(' %s' % tpop, (1.,.5), xycoords='axes fraction',
                            color=COLORS[i])
@@ -417,6 +417,7 @@ def raster_and_Vm(data,
         AX[0].set_xticklabels([])
         membrane_potential_subplots(data, AX[1:],
                                     POP_KEYS, COLORS, tzoom,
+                                    clip_spikes=True, lw=0.5,
                                     subsampling=Vm_subsampling)
 
     return fig, AX

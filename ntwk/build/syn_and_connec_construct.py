@@ -113,6 +113,7 @@ def random_connections(NTWK, store_connections=False):
             # N.B. the brian2 settings does weird things (e.g. it creates synchrony)
             # so we draw manually the connection to fix synaptic numbers
             N_per_cell = int(NTWK['M'][ii,jj]['pconn']*NTWK['POPS'][ii].N)
+            print(NTWK['M'][ii,jj]['name'], N_per_cell)
             if ii==jj: # need to take care of no autapse
                 i_rdms = np.concatenate([\
                                 np.random.choice(
