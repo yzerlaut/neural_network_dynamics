@@ -1,10 +1,10 @@
 import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 
 from PIL import Image # BITMAP (png, jpg, ...)
 import numpy as np
 from matplotlib.pylab import figure, subplot2grid
 
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
 from utils.signal_processing import gaussian_smoothing
 from utils import plot_tools as pt
 

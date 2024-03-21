@@ -1,5 +1,3 @@
-# Filename: signanalysis.py
-
 import numpy.fft as fft
 import numpy as np
 from scipy import signal
@@ -217,16 +215,16 @@ if __name__=='__main__':
 
     import sys, pathlib
     sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-    from utils.plot_tools import *
-    
+    import utils.plot_tools as pt
+     
     t = np.linspace(0, np.pi*2, int(1e3))
     Signal1 = np.sin(3*t)
     Signal2 = np.cos(3*t-np.pi/4)
     cr, t_shift = crosscorrel(Signal1, Signal2, np.pi/2, t[1]-t[0])
-    _, ax = figure(axes=(1,2), figsize=(1.5, 1.3))
+    _, ax = pt.figure(axes=(1,2), figsize=(1.5, 1.3))
     ax[0].plot(t, Signal1, 'k')
     ax[0].plot(t, Signal2)
     ax[0].plot(t, sliding_percentile(Signal2, 20, 200))
     ax[1].plot(t_shift, cr, '-')
     
-    plt.show()
+    pt.plt.show()
