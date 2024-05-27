@@ -3,6 +3,13 @@ import numpy as np
 from itertools import product
 import zipfile, os, pathlib, sys
 
+def check_success(Model):
+    success = True
+    for filename in Model['PARAMS_SCAN']['FILENAMES']:
+        if not os.path.isfile(filename): # if it doesn't exists !
+            success = False
+    return success
+
 def run_scan(Model, KEYS, VALUES,
              running_sim_func,
              running_sim_func_args={},
@@ -76,6 +83,23 @@ def run_scan(Model, KEYS, VALUES,
         zf.write(MODELS[i]['filename'])
 
     zf.close()
+
+    return check_success(Model)
+
+def run_scan_with_success_check(*args, **opt_args):
+    run_scan(*args, **opt_args)
+    i=0
+    success = False
+    while not success and i<10:
+        if 'fix_missing_only' in opt_args:
+            opt_args['fix_missing_only']=True
+            success = run_scan(*args, *opt_args)
+        else:
+            success = run_scan(*args, fix_missing_only=True, **opt_args)
+        print('\n\n'+20*'-'+' Success Check #%i: %s'%(i+1, success)+20*'-'+'\n\n')
+        i+=1
+
+
     
     
 if __name__=='__main__':
@@ -105,8 +129,9 @@ if __name__=='__main__':
     print('-----------------------------------')
     start_time = time.time()
     print(' With parallelization')
-    run_scan(Model, ['SEED', 'x'],
-             [np.arange(4), np.arange(4)],
-             running_sim_func, running_sim_func_args={'a':5},
-             parallelize=True)
+    run_scan_with_success_check(Model, ['SEED', 'x'],
+                             [np.arange(4), np.arange(4)],
+                             running_sim_func, running_sim_func_args={'a':5},
+                             # fix_missing_only=True,
+                             parallelize=True)
     print("--- %s seconds ---" % (time.time() - start_time))        
