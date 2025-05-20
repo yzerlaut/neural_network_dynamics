@@ -5,3 +5,4 @@ from . import analysis, build, configs, cells, plots,\
 from .build.syn_and_connec_construct import initialize_to_rest
 from .build.syn_and_connec_construct import collect_and_run
 from .build import quick_run
+from . import cells 
