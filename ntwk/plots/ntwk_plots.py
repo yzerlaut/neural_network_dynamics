@@ -261,7 +261,8 @@ def Vm_subplots_mean_with_single_trace(data, AX,
 def population_activity_subplot(data, ax,
                                 POP_KEYS, COLORS, tzoom,
                                 subsampling=1,
-                                smoothing=0, lw=0.5,
+                                smoothing=0, 
+                                lw=0.5,
                                 fout_min=0.01,
                                 log_scale=False):
 
