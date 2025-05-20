@@ -1,10 +1,8 @@
 """
 This file construct the equations for brian2
 """
-import numpy as np
 import brian2
-import sys, pathlib
-# sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))
+
 from .cell_library import get_neuron_params, built_up_neuron_params
 
 def get_membrane_equation(neuron_params, synaptic_array,\
@@ -29,7 +27,7 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         dV/dt = (%(Gl)f*nS*(%(El)f*mV - V) + %(Gl)f*nS*%(deltaV)f*mV*exp(-(%(Vthre)f*mV-V)/(%(deltaV)f*mV)) + I - w_adapt)/(%(Cm)f*pF) : volt (unless refractory) """ % neuron_params
 
     ## Adaptation current
-    if (neuron_params['a']!=0) and (neuron_params['b']!=0): # adaptation current or not ?
+    if (neuron_params['a']!=0) or (neuron_params['b']!=0): # adaptation current or not ?
         eqs += """
         dw_adapt/dt = ( -%(a)f*nS*( %(El)f*mV - V) - w_adapt )/(%(tauw)f*ms) : amp  """ % neuron_params
     else:
@@ -158,10 +156,6 @@ if __name__=='__main__':
                         action="store_true")
     args = parser.parse_args()
 
-    from neural_network_dynamics.cells.pulse_protocols import current_pulse_sim
-    from graphs.my_graph import graphs
-    mg = graphs()
-    
-    mg.response_to_current_pulse(*current_pulse_sim(vars(args)))
-    mg.show()
+    from ntwk.cells.pulse_protocols import current_pulse_sim
+
 

@@ -3,10 +3,9 @@ This file construct the equations for brian2
 """
 import numpy as np
 import brian2
-import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-from cells.cell_library import get_neuron_params
-from cells.cell_construct import get_membrane_equation
+
+from .cell_library import get_neuron_params
+from .cell_construct import get_membrane_equation
 
 def current_pulse_sim_with_opto(args, params=None):
     

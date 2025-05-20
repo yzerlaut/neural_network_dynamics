@@ -2,13 +2,12 @@
 pulse protocol simulation for a single neuron model
 """
 
+import numpy as np
 from .cell_library import *
 from .cell_construct import *
 
-from utils import plot_tools as pt
-
-def current_pulse_sim(args, 
-                      params=None, verbose=False):
+def run_sim(args, 
+            params=None, verbose=False):
     
     if params is None:
         params = get_neuron_params(args['NRN'])
@@ -83,10 +82,13 @@ if __name__=='__main__':
                         action="store_true")
     args = parser.parse_args()
 
+    from utils import plot_tools as pt
+
     # run: 
     t, Vm, I, spikes = current_pulse_sim(vars(args))
 
     # plot: 
+
     fig, AX = pt.figure(axes_extents=[[[1,2]],[[1,1]]], figsize=(2,0.8), left=0.5)
     pt.plot(t, Vm, ax=AX[0])
     pt.plot(t, I, ax=AX[1])
