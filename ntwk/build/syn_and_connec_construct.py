@@ -9,13 +9,20 @@ from ..cells.cell_library import get_neuron_params
 from ..cells.cell_construct import get_membrane_equation
 from ..cells.cell_construct import built_up_neuron_params
 
-def collect_and_run(NTWK, verbose=False, INTERMEDIATE_INSTRUCTIONS=[]):
+def collect_and_run(NTWK, 
+                    INTERMEDIATE_INSTRUCTIONS=[],
+                    verbose=False):
     """
+
     /!\ When you add a new object, THINK ABOUT ADDING IT TO THE COLLECTION !  /!\
+
     """
+
     NTWK['dt'], NTWK['tstop'] = NTWK['Model']['dt'], NTWK['Model']['tstop'] 
     brian2.defaultclock.dt = NTWK['dt']*brian2.ms
+
     net = brian2.Network(brian2.collect())
+
     OBJECT_LIST = []
     for key in ['POPS', 'REC_SYNAPSES', 'RASTER',
                 'POP_ACT', 'VMS', 'ISYNe', 'ISYNi',
@@ -23,6 +30,7 @@ def collect_and_run(NTWK, verbose=False, INTERMEDIATE_INSTRUCTIONS=[]):
                 'PRE_SPIKES', 'PRE_SYNAPSES']:
         if key in NTWK.keys():
             net.add(NTWK[key])
+
     if verbose:
         print('running simulation [...]')
 
@@ -113,7 +121,7 @@ def random_connections(NTWK, store_connections=False):
             # N.B. the brian2 settings does weird things (e.g. it creates synchrony)
             # so we draw manually the connection to fix synaptic numbers
             N_per_cell = int(NTWK['M'][ii,jj]['pconn']*NTWK['POPS'][ii].N)
-            print(NTWK['M'][ii,jj]['name'], N_per_cell)
+            # print(NTWK['M'][ii,jj]['name'], N_per_cell)
             if ii==jj: # need to take care of no autapse
                 i_rdms = np.concatenate([\
                                 np.random.choice(
@@ -274,6 +282,7 @@ def get_syn_and_conn_matrix(Model, POPULATIONS,
 
 def build_populations(Model, POPULATIONS,
                       AFFERENT_POPULATIONS=[],
+                      custom_membrane_equation=None,
                       with_raster=False,
                       with_pop_act=False,
                       with_Vm=0,
@@ -307,7 +316,10 @@ def build_populations(Model, POPULATIONS,
     NTWK['POPS'] = []
     for ii, nrn in enumerate(NEURONS):
         neuron_params = built_up_neuron_params(Model, nrn['name'], N=nrn['N'])
-        NTWK['POPS'].append(get_membrane_equation(neuron_params, NTWK['M'][:,ii],
+        if custom_membrane_equation is not None:
+            NTWK['POPS'].append(custom_membrane_equation(neuron_params, NTWK['M'][:,ii]))
+        else:
+            NTWK['POPS'].append(get_membrane_equation(neuron_params, NTWK['M'][:,ii],
                                                   with_synaptic_currents=with_synaptic_currents,
                                                   with_synaptic_conductances=with_synaptic_conductances,
                                                   verbose=verbose))
@@ -318,19 +330,23 @@ def build_populations(Model, POPULATIONS,
         NTWK['POP_ACT'] = []
         for pop in NTWK['POPS']:
             NTWK['POP_ACT'].append(brian2.PopulationRateMonitor(pop))
+
     if with_raster:
         NTWK['RASTER'] = []
         for pop in NTWK['POPS']:
             NTWK['RASTER'].append(brian2.SpikeMonitor(pop))
+
     if with_Vm>0:
         NTWK['VMS'] = []
         for pop in NTWK['POPS']:
             NTWK['VMS'].append(brian2.StateMonitor(pop, 'V', record=np.arange(with_Vm)))
+
     if with_synaptic_currents:
         NTWK['ISYNe'], NTWK['ISYNi'] = [], []
         for pop in NTWK['POPS']:
             NTWK['ISYNe'].append(brian2.StateMonitor(pop, 'Ie', record=np.arange(max([1,with_Vm]))))
             NTWK['ISYNi'].append(brian2.StateMonitor(pop, 'Ii', record=np.arange(max([1,with_Vm]))))
+
     if with_synaptic_conductances:
         NTWK['GSYNe'], NTWK['GSYNi'] = [], []
         for pop in NTWK['POPS']:

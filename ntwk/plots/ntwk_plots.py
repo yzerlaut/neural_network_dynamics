@@ -266,13 +266,15 @@ def population_activity_subplot(data, ax,
                                 fout_min=0.01,
                                 log_scale=False):
 
-    t = np.arange(int(data['tstop']/data['dt'])+1)*data['dt']
+    t = np.arange(len(data['POP_ACT_'+POP_KEYS[0]]))*data['dt']
+        
     cond = (t>=tzoom[0]) & (t<tzoom[1])
 
     for pop_key, color in zip(POP_KEYS, COLORS):
         if smoothing>0:
             ax.plot(t[cond][::subsampling],
-                    gaussian_smoothing(data['POP_ACT_'+pop_key][cond], int(smoothing/data['dt']))[::subsampling]+fout_min,
+                    gaussian_smoothing(data['POP_ACT_'+pop_key][cond], 
+                                       int(smoothing/data['dt']))[::subsampling]+fout_min,
                     color=color, lw=lw)
         else:
             ax.plot(t[cond][::subsampling],
@@ -342,7 +344,8 @@ def activity_plots(data,
                                      log_scale=False),
                    Vm_args=dict(subsampling=2),
                    raster_args=dict(subsampling=10),
-                   fig_args=dict(hspace=0.5,
+                   fig_args=dict(dpi=150,
+                                 hspace=0.5,
                                  right = 5.)):
 
     AE = [[[4,1]],
@@ -352,13 +355,15 @@ def activity_plots(data,
         POP_KEYS = find_pop_keys(data)
 
     for pop in POP_KEYS:
-        if ('VMS_%s' % pop) in data:
-            AE.append([[4,1]])
-        Vm_args['Vm_is_the_last_one'] = True
+        if Vm_args is not None:
+            if ('VMS_%s' % pop) in data:
+                AE.append([[4,1]])
+            Vm_args['Vm_is_the_last_one'] = True
 
     if ('POP_ACT_%s' % pop) in data: # just checking on the last one
         AE.append([[4,2]])
-        Vm_args['Vm_is_the_last_one'] = False
+        if Vm_args is not None:
+            Vm_args['Vm_is_the_last_one'] = False
 
     tzoom=[np.max([tzoom[0], 0.]), np.min([tzoom[1], data['tstop']])]
 
@@ -373,7 +378,7 @@ def activity_plots(data,
                    POP_KEYS, COLORS, tzoom,
                    **raster_args)
 
-    if ('VMS_%s' % pop) in data:
+    if ('VMS_%s' % pop) in data and Vm_args is not None:
         membrane_potential_subplots(data, AX[2:],
                                     POP_KEYS, COLORS, tzoom,
                                     **Vm_args)
@@ -606,9 +611,12 @@ def few_Vm_plot(data,
                 tzoom=[0, np.inf],
                 clip_spikes=False,
                 vpeak=-40, vbottom=-80, shift=20.,
-                bar_scales_args=dict(Xbar=50, Xbar_label='50ms', Ybar=20, Ybar_label='20mV'),
+                bar_scales_args=dict(Xbar=50, Xbar_label='50ms', 
+                                     Ybar=20, Ybar_label='20mV'),
                 subsampling=1,
-                lw=1, ax=None):
+                lw=1, 
+                spike_style='--',
+                ax=None):
 
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
@@ -620,8 +628,8 @@ def few_Vm_plot(data,
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
 
     if ax is None:
-        _, ax = pt.subplots(figsize=(5,3))
-        pt.subplots_adjust(left=.15, bottom=.1, right=.99)
+        _, ax = pt.plt.subplots(figsize=(5,3))
+        pt.plt.subplots_adjust(left=.15, bottom=.1, right=.99)
 
     cond = (t>tzoom[0]) & (t<tzoom[1])
 
@@ -641,7 +649,8 @@ def few_Vm_plot(data,
             # adding spikes
             Scond = (tspikes>tzoom[0]) & (tspikes<tzoom[1])
             for ts in tspikes[Scond]:
-                ax.plot([ts, ts], shift*nn+np.array([threshold, vpeak]), '--', color=color, lw=lw)
+                ax.plot([ts, ts], shift*nn+np.array([threshold, vpeak]), 
+                        spike_style, color=color, lw=lw)
             ax.plot([t[cond][0], t[cond][-1]], shift*nn+np.array([rest, rest]), ':', color=color, lw=lw)
 
     pt.set_plot(ax, [], xticks=[], yticks=[],

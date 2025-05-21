@@ -33,7 +33,8 @@ def simulation(Model,
                                   with_raster=True,
                                   with_Vm=with_Vm)
 
-    build_up_recurrent_connections(NTWK, SEED=5, verbose=verbose)
+    build_up_recurrent_connections(NTWK, 
+                                   SEED=SEED+5, verbose=verbose)
 
     #######################################
     ########### AFFERENT INPUTS ###########
@@ -47,7 +48,8 @@ def simulation(Model,
         if '%s_IncreasingStep_size' % aff_pop in Model:
             if verbose:
                 print('Adding Increasing Step Waveform to:', aff_pop)
-            faff =  stim_waveforms.IncreasingSteps(t_array, aff_pop, Model, translate_to_SI=False)
+            faff =  stim_waveforms.IncreasingSteps(t_array, aff_pop, Model, 
+                                                   translate_to_SI=False)
         elif 'Farray_%s' % aff_pop in Model:
             if verbose:
                 print('Using the provided array for:', aff_pop)
@@ -68,9 +70,9 @@ def simulation(Model,
                                              verbose=verbose,
                                              SEED=SEED+a+i+3)
 
-    ################################################################
-    ## --------------- Initial Condition ------------------------ ##
-    ################################################################
+    #####################
+    ## - Initialize -  ##
+    #####################
     initialize_to_rest(NTWK)
 
     #####################
@@ -78,10 +80,11 @@ def simulation(Model,
     #####################
     if verbose:
         print('----   running simulation for %s [...]' % filename)
-    network_sim = collect_and_run(NTWK, verbose=verbose)
+    network_sim = collect_and_run(NTWK, 
+                                  verbose=verbose)
 
     #####################
-    ## ----- Save ----- ##
+    ## ----- Save ---- ##
     #####################
     write_as_hdf5(NTWK, filename=filename)
     if verbose:

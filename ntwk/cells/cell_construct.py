@@ -34,44 +34,38 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         eqs += """
         w_adapt : amp  """
 
-    ## --> starting current definition
+    #########################################################
+    # START of "I" (voltage-dep) current input ------------->
+
     eqs += """
         I = I0 """
     
     ## intrinsic currents
     if 'Ioscill_amp' in neuron_params:
         eqs += '+ %(Ioscill_amp)f*pA *(1 - cos(2 * pi * %(Ioscill_freq)f * Hz * t))/2 ' % neuron_params
-        
-    ## synaptic currents, 1) adding all synaptic currents to the membrane equation via the I variable
-    for synapse in synaptic_array:
-        if synapse['pconn']>0:
-            # loop over each presynaptic element onto this target
-            Gsyn = 'G'+synapse['name']
-            if 'alpha' in synapse:
-                eqs += '+'+Gsyn+'*( %(alpha)f*(%(Erev)f*mV - V) + (1.0-%(alpha)f)*(%(Erev)f*mV - %(V0)f*mV) )' % synapse
-                # print('using conductance-current mixture in synaptic equations, with ratio', synapse['alpha'])
-            else:
-                eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
+
+    eqs = add_synaptic_currents(synaptic_array, eqs)
+
     # adding a potential clamping current
     if 'Vclamp' in neuron_params:
         eqs += ' + Gclamp * (%(Vclamp)f*mV - V)' % neuron_params
+
     eqs += ' : amp'
-    ## ending current definition <--
+    eqs += """
+        I0 : amp """
+
+    # ----------> END of "I" (voltage-dep) current input -- #
+    #########################################################
+
+    # conductance of the clamping current
     if 'Vclamp' in neuron_params:
         eqs += """
         Gclamp : siemens """
 
-    ## synaptic currents, 2) constructing the temporal dynamics of the synaptic conductances
-    ## N.B. VALID ONLY FOR EXPONENTIAL SYNAPSES UNTIL NOW !!!!
-    for synapse in synaptic_array:
-        # loop over each presynaptic element onto this target
-        if synapse['pconn']>0:
-            Gsyn = 'G'+synapse['name']
-            eqs += """
-        """+'d'+Gsyn+'/dt = -'+Gsyn+'*(1./(%(Tsyn)f*ms)) : siemens' % synapse
-    eqs += """
-        I0 : amp """
+    # add synaptic dyanmics :
+    eqs = add_synaptic_dynamics(synaptic_array, eqs) # only ExpSyn for now
 
+    # build a summary excitatory and inhibitory current
     if with_synaptic_currents:
         # compute excitatory currents
         eqs += """
@@ -92,6 +86,7 @@ def get_membrane_equation(neuron_params, synaptic_array,\
                 eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
         eqs += ' : amp' # no synaptic currents when clamped at the spiking level
 
+    # build a summary excitatory and inhibitory conductance 
     if with_synaptic_conductances:
         # compute excitatory conductances
         eqs += """
@@ -121,6 +116,40 @@ def get_membrane_equation(neuron_params, synaptic_array,\
         return neurons, eqs
     else:
         return neurons
+
+
+
+def add_synaptic_currents(synaptic_array, eqs):
+    """
+    synaptic currents, 
+    1) adding all synaptic currents to the membrane equation via the I variable
+    """
+    for synapse in synaptic_array:
+        if synapse['pconn']>0:
+            # loop over each presynaptic element onto this target
+            Gsyn = 'G'+synapse['name']
+            if 'alpha' in synapse:
+                eqs += '+'+Gsyn+'*( %(alpha)f*(%(Erev)f*mV - V) + (1.0-%(alpha)f)*(%(Erev)f*mV - %(V0)f*mV) )' % synapse
+                # print('using conductance-current mixture in synaptic equations, with ratio', synapse['alpha'])
+            else:
+                eqs += '+'+Gsyn+'*(%(Erev)f*mV - V)' % synapse
+    return eqs
+
+
+def add_synaptic_dynamics(synaptic_array, eqs):
+    """
+    ## synaptic currents, 2) constructing the temporal dynamics of the synaptic conductances
+    ## N.B. VALID ONLY FOR EXPONENTIAL SYNAPSES UNTIL NOW !!!!
+    """
+    for synapse in synaptic_array:
+        # loop over each presynaptic element onto this target
+        if synapse['pconn']>0:
+            Gsyn = 'G'+synapse['name']
+            eqs += """
+        """+'d'+Gsyn+'/dt = -'+Gsyn+'*(1./(%(Tsyn)f*ms)) : siemens' % synapse
+    return eqs
+
+
 
         
 if __name__=='__main__':

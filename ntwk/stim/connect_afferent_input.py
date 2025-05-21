@@ -49,7 +49,8 @@ def construct_fixed_afference(NTWK, afferent_pop, TARGET_POPS, t,
     indices = np.concatenate([indices, additional_spikes['indices']])
     times = np.concatenate([times, additional_spikes['times']])
     # insuring no more than one prespike per bin
-    indices, times = deal_with_multiple_spikes_per_bin(indices, times, t, verbose=verbose)
+    indices, times = deal_with_multiple_spikes_per_bin(indices, times, t,
+                                                       verbose=verbose)
 
     # building brian2 spikes
     spikes = brian2.SpikeGeneratorGroup(NTWK['Model']['N_%s'%afferent_pop],
@@ -103,7 +104,7 @@ def construct_fixed_afference(NTWK, afferent_pop, TARGET_POPS, t,
             # storing quantities:
             NTWK['PRE_SYNAPSES'].append(synapse)
         
-        else:
+        elif verbose:
             print('Nsyn = 0 for', afferent_pop+'_'+target_pop)
     
 
@@ -126,10 +127,11 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
 
     Model = NTWK['Model']
     
-    # Synapses  number ?
-    Nsyn = Model['p_'+afferent_pop+'_'+target_pop]*Model['N_'+afferent_pop]
-    
-    if Nsyn>0: # if non-zero projection [...]
+    if ('p_'+afferent_pop+'_'+target_pop in Model) and\
+            (Model['p_'+afferent_pop+'_'+target_pop]>0):
+        # if non-zero projection [...]
+
+        Nsyn = Model['p_'+afferent_pop+'_'+target_pop]*Model['N_'+afferent_pop]
         
         # extract parameters of the afferent input
         Qsyn = Model['Q_'+afferent_pop+'_'+target_pop]
