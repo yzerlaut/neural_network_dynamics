@@ -105,6 +105,7 @@ def construct_fixed_afference(NTWK, afferent_pop, TARGET_POPS, t,
             NTWK['PRE_SYNAPSES'].append(synapse)
         
         elif verbose:
+
             print('Nsyn = 0 for', afferent_pop+'_'+target_pop)
     
 
@@ -192,8 +193,10 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         NTWK['PRE_SYNAPSES'].append(synapse)
         
     else:
-        print('Nsyn = 0 for', afferent_pop+'_'+target_pop)
-        spikes, synapse, indices, times, pre_indices, pre_times = None, None, [], [], [], []
+        spikes, synapse = None, None
+        indices, times, pre_indices, pre_times = [], [], [], []
+        if verbose:
+            print('Nsyn = 0 for', afferent_pop+'_'+target_pop)
     
     # afferent array
     NTWK['Rate_%s_%s' % (afferent_pop, target_pop)] = rate_array
@@ -202,6 +205,7 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
     if 'iRASTER_PRE' in NTWK.keys():
         NTWK['iRASTER_PRE'].append(indices)
         NTWK['tRASTER_PRE'].append(times)
+
     else: # we create the key
         NTWK['iRASTER_PRE'] = [indices]
         NTWK['tRASTER_PRE'] = [times]

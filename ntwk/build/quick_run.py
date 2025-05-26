@@ -28,13 +28,15 @@ def simulation(Model,
     #######################################
 
     NTWK = build_populations(Model, REC_POPS,
-                                  AFFERENT_POPULATIONS=AFF_POPS,
-                                  with_pop_act=True,
-                                  with_raster=True,
-                                  with_Vm=with_Vm)
+                             AFFERENT_POPULATIONS=AFF_POPS,
+                             with_pop_act=True,
+                             with_raster=True,
+                             with_Vm=with_Vm,
+                             verbose=verbose)
 
     build_up_recurrent_connections(NTWK, 
-                                   SEED=SEED+5, verbose=verbose)
+                                   SEED=SEED+5, 
+                                   verbose=verbose)
 
     #######################################
     ########### AFFERENT INPUTS ###########

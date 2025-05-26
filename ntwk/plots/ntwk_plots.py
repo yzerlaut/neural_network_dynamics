@@ -165,11 +165,10 @@ def shifted_Vms_subplot(data, ax,
                 ax.plot(t[cond], v[cond]+shift, '-', lw=1, c=COLORS[i])
 
                 if spike_peak is not None:
-                    tspikes, threshold = find_spikes_from_Vm(t, v, data, tpop)
-                    scond = (tspikes>=tzoom[0]) & (tspikes<=tzoom[1])
-                    for ts in tspikes[scond]:
-                        ax.plot([ts,ts],[threshold+shift,spike_peak+shift],
-                                '--', c=COLORS[i], lw=0.5)
+                    ispikes, tspikes, threshold = find_spikes_from_Vm(t, v, data, tpop)
+                    for iS in ispikes:
+                        Vm[iS] = spike_peak
+
                 shift += v_shift
 
     pt.draw_bar_scales(ax,
@@ -198,10 +197,12 @@ def membrane_potential_subplots(data, AX,
 
                 if clip_spikes:
                     # getting spikes
-                    tspikes, threshold = \
+                    ispikes, tspikes, threshold = \
                             find_spikes_from_Vm(t, v, data, tpop)
-                    tt, vv = clip_spikes_from_Vm(t[cond], v[cond], tspikes)
-                    ax.plot(tt[::subsampling], vv[::subsampling], 
+                    for tS in tspikes:
+                        v[ (t>tS) & (t<(tS+data[pop_key+'_Trefrac']))] = np.nan
+
+                    ax.plot(t[::subsampling], v[::subsampling], 
                             '-', lw=lw, c=COLORS[i])
                 else:
                     ax.plot(t[cond][::subsampling], v[cond][::subsampling],
@@ -591,11 +592,12 @@ def pop_act(data,
 
 def find_spikes_from_Vm(t, Vm, data, pop_key):
     threshold, reset = data[pop_key+'_Vthre'], data[pop_key+'_Vreset']
-    if pop_key+'_delta_v' in data:
-        threshold += data[pop_key+'_delta_v']
+    if pop_key+'_deltaV' in data:
+        threshold += 4*data[pop_key+'_deltaV']
     # adding spikes
-    tspikes = t[1:][np.argwhere((Vm[1:]-Vm[:-1])<(.8*(reset-threshold)))]
-    return tspikes, threshold
+    ispikes = np.flatnonzero((Vm[1:]-Vm[:-1])<(.8*(reset-threshold)))
+    tspikes = t[:-1][ispikes]
+    return ispikes, tspikes, threshold
 
 def clip_spikes_from_Vm(t, Vm, tspikes,
                         clip_window=10):
@@ -610,7 +612,7 @@ def few_Vm_plot(data,
                 POP_KEYS = None, COLORS=None, NVMS=None,
                 tzoom=[0, np.inf],
                 clip_spikes=False,
-                vpeak=-40, vbottom=-80, shift=20.,
+                vpeak=None, vbottom=-80, shift=20.,
                 bar_scales_args=dict(Xbar=50, Xbar_label='50ms', 
                                      Ybar=20, Ybar_label='20mV'),
                 subsampling=1,
@@ -638,20 +640,22 @@ def few_Vm_plot(data,
         rest = data[pop_key+'_El']
         for i in VmID:
             nn+=1
-            Vm = data['VMS_'+pop_key][i].flatten()
-            tspikes, threshold = find_spikes_from_Vm(t, Vm, data, pop_key) # getting spikes
+
+            Vm = data['VMS_'+pop_key][i].flatten().copy()
+            ispikes, tspikes, threshold = find_spikes_from_Vm(t, Vm, 
+                                                              data, pop_key) # getting spikes
             if clip_spikes:
-                tt, vv = clip_spikes_from_Vm(t[cond], Vm[cond], tspikes)
-                ax.plot(tt[::subsampling], vv[::subsampling]+shift*nn, color=color, lw=lw)
-            else:
-                ax.plot(t[cond][::subsampling], Vm[cond][::subsampling]+shift*nn,
-                        color=color, lw=lw)
-            # adding spikes
-            Scond = (tspikes>tzoom[0]) & (tspikes<tzoom[1])
-            for ts in tspikes[Scond]:
-                ax.plot([ts, ts], shift*nn+np.array([threshold, vpeak]), 
-                        spike_style, color=color, lw=lw)
-            ax.plot([t[cond][0], t[cond][-1]], shift*nn+np.array([rest, rest]), ':', color=color, lw=lw)
+                for tS in tspikes:
+                    Vm[ (t>tS) & (t<(tS+data[pop_key+'_Trefrac']))] = np.nan
+            if vpeak is not None:
+                for iS in ispikes:
+                    Vm[iS] = vpeak
+
+            ax.plot(t[cond][::subsampling], Vm[cond][::subsampling]+shift*nn,
+                    color=color, lw=lw)
+
+            ax.plot([t[cond][0], t[cond][-1]], 
+                    shift*nn+np.array([rest, rest]), ':', color=color, lw=lw)
 
     pt.set_plot(ax, [], xticks=[], yticks=[],
                 xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])

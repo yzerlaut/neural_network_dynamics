@@ -44,7 +44,8 @@ def delayed_oscillation(t, onset, amp, freq, already_SI=False):
     signal[cond] = amp*(1-np.cos(2.*np.pi*freq*Tfactor*(t[cond]-t[cond][0])))/2.
     return signal
 
-def increasing_step_function(t, baseline, onset, size, length, smoothing=0):
+def increasing_step_function(t, baseline, onset, size, length, 
+                             smoothing=0):
     signal = 0*t+baseline
     i, t0 = 1, onset
     while t0<t[-1]:
