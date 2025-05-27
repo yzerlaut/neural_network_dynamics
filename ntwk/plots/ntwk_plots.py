@@ -182,7 +182,8 @@ def shifted_Vms_subplot(data, ax,
 def membrane_potential_subplots(data, AX,
                                 POP_KEYS, COLORS, tzoom,
                                 subsampling=1, 
-                                lw=1,
+                                lw=1, 
+                                spike_peak=None,
                                 clip_spikes=False,
                                 Vm_is_the_last_one=True):
 
@@ -195,18 +196,19 @@ def membrane_potential_subplots(data, AX,
 
             for v in data['VMS_%s' % tpop]:
 
+                # getting spikes
+                ispikes, tspikes, threshold = \
+                        find_spikes_from_Vm(t, v, data, tpop)
+
                 if clip_spikes:
-                    # getting spikes
-                    ispikes, tspikes, threshold = \
-                            find_spikes_from_Vm(t, v, data, tpop)
                     for tS in tspikes:
                         v[ (t>tS) & (t<(tS+data[pop_key+'_Trefrac']))] = np.nan
+                if spike_peak is not None:
+                    for iS in ispikes:
+                        v[iS] = spike_peak
 
-                    ax.plot(t[::subsampling], v[::subsampling], 
-                            '-', lw=lw, c=COLORS[i])
-                else:
-                    ax.plot(t[cond][::subsampling], v[cond][::subsampling],
-                            '-', lw=lw, c=COLORS[i])
+                ax.plot(t[cond][::subsampling], v[cond][::subsampling],
+                        '-', lw=lw, c=COLORS[i])
 
             ax.annotate(' %s' % tpop, (1.,.5), xycoords='axes fraction',
                            color=COLORS[i])
@@ -339,18 +341,17 @@ def activity_plots(data,
                    POP_KEYS = None,
                    COLORS = None,
                    tzoom=[0, np.inf],
-                   ax=None,
+                   axes_extents = dict(Aff=1, Raster=2, Rate=1, Vm=2),
                    pop_act_args=dict(smoothing=0,
                                      subsampling=2,
                                      log_scale=False),
                    Vm_args=dict(subsampling=2),
                    raster_args=dict(subsampling=10),
-                   fig_args=dict(dpi=150,
-                                 hspace=0.5,
-                                 right = 5.)):
+                   fig_args=dict(figsize=(3.,1.), dpi=150,
+                                 hspace=0.5, right = 5.)):
 
-    AE = [[[4,1]],
-          [[4,2]]] # axes extent
+    AE = [[[1,axes_extents['Aff']]],
+          [[4,axes_extents['Raster']]]] # axes extent
 
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
@@ -358,11 +359,11 @@ def activity_plots(data,
     for pop in POP_KEYS:
         if Vm_args is not None:
             if ('VMS_%s' % pop) in data:
-                AE.append([[4,1]])
+                AE.append([[1,axes_extents['Vm']]])
             Vm_args['Vm_is_the_last_one'] = True
 
     if ('POP_ACT_%s' % pop) in data: # just checking on the last one
-        AE.append([[4,2]])
+        AE.append([[4,axes_extents['Rate']]])
         if Vm_args is not None:
             Vm_args['Vm_is_the_last_one'] = False
 

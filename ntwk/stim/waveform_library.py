@@ -52,10 +52,21 @@ def increasing_step_function(t, baseline, onset, size, length,
         signal[t>t0] =baseline+i*size
         t0+=length
         i+=1
+
     if smoothing>0:
         return gaussian_smoothing(signal, int(smoothing/(t[1]-t[0])))
     else:
         return signal
+
+def varying_levels_function(t, levels, onsets, 
+                            smoothing=100):
+
+    signal = 0*t
+
+    for onset, level in zip(onsets, levels):
+        signal[t>onset] = level
+
+    return gaussian_smoothing(signal, int(smoothing/(t[1]-t[0])))
 
 ############################################################
 # -------  Using the network "pop" key framework  ----------
