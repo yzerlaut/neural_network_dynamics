@@ -103,52 +103,43 @@ def build_fixed_afference(NTWK,
                                                   NTWK['Model'], SEED=(SEED+1)*i+j+i*j)
 
 
-def connections_from_matrices(NTWK, Matrices,
-                              store_connections=False):
+def connections_from_pairs(NTWK, Pairs, pre_name, post_name):
+    """
 
-    CONN = np.empty((len(NTWK['POPS']), 
-                     len(NTWK['POPS'])), dtype=object)
-    CONN2 = []
+    set connections from a list of pairs:
+    from a list 
+    [
+        [1,3],
+        [1,7],
+        [1,9],
+        [3,8],
+        ...
+    ]   
 
-    if store_connections:
-        NTWK['connections'] = np.empty((len(NTWK['POPS']), len(NTWK['POPS'])), 
-                                       dtype=object)
+    """
 
-    for ii, jj in itertools.product(range(len(NTWK['POPS'])), 
-                                    range(len(NTWK['POPS']))):
-        
-        print(ii, jj)
+    ii = np.flatnonzero(NTWK['POPULATIONS']==pre_name)[0]   # pre pop. index
+    jj = np.flatnonzero(NTWK['POPULATIONS']==post_name)[0]  # post pop. index
 
-        """
-        if (NTWK['M'][ii,jj]['pconn']>0) and (NTWK['M'][ii,jj]['Q']!=0):
-            if ('psyn' in NTWK['M'][ii,jj]) and (NTWK['M'][ii,jj]['psyn']<1):
-                on_pre = 'G%s_post+=(rand()<%.3f)*w' % (NTWK['M'][ii,jj]['name'], NTWK['M'][ii,jj]['psyn']) # proba of release
-            else:
-                on_pre = 'G%s_post+=w' % NTWK['M'][ii,jj]['name']
-                
-            CONN[ii,jj] = brian2.Synapses(NTWK['POPS'][ii], NTWK['POPS'][jj], model='w:siemens', on_pre=on_pre)
-            # CONN[ii,jj].connect(p=NTWK['M'][ii,jj]['pconn'], condition='i!=j')
-            # N.B. the brian2 settings does weird things (e.g. it creates synchrony)
-            # so we draw manually the connection to fix synaptic numbers
-            N_per_cell = int(NTWK['M'][ii,jj]['pconn']*NTWK['POPS'][ii].N)
-            # print(NTWK['M'][ii,jj]['name'], N_per_cell)
-            if ii==jj: # need to take care of no autapse
-                i_rdms = np.concatenate([\
-                                np.random.choice(
-                                    np.delete(np.arange(NTWK['POPS'][ii].N), [iii]), N_per_cell)\
-                                          for iii in range(NTWK['POPS'][jj].N)])
-            else:
-                i_rdms = np.concatenate([\
-                                np.random.choice(np.arange(NTWK['POPS'][ii].N), N_per_cell)\
-                                          for jjj in range(NTWK['POPS'][jj].N)])
-            j_fixed = np.concatenate([np.ones(N_per_cell,dtype=int)*jjj for jjj in range(NTWK['POPS'][jj].N)])
-            CONN[ii,jj].connect(i=i_rdms, j=j_fixed) 
-            CONN[ii,jj].w = NTWK['M'][ii,jj]['Q']*brian2.nS
-            CONN2.append(CONN[ii,jj])
-            if store_connections:
-                NTWK['connections'][ii,jj] = {'i':i_rdms, 'j':j_fixed}
+    if (len(Pairs)>0) and NTWK['M'][ii,jj]['Q']!=0:
 
-        """
+        if ('psyn' in NTWK['M'][ii,jj]) and (NTWK['M'][ii,jj]['psyn']<1):
+            on_pre = 'G%s_post+=(rand()<%.3f)*w' % (NTWK['M'][ii,jj]['name'], NTWK['M'][ii,jj]['psyn']) # proba of release
+        else:
+            on_pre = 'G%s_post+=w' % NTWK['M'][ii,jj]['name']
+            
+        connection = brian2.Synapses(NTWK['POPS'][ii], NTWK['POPS'][jj], 
+                                     model='w:siemens', on_pre=on_pre)
+        connection.connect(i=np.array(Pairs)[:,0], j=np.array(Pairs)[:,1]) 
+        connection.w = NTWK['M'][ii,jj]['Q']*brian2.nS
+
+        return connection
+
+    else:
+
+        print('\n [!!]', pre_name, post_name, '-> 0  weight connection [!!] \n')
+        return None
+
 
 
 def random_connections(NTWK, store_connections=False):
@@ -388,7 +379,6 @@ def build_populations(Model, POPULATIONS,
     if with_Vm>0:
         NTWK['VMS'] = []
         for pop in NTWK['POPS']:
-            print(pop.N)
             NTWK['VMS'].append(brian2.StateMonitor(pop, 'V', 
                                 record=np.arange(np.min([with_Vm, pop.N]))))
 

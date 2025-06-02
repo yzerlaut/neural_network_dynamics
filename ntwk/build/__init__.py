@@ -4,6 +4,6 @@ from .syn_and_connec_construct import build_fixed_aff_to_pop_matrix as fixed_aff
 from .syn_and_connec_construct import build_fixed_afference as fixed_afference
 from .syn_and_connec_construct import initialize_to_rest,\
         initialize_to_random, get_syn_and_conn_matrix,\
-        random_distance_dependent_connections, connections_from_matrices,\
+        random_distance_dependent_connections, connections_from_pairs,\
         draw_spatially_dependent_connectivity_profile, random_connections
 from .syn_and_connec_library import *

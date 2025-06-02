@@ -19,15 +19,14 @@ Model = {
     # synaptic weights
     'Q_Exc_Exc':1., 'Q_Exc_Inh':1., 
     'Q_Inh_Exc':10., 'Q_Inh_Inh':10., 
-    'Q_AffExc_Exc':3.,
+    'Q_AffExc_Exc':3., 'Q_AffExc_Inh':3.,
     # synaptic time constants
     'Tsyn_Exc':5., 'Tsyn_Inh':5.,
     # synaptic reversal potentials
     'Erev_Exc':0., 'Erev_Inh': -80.,
-    # connectivity parameters
-    'p_Exc_Exc':0.02, 'p_Exc_Inh':0.02, 
-    'p_Inh_Exc':0.02, 'p_Inh_Inh':0.02, 
-    'p_AffExc_Exc':0.1, 
+    # connectivity parameters -- USELESS BUT NON ZERO TO ENABLE CONNECTION
+    'p_Exc_Exc':1, 'p_Exc_Inh':1, 'p_Inh_Exc':1, 'p_Inh_Inh':1, 
+    'p_AffExc_Exc':1, 'p_AffExc_Inh':1, 
     # simulation parameters
     'dt':0.1, 'tstop': 500., 
     'SEED':3, # connectivity seed
@@ -43,101 +42,75 @@ Model = {
     'Inh_a':0., 'Inh_b': 0., 'Inh_tauw':1e9,
 }
 
-StimPattern = {'indices':[], 'times':[]}
-for event in range(3):
-    StimPattern['times'] += list(30*(1+event*np.ones(7)))
-    StimPattern['indices'] += list(range(7))
 
+####################################
+########    RECURRENCE   ###########
+####################################
 
-
-
-REC_POPS = ['Exc', 'Inh']
-AFF_POPS = ['AffExc']
-
-NTWK = ntwk.build.populations(Model, REC_POPS,
-                              AFFERENT_POPULATIONS=AFF_POPS,
+NTWK = ntwk.build.populations(Model, ['Exc', 'Inh'],
+                              AFFERENT_POPULATIONS=['AffExc'],
                               with_raster=True, with_Vm=7, verbose=True)
 
-M0 = np.array([\
-        [ 0, 0, 0, 0, 0],
-        [ 0, 0, 0, 0, 0],
-        [ 0, 0, 0, 0, 0],
-        [ 0, 0, 0, 0, 0],
-        [ 0, 0, 0, 0, 0] ])
-
-ntwk.build.connections_from_matrices(NTWK, [[M0]])
+Pairs = [\
+        [0, 3],
+        [1, 3],
+        [1, 5],
+        [2, 3],
+                ]
+        
+NTWK['REC_SYNAPSES'] = []
+NTWK['REC_SYNAPSES'].append(\
+    ntwk.build.connections_from_pairs(NTWK, Pairs, 'Exc', 'Exc'))
 
 #######################################
-########### AFFERENT INPUTS ###########
+########    STIMULATION     ###########
 #######################################
-t_array = ntwk.arange(int(Model['tstop']/Model['dt']))*Model['dt']
 
-# background activity
-faff = 1.
-# # # afferent excitation onto cortical excitation and inhibition
-for i, tpop in enumerate(['Exc']): # both on excitation and inhibition
-    ntwk.stim.construct_feedforward_input(NTWK, tpop, 'AffExc',
-                                          t_array, faff+0.*t_array,
-                                          verbose=True)
+# afferent to excitation 
+set_of_events = [[] for e in range(Model['N_Exc'])]
+set_of_events[1].append(50) # ms
+ntwk.stim.events_one_synapse_per_neuron(NTWK, 'Exc', 'AffExc',
+                                        set_of_events)
 
-"""
-# build connectivity matrices for the stimulus
-ntwk.build.fixed_afference(NTWK, ['AffExc'], REC_POPS)
+# afferent to excitation 
+set_of_events = [[] for e in range(Model['N_Inh'])]
+set_of_events[0].append(20) # ms
+ntwk.stim.events_one_synapse_per_neuron(NTWK, 'Inh', 'AffExc',
+                                        set_of_events)
 
-# stimulus activity
-for i, tpop in enumerate(['Exc']): # both on excitation and inhibition
-    ntwk.stim.construct_feedforward_input(NTWK, tpop, 'AffExc',
-                                          t_array, 0.*t_array, # no background aff
-                                          additional_spikes_in_terms_of_pre_pop=StimPattern,
-                                          verbose=True)
 
-"""
-
-################################################################
-## --------------- Initial Condition ------------------------ ##
-################################################################
-ntwk.build.initialize_to_rest(NTWK)
 
 #####################
 ## ----- Run ----- ##
 #####################
 
-
 def update1(NTWK):
-    NTWK['POPS'][1].I0[0] = 200*ntwk.pA
+    NTWK['POPS'][0].I0[0] = 500*ntwk.pA
+    NTWK['POPS'][0].I0[1] = 500*ntwk.pA
 def update2(NTWK):
-    NTWK['POPS'][1].I0[0] = 0*ntwk.pA
+    NTWK['POPS'][0].I0[0] = 0*ntwk.pA
+    NTWK['POPS'][1].I0[1] = 500*ntwk.pA
 
 
-network_sim = ntwk.collect_and_run(NTWK, 
-                                   INTERMEDIATE_INSTRUCTIONS=[{'time':100, 'function':update1},
-                                                              {'time':200, 'function':update2}],
-                                   verbose=True)
+ntwk.build.initialize_to_rest(NTWK)
+
+sim = ntwk.collect_and_run(NTWK, 
+                           INTERMEDIATE_INSTRUCTIONS=[{'time':100, 'function':update1},
+                                                      {'time':300, 'function':update2}],
+                           verbose=True)
 
 
 
-######################
-## ----- Write ---- ##
-######################
-
-NTWK['AffExc_indices'] = StimPattern['indices']
-NTWK['AffExc_times'] = StimPattern['times']
-ntwk.recording.write_as_hdf5(NTWK, 
-                             # ARRAY_KEYS=['AffExc_indices', 'AffExc_times'],
-                             filename='toy-network.h5')
+## write data
+ntwk.recording.write_as_hdf5(NTWK, filename='toy-network.h5')
 
 ## load file
 data = ntwk.recording.load_dict_from_hdf5('toy-network.h5')
 
-# plot input patterm
-fig, ax = plt.subplots(1)
-ax.set_title('stim. pattern')
-# ax.plot(data['AffExcTV_times'], data['AffExcTV_indices'], 'ko', ms=1)
-ax.set_xlim([0, Model['tstop']])
-ax.set_xlabel('time (ms)')
-ax.set_ylabel('nrn ID')
-
-# ## plot
-fig, _ = ntwk.plots.raster_and_Vm(data)
-
+fig, _ = ntwk.plots.raster_and_Vm(data, Vm_args=dict(vpeak=-10, shift=12))
+# fig = ntwk.plots.few_Vm_plot(data, vpeak=-10, shift=12)
+# fig, AX = ntwk.plots.activity_plots(data, #tzoom=[Model['tstop']],
+                                    # axes_extents = dict(Aff=1, Raster=2, Rate=1, Vm=1),
+                                    # Vm_args=dict(lw=0.5, spike_peak=10, subsampling=1),
+                                    # pop_act_args=dict(smoothing=4, subsampling=4))
 plt.show()

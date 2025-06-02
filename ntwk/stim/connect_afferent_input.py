@@ -138,7 +138,7 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         Qsyn = Model['Q_'+afferent_pop+'_'+target_pop]
         
         #finding the target pop in the brian2 objects
-        ipop = np.argwhere(NTWK['POPULATIONS']==target_pop).flatten()[0]
+        ipop = np.flatnonzero(NTWK['POPULATIONS']==target_pop)[0]
         
         if verbose:
             print('drawing Poisson process for afferent input [...]')
@@ -210,6 +210,63 @@ def construct_feedforward_input(NTWK, target_pop, afferent_pop,\
         NTWK['iRASTER_PRE'] = [indices]
         NTWK['tRASTER_PRE'] = [times]
 
+
+def events_one_synapse_per_neuron(NTWK, target_pop, afferent_pop,\
+                                  set_of_pre_events=[],
+                                  verbose=False):
+    """
+
+
+    """
+
+    Model = NTWK['Model']
+    
+    #finding the target pop in the brian2 objects
+    ipop = np.flatnonzero(NTWK['POPULATIONS']==target_pop)[0]
+
+    Nsyn = NTWK['POPS'][ipop].N # 1 synapse per post-neuron
+        
+    # extract parameters of the afferent input
+    Qsyn = Model['Q_'+afferent_pop+'_'+target_pop]
+        
+        
+    if len(set_of_pre_events)==Nsyn:
+
+        if verbose:
+            print('adding individual spike trains to each neuron [...]')
+
+        indices, times = [], []
+        for i, events in enumerate(set_of_pre_events):
+            indices += [i for e in events]
+            times += [e for e in events]
+
+        # incorporating into Brian2 objects
+        spikes = brian2.SpikeGeneratorGroup(NTWK['POPS'][ipop].N, indices, times*brian2.ms)
+
+        if ('psyn_%s_%s' % (afferent_pop, target_pop) in Model):
+            psyn = Model['psyn_%s_%s' % (afferent_pop, target_pop)] # probability of release
+            on_pre = 'G%s%s_post+=(rand()<%.3f)*w' % (afferent_pop, target_pop, psyn)
+        else:
+            on_pre = 'G'+afferent_pop+target_pop+' += w'
+
+        synapse = brian2.Synapses(spikes, NTWK['POPS'][ipop], model='w:siemens', on_pre=on_pre)
+        synapse.connect('i==j')
+        synapse.w = Qsyn*brian2.nS
+
+        NTWK['PRE_SPIKES'].append(spikes)
+        NTWK['PRE_SYNAPSES'].append(synapse)
+        
+    else:
+        print('\n [!!] the list of presynaptic events does not have the population size [!!] \n')
+
+    # storing quantities:
+    if 'iRASTER_PRE' in NTWK.keys():
+        NTWK['iRASTER_PRE'].append(indices)
+        NTWK['tRASTER_PRE'].append(times)
+
+    else: # we create the key
+        NTWK['iRASTER_PRE'] = [indices]
+        NTWK['tRASTER_PRE'] = [times]
 
         
 if __name__=='__main__':

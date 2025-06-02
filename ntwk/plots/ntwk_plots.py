@@ -106,7 +106,7 @@ def connectivity_matrix(Model,
 def raster_subplot(data, ax,
                    POP_KEYS, COLORS, tzoom,
                    Nmax_per_pop_cond=None,
-                   subsampling=10,
+                   subsampling=1,
                    with_annot=True,
                    ms=0.5):
 
@@ -133,8 +133,9 @@ def raster_subplot(data, ax,
         n += Nmax_per_pop_cond[i]
 
     ax.set_xlim(tzoom)
-    ax.set_ylim([0,n])
+    ax.set_ylim([-0.5,n+0.5])
     ax.set_yticks([])
+    ax.invert_yaxis()
     if with_annot:
         ax.annotate('%i '%n, (0,n), ha='right', va='center')
         ax.annotate('1 ', (0,0), ha='right', va='center')
@@ -397,41 +398,42 @@ def raster_and_Vm(data,
                   POP_KEYS = None,
                   COLORS = None,
                   tzoom=[0, np.inf],
+                  axes_extents = dict(Raster=1, Vm=3),
                   figsize=(5,3),
                   Vm_args=dict(subsampling=1,
                                lw=1,
-                               clip_spikes=False)):
+                               clip_spikes=False),
+                  Raster_args=dict(ms=2, with_annot=False),
+                  fig_args=dict(figsize=(2.5, 1.), dpi=150,
+                                hspace=0.3, bottom=0.2, top=0.2, 
+                                left=0.1, right = 0.1)):
+    """
+    just the raster and Vm plot
+    """
+
+    AE = [[[1,axes_extents['Vm']]],
+          [[1,axes_extents['Raster']]]] # axes extent
+    fig, AX = pt.figure(axes_extents=AE, **fig_args)
+
 
     if POP_KEYS is None:
         POP_KEYS = find_pop_keys(data)
 
-    n, fig2 = 0, None
-    for pop in POP_KEYS:
-        if ('VMS_%s' % pop) in data:
-            n+=1
-
-    if n>0:
-        fig = figure(figsize=(figsize[0],figsize[1]/2*n))
-        AX = [subplot2grid((n+2,1), (0,0), rowspan=2)]
-        for i in range(n):
-            AX.append(subplot2grid((n+2,1), (i+2,0)))
-    else:
-        fig, [AX] = pt.figure((1,1), figsize=figsize,
-                              reshape_axes=False)
+    if COLORS is None:
+        COLORS = [pt.tab10(i%10) for i in range(len(POP_KEYS))]
 
     tzoom=[np.max([tzoom[0], 0.]),
            np.min([tzoom[1], data['tstop']])]
 
-    if COLORS is None:
-        COLORS = [pt.tab10(i) for i in range(10)]
+    few_Vm_plot(data, tzoom=tzoom, ax=AX[0],
+                POP_KEYS=POP_KEYS, COLORS=COLORS,
+                **Vm_args)
 
-    raster_subplot(data, AX[0],
-                   POP_KEYS, COLORS, tzoom)
-    if n>0:
-        AX[0].set_xticklabels([])
-        membrane_potential_subplots(data, AX[1:],
-                                    POP_KEYS, COLORS, tzoom,
-                                    **Vm_args)
+
+    raster_subplot(data, AX[1],
+                   POP_KEYS, COLORS, tzoom,
+                   **Raster_args)
+    AX[1].axis('off')
 
     return fig, AX
 
@@ -615,7 +617,7 @@ def few_Vm_plot(data,
                 clip_spikes=False,
                 vpeak=None, vbottom=-80, shift=20.,
                 bar_scales_args=dict(Xbar=50, Xbar_label='50ms', 
-                                     Ybar=20, Ybar_label='20mV'),
+                                     Ybar=10, Ybar_label='10mV'),
                 subsampling=1,
                 lw=1, 
                 spike_style='--',
@@ -626,7 +628,8 @@ def few_Vm_plot(data,
     if COLORS is None:
         COLORS = ['C'+str(i) for i in range(len(POP_KEYS))]
     if NVMS is None:
-        NVMS = np.array([range(len(data['VMS_'+pop_key])) for pop_key in POP_KEYS], dtype=object)
+        NVMS = np.array([range(len(data['VMS_'+pop_key]))\
+                            for pop_key in POP_KEYS], dtype=object)
 
     t = np.arange(int(data['tstop']/data['dt']))*data['dt']
 
@@ -637,9 +640,9 @@ def few_Vm_plot(data,
     cond = (t>tzoom[0]) & (t<tzoom[1])
 
     nn = 0
-    for VmID, pop_key, color in zip(NVMS, POP_KEYS, COLORS):
+    for VmID, pop_key, color in zip(NVMS[::-1], POP_KEYS[::-1], COLORS[::-1]):
         rest = data[pop_key+'_El']
-        for i in VmID:
+        for i in VmID[::-1]:
             nn+=1
 
             Vm = data['VMS_'+pop_key][i].flatten().copy()
@@ -660,6 +663,7 @@ def few_Vm_plot(data,
 
     pt.set_plot(ax, [], xticks=[], yticks=[],
                 xlim=[tzoom[0], min([ax.get_xlim()[1], tzoom[1]])])
+
     if bar_scales_args is not None:
         pt.draw_bar_scales(ax, **bar_scales_args)
 
