@@ -24,9 +24,9 @@ Model = {
     'Q_AffExc_PyrExc':4., 'Q_AffExc_PvInh':4., 'Q_AffExc_SstInh':4., 'Q_AffExc_VipInh':4.,
     'Q_SstInh_PvInh':10., 
     # synaptic time constants (ms)
-    'Tse':5., 'Tsi':5.,
+    'Tsyn_Exc':5., 'Tsyn_Inh':5.,
     # synaptic reversal potentials (mV)
-    'Ee':0., 'Ei': -80.,
+    'Erev_Exc':0., 'Erev_Inh': -80.,
     # connectivity parameters (proba.)
     'p_PyrExc_PyrExc':0.05, 'p_PyrExc_PvInh':0.05, 'p_PyrExc_SstInh':0.05, 
     'p_PvInh_PyrExc':0.05, 'p_PvInh_PvInh':0.05, 'p_PvInh_SstInh':0.05, 
@@ -82,10 +82,10 @@ if sys.argv[-1]=='plot':
     # ######################
     
     ## load file
-    data = ntwk.recording.load_dict_from_hdf5('canonical_data.h5')
+    data = ntwk.recording.load_dict_from_hdf5('data/canonical_data.h5')
 
     # ## plot
-    fig, _ = ntwk.plots.raster_and_Vm_plot(data, smooth_population_activity=10.)
+    fig, _ = ntwk.plots.raster_and_Vm(data)
     
     plt.show()
 else:
@@ -119,6 +119,6 @@ else:
     #####################
     ntwk.collect_and_run(NTWK, verbose=True)
 
-    ntwk.recording.write_as_hdf5(NTWK, filename='canonical_data.h5')
-    print('Results of the simulation are stored as:', 'canonical_data.h5')
-    print('--> Run \"python from_papers/Canonical-Inh-circuit.py plot\" to plot the results')
+    ntwk.recording.write_as_hdf5(NTWK, filename='data/canonical_data.h5')
+    print('Results of the simulation are stored as:', 'data/canonical_data.h5')
+    print('--> Run \"python canonical-inh-circuit.py plot\" to plot the results')

@@ -102,15 +102,10 @@ sim = ntwk.collect_and_run(NTWK,
 
 
 ## write data
-ntwk.recording.write_as_hdf5(NTWK, filename='toy-network.h5')
+ntwk.recording.write_as_hdf5(NTWK, filename='data/toy-network.h5')
 
 ## load file
-data = ntwk.recording.load_dict_from_hdf5('toy-network.h5')
+data = ntwk.recording.load_dict_from_hdf5('data/toy-network.h5')
 
 fig, _ = ntwk.plots.raster_and_Vm(data, Vm_args=dict(vpeak=-10, shift=12))
-# fig = ntwk.plots.few_Vm_plot(data, vpeak=-10, shift=12)
-# fig, AX = ntwk.plots.activity_plots(data, #tzoom=[Model['tstop']],
-                                    # axes_extents = dict(Aff=1, Raster=2, Rate=1, Vm=1),
-                                    # Vm_args=dict(lw=0.5, spike_peak=10, subsampling=1),
-                                    # pop_act_args=dict(smoothing=4, subsampling=4))
 plt.show()
