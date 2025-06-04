@@ -20,7 +20,7 @@ Both the spiking network and single cell simulation toolkit are built as a layer
 Using `git` to clone the repository and "pip" to install the package in your python environment:
 
 ```
-git clone https://github.com/yzerlaut/neural_network_dynamics.git
+git clone https://github.com/yzerlaut/neural_network_dynamics.git --recurse-submodules
 pip install -r neural_network_dynamics/requirements.txt
 ```
 
