@@ -24,9 +24,9 @@ Model = {
     'Q_AffExc_DsInh':4.,
     'Q_DsInh_RecInh':10., 
     # synaptic time constants (ms)
-    'Tse':5., 'Tsi':5.,
+    'Tsyn_Exc':5., 'Tsyn_Inh':5.,
     # synaptic reversal potentials (mV)
-    'Ee':0., 'Ei': -80.,
+    'Erev_Exc':0., 'Erev_Inh': -80.,
     # connectivity parameters (proba.)
     'p_RecExc_RecExc':0.05, 'p_RecExc_RecInh':0.05, 
     'p_RecInh_RecExc':0.05, 'p_RecInh_RecInh':0.05, 
@@ -77,10 +77,10 @@ if sys.argv[-1]=='plot':
     # ######################
     
     ## load file
-    data = ntwk.recording.load_dict_from_hdf5('Zerlaut_et_al_2019_data.h5')
+    data = ntwk.recording.load_dict_from_hdf5('../data/Zerlaut_et-al_2019.ntwk.h5')
 
     # ## plot
-    fig, _ = ntwk.plots.raster_and_Vm_plot(data, smooth_population_activity=10.)
+    fig, _ = ntwk.plots.raster_and_Vm(data)
     
     plt.show()
 else:
@@ -116,6 +116,5 @@ else:
     #####################
     ntwk.collect_and_run(NTWK, verbose=True)
 
-    ntwk.recording.write_as_hdf5(NTWK, filename='Zerlaut_et_al_2019_data.h5')
-    print('Results of the simulation are stored as:', '4pop_model_data.h5')
-    print('--> Run \"python from_papers/Zerlaut_et-al_2019.py plot\" to plot the results')
+    ntwk.recording.write_as_hdf5(NTWK, filename='../data/Zerlaut_et-al_2019.ntwk.h5')
+    print('--> Run \"python Zerlaut_et-al_2019.py plot\" to plot the results')
