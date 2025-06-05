@@ -299,6 +299,35 @@ def population_activity_subplot(data, ax,
 
     return ax
 
+def single_pop_act_subplot(data, ax, 
+                           pop_key, color, tzoom,
+                           subsampling=1,
+                           smoothing=0):
+
+    t = np.arange(len(data['POP_ACT_'+pop_key]))*data['dt']
+        
+    cond = (t>=tzoom[0]) & (t<tzoom[1])
+
+    if smoothing>0:
+        ax.fill_between(t[cond][::subsampling],0*t[cond][::subsampling],
+                gaussian_smoothing(data['POP_ACT_'+pop_key][cond], 
+                                   int(smoothing/data['dt']))[::subsampling],
+                color=color)
+    else:
+        ax.fill_between(t[cond][::subsampling],0*t[cond][::subsampling],
+                data['POP_ACT_'+pop_key][cond][::subsampling],
+                color=color)
+    ylim = [0, data['POP_ACT_'+pop_key][cond][::subsampling].max()]
+    ylim = ax.get_ylim()
+    # ax.set_ylim(ylim)
+    ax.set_xlim(tzoom)
+    pt.draw_bar_scales(ax, Ybar=.7*ylim[1], Xbar=1e-12, 
+                       Ybar_label = '%.1fHz ' % (.7*ylim[1]),
+                       color=color, fontsize=7)
+    ax.axis('off')
+
+    return ax
+
 def input_rate_subplot(data, ax,
                        POP_KEYS, COLORS,
                        tzoom,
@@ -393,6 +422,54 @@ def activity_plots(data,
 
     return fig, AX
 
+
+def pretty(data,
+          POP_KEYS = None,
+          COLORS = None,
+          tzoom=[0, np.inf],
+          axes_extents = dict(Raster=3, Vm=7, Rate=1),
+          Vm_args=dict(subsampling=1, lw=1,
+                       clip_spikes=False),
+          Raster_args=dict(ms=1, with_annot=False),
+          Rate_args=dict(smoothing=10),
+          fig_args=dict(figsize=(2.5, 0.3), dpi=150,
+                        hspace=0.3, bottom=0.2, top=0.2, 
+                        left=0.1, right = 0.1)):
+    """
+    just the raster and Vm plot
+    """
+
+    if POP_KEYS is None:
+        POP_KEYS = find_pop_keys(data)
+
+    AE = [[[1,axes_extents['Vm']]],
+          [[1,axes_extents['Raster']]]] # axes extent
+    for p in POP_KEYS:
+        AE.append([[1,axes_extents['Rate']]])
+
+    fig, AX = pt.figure(axes_extents=AE, **fig_args)
+
+    if COLORS is None:
+        COLORS = [pt.tab10(i%10) for i in range(len(POP_KEYS))]
+
+    tzoom=[np.max([tzoom[0], 0.]),
+           np.min([tzoom[1], data['tstop']])]
+
+    few_Vm_plot(data, tzoom=tzoom, ax=AX[0],
+                POP_KEYS=POP_KEYS, COLORS=COLORS,
+                **Vm_args)
+
+    raster_subplot(data, AX[1],
+                   POP_KEYS, COLORS, tzoom,
+                   **Raster_args)
+    AX[1].axis('off')
+
+    for i in range(len(POP_KEYS)):
+        single_pop_act_subplot(data, AX[2+i],
+                               POP_KEYS[i], COLORS[i], tzoom,
+                               **Rate_args)
+
+    return fig, AX
 
 def raster_and_Vm(data,
                   POP_KEYS = None,
