@@ -225,7 +225,7 @@ def events_one_synapse_per_neuron(NTWK, target_pop, afferent_pop,\
     ipop = np.flatnonzero(NTWK['POPULATIONS']==target_pop)[0]
 
     Nsyn = NTWK['POPS'][ipop].N # 1 synapse per post-neuron
-        
+       
     # extract parameters of the afferent input
     Qsyn = Model['Q_'+afferent_pop+'_'+target_pop]
         

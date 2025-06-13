@@ -444,8 +444,10 @@ def pretty(data,
 
     AE = [[[1,axes_extents['Vm']]],
           [[1,axes_extents['Raster']]]] # axes extent
-    for p in POP_KEYS:
-        AE.append([[1,axes_extents['Rate']]])
+
+    if 'Rate' in axes_extents:
+        for p in POP_KEYS:
+            AE.append([[1,axes_extents['Rate']]])
 
     fig, AX = pt.figure(axes_extents=AE, **fig_args)
 
@@ -464,10 +466,11 @@ def pretty(data,
                    **Raster_args)
     AX[1].axis('off')
 
-    for i in range(len(POP_KEYS)):
-        single_pop_act_subplot(data, AX[2+i],
-                               POP_KEYS[i], COLORS[i], tzoom,
-                               **Rate_args)
+    if 'Rate' in axes_extents:
+        for i in range(len(POP_KEYS)):
+            single_pop_act_subplot(data, AX[2+i],
+                                   POP_KEYS[i], COLORS[i], tzoom,
+                                   **Rate_args)
 
     return fig, AX
 
@@ -694,7 +697,7 @@ def few_Vm_plot(data,
                 clip_spikes=False,
                 vpeak=None, vbottom=-80, shift=20.,
                 bar_scales_args=dict(Xbar=50, Xbar_label='50ms', 
-                                     Ybar=10, Ybar_label='10mV'),
+                                     Ybar=20, Ybar_label='20mV'),
                 subsampling=1,
                 lw=1, 
                 spike_style='--',
