@@ -432,7 +432,7 @@ def pretty(data,
                        clip_spikes=False),
           Raster_args=dict(ms=1, with_annot=False),
           Rate_args=dict(smoothing=10),
-          fig_args=dict(figsize=(2.5, 0.3), dpi=150,
+          fig_args=dict(ax_scale=(2.5, 0.3), dpi=150,
                         hspace=0.3, bottom=0.2, top=0.2, 
                         left=0.1, right = 0.1)):
     """
