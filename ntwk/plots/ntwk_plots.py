@@ -120,6 +120,7 @@ def raster_subplot(data, ax,
 
     n = 0
     for i, tpop in enumerate(POP_KEYS):
+        print(tpop, COLORS[i])
         cond = (data['tRASTER_%s' % tpop]>tzoom[0]) &\
                 (data['tRASTER_%s' % tpop]<tzoom[1]) &\
                 (data['iRASTER_%s' % tpop]<Nmax_per_pop_cond[i])
@@ -612,7 +613,9 @@ def raster(data,
         try:
             cond = (data['tRASTER_'+pop_key]>tzoom[0]) & (data['tRASTER_'+pop_key]<tzoom[1]) & (data['iRASTER_'+pop_key]<nmax)
             #ax.plot(data['tRASTER_'+pop_key][cond][::subsampling], np.sum(NMAXS[:n])+data['iRASTER_'+pop_key][cond][::subsampling], '.', color=color, ms=ms)
-            pt.scatter(data['tRASTER_'+pop_key][cond][::subsampling], np.sum(NMAXS[:n])+data['iRASTER_'+pop_key][cond][::subsampling], color=color, ms=ms, ax=ax, no_set=True)
+            pt.scatter(data['tRASTER_'+pop_key][cond][::subsampling], 
+                       np.sum(NMAXS[:n])+data['iRASTER_'+pop_key][cond][::subsampling], 
+                       color=color, ms=ms, ax=ax, no_set=True)
         except ValueError:
             pass
 

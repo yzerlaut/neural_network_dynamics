@@ -376,11 +376,16 @@ def build_populations(Model, POPULATIONS,
         for pop in NTWK['POPS']:
             NTWK['RASTER'].append(brian2.SpikeMonitor(pop))
 
-    if with_Vm>0:
+    if type(with_Vm) in [list, np.ndarray]:
+        nVms = with_Vm
+    else:
+        nVms = np.ones(len(NTWK['POPS']))*with_Vm
+    if np.sum(nVms)>0:
+
         NTWK['VMS'] = []
-        for pop in NTWK['POPS']:
+        for p, pop in enumerate(NTWK['POPS']):
             NTWK['VMS'].append(brian2.StateMonitor(pop, 'V', 
-                                record=np.arange(np.min([with_Vm, pop.N]))))
+                                record=np.arange(np.min([nVms[p], pop.N]))))
 
     if with_synaptic_currents:
         NTWK['ISYNe'], NTWK['ISYNi'] = [], []
