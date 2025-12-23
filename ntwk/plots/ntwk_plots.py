@@ -36,7 +36,7 @@ def connectivity_matrix(Model,
                         REC_POPS=None,
                         AFF_POPS=None,
                         COLORS=None,
-                        colormap=pt.viridis,
+                        colormap=pt.plt.cm.viridis,
                         blank_zero=False,
                         nticks=4,
                         ax=None):
