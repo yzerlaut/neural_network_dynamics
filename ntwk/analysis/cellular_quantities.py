@@ -1,7 +1,4 @@
 import numpy as np
-import matplotlib.pylab as plt
-from itertools import combinations # for cross correlations
-import sys, pathlib
 from scipy.stats import skew
 from brian2 import mV
 

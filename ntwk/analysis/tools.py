@@ -1,7 +1,6 @@
 import numpy as np
-from scipy.stats import skew
 from scipy.optimize import minimize
-from scipy.integrate import cumtrapz
+from scipy.integrate import cumulative_trapezoid
 
 def autocorrel(Signal, tmax, dt):
     """
@@ -29,7 +28,7 @@ def get_acf_time(Vm, dt,
 
     acf, shift = autocorrel(Vm, max_time_for_Tv, dt)
     if method=='integrate':
-        return cumtrapz(acf, shift)[-1]
+        return cumulative_trapezoid(acf, shift)[-1]
     elif method=='fit_exp':
         def func(X):
             return np.sum(np.abs(np.exp(-shift/X[0])-acf))
