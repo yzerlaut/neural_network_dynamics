@@ -1,6 +1,5 @@
 import numpy as np
 from itertools import combinations # for cross correlations
-from scipy.stats import skew
 from brian2 import ms, Hz
 import elephant, neo, quantities # eletrophysiology analysis toolkit
 # for smoothing
